@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.zkoss.zss</groupId>
+	<artifactId>zsstest</artifactId>
+	<properties>
+		<zk.version>6.5.0</zk.version>
+		<junit.version>4.8.1</junit.version>
+	</properties>
+	<version>2.5.0</version>
+	<packaging>jar</packaging>
+	<name>ZK Spreadsheet Unit Test</name>
+	<url>http://www.zkoss.org/zsstest</url>
+	<description>ZK Spreadsheet Unit Test</description>
+	<repositories>
+		<repository>
+			<id>zk repository</id>
+			<url>http://mavensync.zkoss.org/maven2</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<id>snapshots</id>
+			<name>Maven Central Plugins Development Repository</name>
+			<url>http://snapshots.maven.codehaus.org/maven2</url>
+		</pluginRepository>
+		<pluginRepository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>central</id>
+			<name>Maven Plugin Repository</name>
+			<url>http://repo1.maven.org/maven2</url>
+		</pluginRepository>
+	</pluginRepositories>
+	<dependencies>
+		<dependency>
+			<groupId>org.zkoss.zss</groupId>
+			<artifactId>zss</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.zkoss.zss</groupId>
+			<artifactId>zssex</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+		</dependency>
+	</dependencies>
+</project> 
