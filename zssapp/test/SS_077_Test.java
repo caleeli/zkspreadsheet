@@ -6,11 +6,25 @@ public class SS_077_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-        // Select L13:M14
-    	selectCells(11, 12, 12, 13);
+        // Select cells
+        clickCell(loadCellL13());
+        clickCell(loadCellL13());
+        mouseDownAt(loadCellL13(), "1,2");
+        waitResponse();
+        mouseMoveAt(loadCellM14(), "1,2");
+        waitResponse();
         
-    	clickDropdownButtonMenu("$fastIconBtn $borderBtn","Inside horizontal borders");
-    	
+        // Click Border icon
+        JQuery borderIcon = jq("$borderBtn");
+        mouseOver(borderIcon);
+        waitResponse();
+        clickAt(borderIcon, "30,0");
+        waitResponse();
+        
+        // Click inside horizontal border
+        click(jq(".z-menu-item:eq(8)"));
+        waitResponse();
+        
         // Verify
         verifyTrue(ColorVerifingHelper.isEqualColor("#FFFFFF", loadCellL13().parent().css("border-right-color")));
         verifyTrue(ColorVerifingHelper.isEqualColor("#000000", loadCellL13().parent().css("border-bottom-color")));

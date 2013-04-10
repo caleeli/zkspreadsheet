@@ -30,12 +30,14 @@ public class SS_154_Test extends SSAbstractTestCase {
 		
 		//verify
 		int afterF12width = getSpecifiedCell(5, 11).width();
+		int afterG12width = getSpecifiedCell(6, 11).width();
+		int afterH12width = getSpecifiedCell(7, 11).width();
 		
 		String mergeText = getSpecifiedCell(5, 11).text();
 		
 		verifyTrue(afterF12width > beforeF12width+beforeG12width+beforeH12width);
-		verifyFalse(getSpecifiedCell(6, 11).isVisible());
-		verifyFalse(getSpecifiedCell(7, 11).isVisible());
+		verifyTrue(afterG12width ==0);
+		verifyTrue(afterH12width ==0);
 		verifyEquals(f12Text, mergeText);
 	}
 }

@@ -41,8 +41,6 @@ public class SSDataEvent extends Event implements Serializable {
 	public static final String ON_RANGE_DELETE = "onRangeDelete";
 	/** Identifies the size change of a Cell. */
 	public static final String ON_SIZE_CHANGE = "onSizeChange";
-	/** Identifyes the associated button change of a Cell. */
-	public static final String ON_BTN_CHANGE = "onBtnChange";
 	
 	/** Identifies the change of a merged range (move or change size). */
 	public static final String ON_MERGE_CHANGE = "onMergeChange";
@@ -54,40 +52,6 @@ public class SSDataEvent extends Event implements Serializable {
 	/** Identifies the grid-line status change. */
 	public static final String ON_DISPLAY_GRIDLINES = "onDisplayGridlines";
 	
-	/** Identifies the protect sheet status change. **/
-	public static final String ON_PROTECT_SHEET = "onProtectSheet";
-	
-	/** Identifies one chart added. **/
-	public static final String ON_CHART_ADD = "onChartAdd";
-	/** Identifies the specified chart deleted. **/
-	public static final String ON_CHART_DELETE = "onChartDelete";
-	/** Identifies the specified chart changed. **/
-	public static final String ON_CHART_UPDATE = "onChartUpdate";
-	
-	/** Identifies one picture added. **/
-	public static final String ON_PICTURE_ADD = "onPictureAdd";
-	/** Identifies the specified picture deleted. **/
-	public static final String ON_PICTURE_DELETE = "onPictureDelete";
-	/** Identifies the specified pciture changed. **/
-	public static final String ON_PICTURE_UPDATE = "onPictureUpdate";
-	
-	/** Identifies the change of a widget. */
-	public static final String ON_WIDGET_CHANGE = "onWidgetChange";
-
-	/** Identifies the move of a focus of other spreadsheet. Used in collaboration.*/
-	public static final String ON_FRIEND_FOCUS_MOVE = "onFriendFocusMove";
-	/** Identifies the deletion of a focus of other spreadsheet. Used in collaboration.*/
-	public static final String ON_FRIEND_FOCUS_DELETE = "onFriendFocusDelete";
-	
-	/** Identifies the deletion of a sheet. */
-	public static final String ON_SHEET_DELETE = "onSheetDelete";
-	/** Identifies the creation of a new sheet */
-	public static final String ON_SHEET_CREATE = "onSheetCreate";
-	/** Identifies the sheet name change */
-	public static final String ON_SHEET_NAME_CHANGE = "onSheetNameChange";
-	/** Identifies the sheet position change */
-	public static final String ON_SHEET_ORDER_CHANGE = "onSheetPosChange";
-	
 	/** Identifies no move direction when add or remove a range. */
 	public static final int MOVE_NO = 1000;
 	/** Identifies move direction as vertical(down or up) when add or remove a range. */
@@ -96,21 +60,8 @@ public class SSDataEvent extends Event implements Serializable {
 	public static final int MOVE_H = 1002;
 
 	private int _direction; //MOVE_NO, MOVE_V, MOVE_H
-	private String _password;
 	private Ref _rng; //the applied range
 	private Ref _org; //the original range
-	private Object _payload; //the payload of this event
-	
-	/**
-	 * Constructor of the SSDataEvent.
-	 * @param name event name
-	 * @param rng a reference to a range of cells.
-	 * @param payload payload of this event.
-	 */
-	public SSDataEvent(String name, Ref rng, Object payload) {
-		this(name, rng, null, MOVE_NO);
-		_payload = payload;
-	}
 	
 	/**
 	 * Constructor of the SSDataEvent.
@@ -142,12 +93,6 @@ public class SSDataEvent extends Event implements Serializable {
 		_direction = show ? 1 : 0;
 	}
 	
-	public SSDataEvent(String name, Ref rng, String password) {
-		super(name);
-		_rng = rng;
-		_password = password;
-	}
-	
 	public Ref getRef() {
 		return _rng;
 	}
@@ -164,20 +109,8 @@ public class SSDataEvent extends Event implements Serializable {
 		return _direction != 0;
 	}
 	
-	public boolean getProtect() {
-		return _password != null;
-	}
-	
-	public String getPassword() {
-		return _password;
-	}
-	
-	public Object getPayload() {
-		return _payload;
-	}
-	
 	public String toString() {
-		return "["+getName()+" -> "+_rng+","+_org+","+_payload+"]";
+		return "["+getName()+" -> "+_rng+","+_org+"]";
 	}
 	
 }

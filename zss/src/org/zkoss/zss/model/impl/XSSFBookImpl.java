@@ -17,29 +17,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.openxmlformats.schemas.officeDocument.x2006.docPropsVTypes.CTVariant;
-import org.openxmlformats.schemas.officeDocument.x2006.docPropsVTypes.CTVector;
-import org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.CTProperties;
-import org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.CTVectorLpstr;
-import org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.CTVectorVariant;
 import org.zkoss.lang.Classes;
 import org.zkoss.lang.Library;
-import org.zkoss.poi.POIXMLProperties;
+import org.zkoss.poi.hssf.record.formula.Ptg;
 import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.formula.FormulaParser;
 import org.zkoss.poi.ss.formula.FormulaType;
-import org.zkoss.poi.ss.formula.SheetNameFormatter;
 import org.zkoss.poi.ss.formula.WorkbookEvaluator;
-import org.zkoss.poi.ss.formula.ptg.Ptg;
 import org.zkoss.poi.ss.usermodel.Color;
 import org.zkoss.poi.ss.usermodel.Font;
 import org.zkoss.poi.ss.usermodel.FormulaEvaluator;
-import org.zkoss.poi.ss.usermodel.PictureData;
-import org.zkoss.poi.ss.usermodel.PivotCache;
-import org.zkoss.poi.ss.util.AreaReference;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 import org.zkoss.poi.xssf.usermodel.XSSFColor;
 import org.zkoss.poi.xssf.usermodel.XSSFEvaluationWorkbook;
@@ -55,6 +44,7 @@ import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zss.engine.Ref;
 import org.zkoss.zss.engine.RefBook;
+import org.zkoss.zss.engine.impl.RefBookImpl;
 import org.zkoss.zss.formula.DefaultFunctionResolver;
 import org.zkoss.zss.formula.FunctionResolver;
 import org.zkoss.zss.formula.NoCacheClassifier;
@@ -225,11 +215,6 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 		BookHelper.reevaluateAndNotify(this, last, all);
 	}
 	
-	@Override
-	public void deletePictureData(PictureData img) {
-		getAllPictures().remove(img);
-	}
-	
 	//--Workbook--//
 	@Override
 	public void removeSheetAt(int index) {
@@ -242,64 +227,11 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 
 	@Override
 	public void setSheetName(int index, String name) {
-		final String oldsheetname = getSheetName(index);
-		super.setSheetName(index, name);
 		if (_refBook != null) {
+			final String oldsheetname = getSheetName(index);
 			_refBook.setSheetName(oldsheetname, name);
 		}
-		for (XSSFSheet sheet : this) { //scan all sheets to change the possible reference
-			((SheetCtrl)sheet).whenRenameSheet(oldsheetname, name);
-		}
-		ranameSheetInAppXml(oldsheetname, name);
-	}
-
-	//rename sheet in app.xml(extended properties)
-	private void ranameSheetInAppXml(String oldsheetname, String name) {
-	    POIXMLProperties properties = getProperties(); //app.xml and custom.xml 
-
-		CTProperties ext = properties.getExtendedProperties().getUnderlyingProperties();
-		CTVectorVariant vectorv = ext.getHeadingPairs();
-		CTVector vector = vectorv.getVector();
-		CTVariant[] variants = vector.getVariantArray();
-		int sheetCount = -1;
-		int nameCount = -1;
-		for(int j = 0; j < variants.length; ++j) {
-			final CTVariant variant = variants[j];
-			if ((j & 1) == 0) { //string
-				String key = variant.getLpstr();
-				if ("Worksheets".equalsIgnoreCase(key)) {
-					final CTVariant variant2 = variants[++j];
-					sheetCount = variant2.getI4();
-				} else if ("Named Ranges".equalsIgnoreCase(key)) {
-					final CTVariant variant2 = variants[++j];
-					nameCount = variant2.getI4();
-				}
-			}
-		}
-		if (sheetCount >= 0 && nameCount >= 0) {
-			nameCount += sheetCount;
-		}
-		CTVectorLpstr vectorv2 = ext.getTitlesOfParts();
-		CTVector vector2 = vectorv2.getVector();
-		String[] lpstrs = vector2.getLpstrArray();
-		int j = 0;
-		for(; j < sheetCount; ++j) {
-			final String sname = lpstrs[j];
-			if (oldsheetname.equals(sname)) {
-				vector2.setLpstrArray(j, name);
-				j = sheetCount;
-				break;
-			}
-		}
-		final String o = SheetNameFormatter.format(oldsheetname);
-		final String n = SheetNameFormatter.format(name);
-		for(; j < nameCount; ++j) {
-			final String refname = lpstrs[j];
-			final String newrefname = refname.replace(o+"!", n+"!");
-			if (!newrefname.equals(refname)) {
-				vector2.setLpstrArray(j, newrefname);
-			}
-		}
+		super.setSheetName(index, name);
 	}
 
 	@Override
@@ -313,7 +245,7 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 			return BookHelper.getRepeatRowsAndColumns(ptgs);
 		}
 	}
-    public XSSFName getBuiltInName(String builtInCode, int sheetNumber) {
+    private XSSFName getBuiltInName(String builtInCode, int sheetNumber) {
     	final int sz  = getNumberOfNames();
     	for (int j = 0; j < sz; ++j) {
     		XSSFName name = getNameAt(j);
@@ -382,22 +314,6 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 		getOrCreateRefBook().setShareScope(scope);
 	}
 	
-	@Override
-	public Worksheet getWorksheet(String name) {
-		return (Worksheet) getSheet(name);
-	}
-	
-	@Override
-	public boolean isDate1904() {
-		return super.isDate1904();
-	}
-
-	@Override
-	public Worksheet getWorksheetAt(int index) {
-		return (Worksheet) getSheetAt(index);
-	}
-
-    
 	//--BookCtrl--//
 	@Override
 	public RefBook newRefBook(Book book) {
@@ -408,23 +324,14 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 	public Object nextSheetId() {
 		return getBookCtrl().nextSheetId();
 	}
-	
+
 	@Override
-	public String nextFocusId() {
-		return (String) getBookCtrl().nextFocusId();
+	public Worksheet getWorksheetAt(int index) {
+		return (Worksheet) getSheetAt(index);
 	}
 
 	@Override
-	public void addFocus(Object focus) {
-		getBookCtrl().addFocus(focus);
-	}
-
-	@Override
-	public void removeFocus(Object focus) {
-		getBookCtrl().removeFocus(focus);	}
-
-	@Override
-	public boolean containsFocus(Object focus) {
-		return getBookCtrl().containsFocus(focus);
+	public Worksheet getWorksheet(String name) {
+		return (Worksheet) getSheet(name);
 	}
 }

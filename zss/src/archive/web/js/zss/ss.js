@@ -27,7 +27,8 @@ zkS = {};
  * i want if scentance pass even val=0
  */
 zkS.t = function (val) {
-	return val || val === 0;
+	if(val || val===0) return true;
+	return false;
 };
 
 zkS._delayInit = false;/*should i init header and cell by dealy bath*/
@@ -94,33 +95,50 @@ zkS.doCallback = function (token) {
 	}
 };
 
+
 zkS.parentByZSType = function(el, type, pathlen) {
-	if (el) {
-		if (!(type instanceof Array))
-			type = [type];
-		var i = 0,
-			size = type.length, 
-			n = el;
-		for(; !!n; n = n.parentNode) {
-			if (!n.attributes) 
-				continue;
-			j = size;
-			while (j--) {
-				if (n.getAttribute('zs.t') == type[j])
-					return n;
-			}
-			if (pathlen && i++ > pathlen)
-				break;
+	var i = 0;
+	if (!(type instanceof Array))
+		type = [type];
+
+	var size,
+		$parent = zss.Util.$parent;
+
+	for (; el && el != document; el = $parent(el)) {
+		size = type.length;
+		for (var j = 0; j < size; j++) {
+			if (jq(el).attr('zs.t') == type[j])
+				return el;
 		}
+		if (pathlen && i++ > pathlen)
+			break;
 	}
 	return null;
 };
 
+
 zkS.copyParm = function (src, dest, parms) {
-	var i = parms.length;
-	while(i--)
+	var size = parms.length;
+	for(var i = 0; i < size; i++){
 		dest[parms[i]] = src[parms[i]];	
+	}
 };
+
+zkS.trimFirst = function (comp, tag) {
+	var node = comp.firstChild;
+	while(node && node.tagName!=tag){
+		comp.removeChild(node);
+		node = comp.firstChild;
+	}
+};
+zkS.trimLast = function (comp, tag) {
+	var node = comp.lastChild;
+	while(node && node.tagName != tag) {
+		comp.removeChild(node);
+		node = comp.lastChild;
+	}
+};
+
 
 /** Returns the data for onClick. */
 zkS._getMouseData = function (evt, target) {
@@ -146,9 +164,9 @@ zkS.isEvtKey = function (evt, flag) {
 
 
 /**
- * check to see if cmp has scroll bar
+ * check to see if cmp has scrollbal
  * @param {Object} cmp component to check
- * @param {Object} vert false to check horizontal, true for vertical
+ * @param {Object} vert false to check horizontal, ture for vertical
  * @return true or false.
  */
 zkS._hasScrollBar = function (cmp, vert) {
@@ -156,7 +174,7 @@ zkS._hasScrollBar = function (cmp, vert) {
 		client;
 	if(vert){
 		off = cmp.offsetWidth;
-		client = cmp.clientWidth;
+		client = cmp.clientWidth;  
 	}else{
 		off = cmp.offsetHeight;
 		client = cmp.clientHeight;  

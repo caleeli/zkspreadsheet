@@ -21,19 +21,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
-import org.zkoss.zk.ui.event.Events;
-import org.zkoss.zk.ui.event.ForwardEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zkplus.databind.BindingListModelList;
 import org.zkoss.zss.app.formula.FormulaMetaInfo;
 import org.zkoss.zss.app.formula.Formulas;
-import org.zkoss.zss.app.zul.Dialog;
-import org.zkoss.zss.app.zul.Zssapp;
 import org.zkoss.zss.app.zul.ctrl.DesktopWorkbenchContext;
-import org.zkoss.zss.ui.Position;
-import org.zkoss.zss.ui.Rect;
 import org.zkoss.zul.Button;
 import org.zkoss.zul.Combobox;
 import org.zkoss.zul.Label;
@@ -43,7 +38,6 @@ import org.zkoss.zul.ListitemRenderer;
 import org.zkoss.zul.Messagebox;
 import org.zkoss.zul.SimpleListModel;
 import org.zkoss.zul.Textbox;
-import org.zkoss.zul.Window;
 
 /**
  * @author Sam
@@ -53,7 +47,6 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 	
 	private final static String ALL = "All";
 	
-	private Dialog _insertFormulaDialog;
 	private Textbox searchTextbox;
 	private Button searchBtn;
 	
@@ -65,9 +58,6 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 	private Button okBtn;
 	
 	LinkedHashMap<String, List<FormulaMetaInfo>> formulaInfos;
-	
-	private int rowIdx;
-	private int colIdx;
 	
 	@Override
 	public void doAfterCompose(Component comp) throws Exception {
@@ -93,31 +83,8 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 				item.setLabel(info.getFunction());
 				item.setValue(info);
 			}
-
-			@Override
-			public void render(Listitem item, Object data, int index)
-					throws Exception {
-				render(item, data);
-			}
 		});
-		functionListbox.addEventListener(Events.ON_DOUBLE_CLICK, new EventListener() {
-			public void onEvent(Event event) throws Exception {
-				openComposeFormulaDialog();
-			}
-		});
-	}
-	
-	public void onOpen$_insertFormulaDialog(ForwardEvent evt) {
 		
-		Rect selection = (Rect) evt.getOrigin().getData();
-		
-		_insertFormulaDialog.setMode(Window.MODAL);
-		searchTextbox.setText(null);
-		initFunctionListbox();
-		searchTextbox.focus();
-		
-		rowIdx = selection.getTop();
-		colIdx = selection.getLeft();
 	}
 	
 	public void onSelect$categoryCombobox() {
@@ -147,27 +114,24 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 	}
 	
 	public void onClick$okBtn() {
-		openComposeFormulaDialog();
-	}
-	
-	private void openComposeFormulaDialog() {
 		Listitem item = (Listitem)functionListbox.getSelectedItem();
 		if (item == null) {
-			Messagebox.show("Select a function");
-			return;
+			try {
+				Messagebox.show("Select a function");
+				return;
+			} catch (InterruptedException e) {
+			}
 		}	
 		
 		FormulaMetaInfo info = (FormulaMetaInfo) item.getValue();
 		if (info.getRequiredParameter() == 0) {
-			getDesktopWorkbenchContext().getWorkbookCtrl().insertFormula(rowIdx, colIdx, "=" + info.getFunction() + "()");
+			getDesktopWorkbenchContext().getWorkbookCtrl().insertFormula("=" + info.getFunction() + "()");
 		} else {
-			info.setRowIndex(rowIdx);
-			info.setColIndex(colIdx);
 			getDesktopWorkbenchContext().getWorkbenchCtrl().
 				openComposeFormulaDialog((FormulaMetaInfo)item.getValue());
 		}
 
-		_insertFormulaDialog.fireOnClose(null);
+		self.detach();
 	}
 	
 	//TODO: shall I use echo event to showbusy, need to test speed 
@@ -203,6 +167,6 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 		functionListbox.setModel(new SimpleListModel(search(searchFor)));
 	}
 	protected DesktopWorkbenchContext getDesktopWorkbenchContext() {
-		return Zssapp.getDesktopWorkbenchContext(self);
+		return DesktopWorkbenchContext.getInstance(Executions.getCurrent().getDesktop());
 	}
 }

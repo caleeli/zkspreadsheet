@@ -1,6 +1,6 @@
 <zk>
 	<tabbox id="tabbox">
-		<tabs id="tabs" sclass="zssapp-tabs">
+		<tabs id="tabs">
 		</tabs>
 	</tabbox>
 	<menupopup id="sheetContextMenu">
@@ -8,7 +8,6 @@
 		<menuitem id="shiftSheetRight" label="${c:l('shiftRight')}" />
 		<menuitem id="deleteSheet" label="${c:l('delete')}"/>
 		<menuitem id="renameSheet" label="${c:l('rename')}"/>
-		<menuitem id="protectSheet" label="${c:l('sheet.protect')}" checkmark="true" autocheck="true"/>
-		<menuitem id="copySheet" label="${c:l('edit.copy')}" disabled="true"/>
+		<menuitem id="copySheet" label="${c:l('edit.copy')}"/>
 	</menupopup>
 </zk>

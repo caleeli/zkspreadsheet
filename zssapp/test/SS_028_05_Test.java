@@ -6,11 +6,11 @@ public class SS_028_05_Test extends SSAbstractTestCase {
     @Override
     protected void executeTest() {
     	//freeze some rows first
-    	click(jq("$viewMenu"));
+    	click("jq('$viewMenu button.z-menu-btn')");
     	waitResponse();
-    	mouseOver(jq("$freezeRows"));
+    	mouseOver(jq("$freezeRows a.z-menu-cnt-img"));
     	waitResponse();
-    	click(jq("$freezeRow5"));
+    	click("jq('$freezeRow5 a.z-menu-item-cnt')");
     	waitResponse();
     	// TODO: Verify correct row is frozen
     	verifyTrue(jq("div.zstopblock").width() != 0);

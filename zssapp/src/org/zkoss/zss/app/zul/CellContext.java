@@ -19,6 +19,7 @@ import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.IdSpace;
 import org.zkoss.zss.app.Consts;
 import org.zkoss.zss.app.zul.ctrl.CellStyleCtrlPanel;
+import org.zkoss.zss.app.zul.ctrl.DesktopWorkbenchContext;
 import org.zkoss.zul.Toolbarbutton;
 import org.zkoss.zul.Window;
 
@@ -34,13 +35,12 @@ public class CellContext extends Window implements IdSpace {
 
 	public CellContext() {
 		Executions.createComponents(Consts._CellContext_zul, this, null);
+		
 		Components.wireVariables(this, this, '$', true, true);
 		Components.addForwards(this, this, '$');
-		
 		setVisible(false);
 		setSclass("fastIconWin");
 		setVflex("min");
-		setWidth("220px");
 	}
 	
 	public void onClick$fontCtrlPanel() {
@@ -52,6 +52,6 @@ public class CellContext extends Window implements IdSpace {
 	}
 	
 	public void onClick$_mergeCellBtn() {
-		Zssapp.getDesktopWorkbenchContext(this).mergeCell();
+		DesktopWorkbenchContext.getInstance(Executions.getCurrent().getDesktop()).mergeCell();
 	}
 }

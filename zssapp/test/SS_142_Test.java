@@ -17,14 +17,13 @@ it will be useful, but WITHOUT ANY WARRANTY.
 public class SS_142_Test extends SSAbstractTestCase {
 	@Override
 	protected void executeTest() {
-		verifyFalse(jq("$_formatNumberDialog").isVisible());	
-		
 		rightClickCell(5,11);
 		click(jq("$format a.z-menu-item-cnt"));
 		waitResponse();
 		
 		//verify
-		verifyTrue(jq("$_formatNumberDialog").isVisible());		
+		String titleOfPopup =  jq(".z-window-highlighted.z-window-highlighted-shadow .z-window-highlighted-header").attr("textContent");
+		verifyEquals(titleOfPopup,"Number Format");		
 	}
 }
 

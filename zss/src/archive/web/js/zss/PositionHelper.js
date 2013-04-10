@@ -17,25 +17,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 }}IS_RIGHT
 */
 
-(function () {
-	
-	function setSize(obj, size, wrap) {
-		if (obj[4]) {//indicate use wrap size currently
-			if (wrap) {//no need to save original save
-				obj[1] = size;
-			} else {//use new size, remove original save
-				obj[1] = size;
-				obj[4] = null;
-			}
-		} else {
-			if (wrap) {
-				obj[4] = obj[1]; //save original custom size
-				obj[1] = size;
-			} else {
-				obj[1] = size;
-			}
-		}
-	}
+
 /**
  * PositionHelper for calculate pixel to column/row index or vice versa
  */
@@ -51,52 +33,12 @@ zss.PositionHelper = zk.$extends(zk.Object, {
 	updateDefaultSize: function (defaultSize) {
 		this.size = defaultSize;
 	},
-	getIncUnhidden: function (idx, limit) {
-		var customizedSize = this.custom,
-			size = customizedSize.length,
-			v0,
-			v1;
-		for(var j = 0; j < size && idx <= limit; ++j) {
-			v0 = customizedSize[j][0];
-			if (idx == v0) {
-				v1 = customizedSize[j][3]; //hidden: true
-				if (!v1) {//special size but not hidden, return
-					break;
-				} else {
-					++idx; //a hidden one, try next unhidden
-				}
-			} else if (idx < v0) { //normal case, return
-				break; 
-			}
-		}
-		return idx > limit ? -1 : idx;
-	},
-	getDecUnhidden: function (idx, limit) {
-		var customizedSize = this.custom,
-			size = customizedSize.length,
-			v0,
-			v1;
-		for(var j = size - 1; j >= 0 && idx >= limit; --j) {
-			v0 = customizedSize[j][0];
-			if (idx == v0) {
-				v1 = customizedSize[j][3]; //hidden: true
-				if (!v1) {//special size but not hidden, return
-					break;
-				} else {
-					--idx; //a hidden one, try next unhidden
-				}
-			} else if (idx > v0) { //normal case, return
-				break; 
-			}
-		}
-		return idx < limit ? -1 : idx;
-	},
 	/**
 	 * get cell index from a pixel
 	 * @param int px
 	 */
 	getCellIndex: function (px) {
-		if (px < 0) px = 0; //col1/row1 can be hidden...
+		if (px < 0) return 0;
 		var sum = 0,
 			sum2 = 0,
 			index = 0,
@@ -197,32 +139,6 @@ zss.PositionHelper = zk.$extends(zk.Object, {
 		}
 	},
 	/**
-	 * Returns whether cell's size is default or not
-	 * 
-	 * @param int index
-	 * @return boolean indicate whether is default size or not
-	 */
-	isDefaultSize: function (index) {
-		var defaultSize = this.size,
-			size = this._getCustomizedSize(index),
-			dif = Math.abs(size - defaultSize);
-		if (Math.abs(size - defaultSize) > 1) { //default height tolerate range
-			return false;
-		}
-		return true;
-	},
-	_getCustomizedSize: function (index) {
-		var customizedSize = this.custom,
-			i = customizedSize.length;
-		while (i--) {
-			if (index == customizedSize[i][0]) {
-				//if use wrap size, the original size is save at [4]
-				return customizedSize[i][4] ? customizedSize[i][4] : customizedSize[i][1];	
-			}
-		}
-		return this.size;
-	},
-	/**
 	 * Returns the size of the cell
 	 * @param int cellIndex
 	 * @return int size
@@ -262,24 +178,24 @@ zss.PositionHelper = zk.$extends(zk.Object, {
 	 * @param int size
 	 * @param string id
 	 * @param boolean hidden
-	 * @param boolean wrap
 	 */
-	setCustomizedSize: function (cellIndex, size, id, hidden, wrap) {
+	setCustomizedSize: function (cellIndex, size, id, hidden) {
 		var customizedSize = this.custom,
-			defaultSize = this.size,
-			s = 0,
+			defaultSize = this.size;
+
+		var s = 0,
 			e = customizedSize.length;
 		if (e == 0) {
-			this._insert(0, cellIndex, size, id, hidden, wrap);
+			this._insert(0,cellIndex,size,id,hidden);
 			return;
 		}
 		var i;
 		while (s < e) {//binary search
 			i = s + Math.floor((e - s) / 2);
 			if (customizedSize[i][0] == cellIndex) {
+				customizedSize[i][1] = size;
 				customizedSize[i][2] = id;
 				customizedSize[i][3] = hidden;
-				setSize(customizedSize[i], size, wrap);
 				return;
 			} else if (customizedSize[i][0] > cellIndex) {
 				e = i - 1;
@@ -288,17 +204,17 @@ zss.PositionHelper = zk.$extends(zk.Object, {
 			}
 			if (e == s) {
 				if (e >= customizedSize.length || customizedSize[e][0] > cellIndex) {
-					this._insert(e, cellIndex, size, id, hidden, wrap);
+					this._insert(e, cellIndex, size, id, hidden);
 				} else if (customizedSize[e][0] == cellIndex) {
+					customizedSize[e][1] = size;
 					customizedSize[e][2] = id;
 					customizedSize[e][3] = hidden;
-					setSize(customizedSize[e], size, wrap);
 				} else {
-					this._insert(e + 1, cellIndex, size, id, hidden, wrap);
+					this._insert(e + 1, cellIndex, size, id, hidden);
 				}
 				break;
 			} else if (e < s) {
-				this._insert(s, cellIndex, size, id, hidden, wrap);
+				this._insert(s, cellIndex, size, id, hidden);
 			}
 		}
 	},
@@ -350,26 +266,21 @@ zss.PositionHelper = zk.$extends(zk.Object, {
 			customizedSize.push.apply(customizedSize, tail);
 		}
 	},
-	_insert: function(index, cellIndex, size, id, hidden, wrap) {
-		var customizedSize = this.custom,
-			obj = [cellIndex, size, id, hidden];
-		if (wrap) {
-			obj[4] = this.size; // original default size
-		}
+	_insert: function(index, cellIndex,size, id, hidden) {
+		var customizedSize = this.custom;
 		if (customizedSize.length == 0) {
-			customizedSize.push.apply(customizedSize, [obj]);
+			customizedSize.push.apply(customizedSize, [[cellIndex, size, id, hidden]]);
 			return;
 		}
 		if (index == 0) {
-			customizedSize.unshift(obj);
+			customizedSize.unshift([cellIndex, size, id, hidden]);
 		} else if(index > customizedSize.length) {
-			customizedSize.push.apply(customizedSize, [obj]);
+			customizedSize.push.apply(customizedSize, [[cellIndex, size, id, hidden]]);
 		} else {
 			var tail = customizedSize.slice(index, customizedSize.length);
 			customizedSize.length = index;
-			customizedSize.push.apply(customizedSize, [obj]);
+			customizedSize.push.apply(customizedSize, [[cellIndex, size, id, hidden]]);
 			customizedSize.push.apply(customizedSize, tail);
 		}
 	}
 });
-})();

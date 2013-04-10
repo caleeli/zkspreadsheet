@@ -117,7 +117,7 @@ public class CellVisitorContext {
 	}
 	
 	public String getFontColor() {
-		String color = BookHelper.getFontHTMLColor(getOrCreateCell(), getFont());
+		String color = BookHelper.getFontHTMLColor(book, getFont());		
 		return color == null || BookHelper.AUTO_COLOR.equals(color) ? "#000000" : color;
 	}
 
@@ -127,14 +127,6 @@ public class CellVisitorContext {
 	 */
 	public short getAlignment() {
 		return getOrCreateCell().getCellStyle().getAlignment();
-	}
-	
-	/**
-	 * Returns the cell's vertical alignment
-	 * @return the cell's alignment
-	 */
-	public short getVerticalAlignment() {
-		return getOrCreateCell().getCellStyle().getVerticalAlignment();
 	}
 	
 	/**
@@ -183,9 +175,5 @@ public class CellVisitorContext {
 	
 	public short getFormatIndex() {
 		return getCellStyle().getDataFormat();
-	}
-	
-	public boolean getLocked() {
-		return getCellStyle().getLocked();
 	}
 }

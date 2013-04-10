@@ -20,7 +20,7 @@ Copyright (C) 2002-2006 Potix Corporation. All Rights Reserved.
 		<arg value="${bin.dir}/genprop"/>
 		<arg value="-x"/>
 		<arg value="${src.mesg.dir}"/>
-		<arg value="${src.dir}"/>
+		<arg value="${codegen.dir}"/>
 	</exec>
 </target>
 
@@ -28,10 +28,6 @@ Copyright (C) 2002-2006 Potix Corporation. All Rights Reserved.
 <!-- COMPILE -->
 <!-- ======= -->
 <target name="compile" depends="codegen.mesg" if="compile.required">
-	<!--copy cmllib/zkex.jar to /dist/jar-->
-	<copy todir="${dist.lib.dir}" preservelastmodified="yes" failonerror="false" quiet="true">
-		<fileset dir="../cmllib" includes="*.jar"/>
-	</copy>
 	<mkdir dir="${out.dir}"/>
 	<available file="srcdpc" property="srcdpc.dir" value="srcdpc"/>
 	<property name="srcdpc.dir" value=""/>
@@ -43,9 +39,7 @@ Copyright (C) 2002-2006 Potix Corporation. All Rights Reserved.
 	<property name="srcooxml.dir" value=""/>
 	<available file="srcscratchpad" property="srcscratchpad.dir" value="srcscratchpad"/>
 	<property name="srcscratchpad.dir" value=""/>
-	<available file="srcresources" property="srcresources.dir" value="srcresources"/>
-	<property name="srcresources.dir" value=""/>
-	<javac srcdir="${src.dir}:${codegen.dir}:${srcdpc.dir}:${srcjava.dir}:${srcooxml.dir}:${srcscratchpad.dir}:${srcresources.dir}" destdir="${out.dir}"
+	<javac srcdir="${src.dir}:${codegen.dir}:${srcdpc.dir}:${srcjava.dir}:${srcooxml.dir}:${srcscratchpad.dir}" destdir="${out.dir}"
 	 debug="${debug}" optimize="${optimize}" encoding="UTF-8"
 	 target="${target.version}" deprecation="${deprecation}" source="${source.version}"/>
 	<javac srcdir="${src.dir}:${srcpv.dir}" destdir="${out.dir}"
@@ -170,47 +164,16 @@ if="deploy.jboss.required">
 		<arg value="${codegen.archive.dir}/${zipcss}"/>
 	</exec>
 	
-	<!-- for zpoi -->
 	<copy todir="${codegen.archive.dir}" preservelastmodified="yes" failonerror="false">
-		<fileset dir="srcresources" includes="**/functionMetadata*.txt"/>
+		<fileset dir="srcjava" includes="**/functionMetadata*.txt"/>
 	</copy>
 	
-	<!-- for zsshtml -->
-	<copy todir="${codegen.archive.dir}" preservelastmodified="yes" failonerror="false">
-		<fileset dir="src" includes="**/excelStyle.css"/>
-	</copy>
-	
-	<!-- for zssex -->
-	<copy todir="${codegen.archive.dir}" preservelastmodified="yes" failonerror="false">
-		<fileset dir="srcpv" includes="zssPublicCert.store"/>
-		<fileset dir="srcpv" includes="**/Resources.properties"/>
-	</copy>
-
 	<jar jarfile="${out.dir}/${jar.name}" manifest="${manifest.mf}">
 		<fileset dir="${out.dir}" excludes="${exclude.list}"/>
 		<fileset dir="${src.archive.dir}" includes="**"
 		 excludes="META-INF/MANIFEST.MF, ${zipjs}/**, ${zipcss}/**"/>
 		<fileset dir="${codegen.archive.dir}" includes="**"
 		 excludes="META-INF/MANIFEST.MF"/>
-	</jar>
-</target>
-<target name="build.jar2" depends="build.jar" if="build.jar2.required">
-	<!-- for zsshtml -->
-	<copy todir="${codegen.archive.dir}" preservelastmodified="yes" failonerror="false">
-		<fileset dir="src" includes="**/excelStyle.css"/>
-	</copy>
-	
-	<!-- for zssex -->
-	<copy todir="${codegen.archive.dir}" preservelastmodified="yes" failonerror="false">
-		<fileset dir="srcpv" includes="zssPublicCert.store"/>
-		<fileset dir="srcpv" includes="**/Resources.properties"/>
-	</copy>
-	<jar jarfile="${out.dir}/${jar2.name}" manifest="${manifest.mf}">
-		<fileset dir="${out.dir}" excludes="${exclude.list}"/>
-		<fileset dir="${src.archive.dir}" includes="**"
-		 excludes="META-INF/MANIFEST.MF, ${zipjs}/**, ${zipcss}/**"/>
-		<fileset dir="${codegen.archive.dir}" includes="**"
-		 excludes="META-INF/MANIFEST.MF, **/*.src.js"/>
 	</jar>
 </target>
 <target name="build.jad" depends="compile" if="build.jad.required">
@@ -295,7 +258,7 @@ if="deploy.jboss.required">
 </target>
 
 <target name="build"
- depends="config.build, build.war, build.jad, build.jar, build.jar2, build.ear, deploy">
+ depends="config.build, build.war, build.jad, build.jar, build.ear, deploy">
 </target>
 
 <!-- ===== -->
@@ -311,7 +274,6 @@ if="deploy.jboss.required">
 	<delete quiet="true" dir="${tmp.dir}"/>
 	<delete quiet="true" dir="${outv.dir}"/>
 	<delete quiet="true" dir="${codegen.dir}"/>
-	<delete quiet="true" dir="target"/>
 	<delete quiet="true">
 		<fileset dir="${dist.lib.dir}" includes="${xar.name}, ${jad.name}"/>
 		<!--fileset dir="${jboss.lib.dir}" includes="${xar.name}"/-->

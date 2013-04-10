@@ -20,12 +20,10 @@ package org.zkoss.zss.app;
  */
 public class Consts {
 
-	public static String _Zssapp_zul = "~./zssapp/html/zssapp.zul";
-	public static String _SheetPanel_zul = "~./zssapp/html/sheets.zul";
 	public static String _CellStylePanel_zul = "~./zssapp/html/cellStylePanel.zul";
 	
 	/*File zul*/
-	public static String _OpenFile_zul = "~./zssapp/html/dialog/file/fileListOpen.zul";
+	public static String _FileListOpen_zul = "~./zssapp/html/dialog/file/fileListOpen.zul";
 	public static String _ImportFile_zul = "~./zssapp/html/dialog/file/importFile.zul";
 	public static String _SaveFile_zul = "~./zssapp/html/dialog/file/saveFile.zul";
 	
@@ -45,19 +43,17 @@ public class Consts {
 	public static String _ViewMenu_zul = "~./zssapp/html/menu/viewMenu.zul";
 	public static String _InsertMenu_zul = "~./zssapp/html/menu/insertMenu.zul";
 	
+	/*Spreadsheet zul*/
+	public static String _SheetPanel_zul = "~./zssapp/html/sheets.zul";
+	
 	/*Dialog zul*/
+	public static String _InsertFormulaDialog_zul = "~./zssapp/html/dialog/insertFormula.zul";
 	public static String _InsertFormulaDialog2_zul = "~./zssapp/html/dialog/insertFormulaDialog.zul";
 	public static String _InsertHyperlinkDialog_zul = "~./zssapp/html/dialog/hyperlink/insertHyperlink.zul";
 	public static String _PasteSpecialDialog_zul = "~./zssapp/html/dialog/pasteSpecialWindow.zul";
 	public static String _ComposeFormulaDialog_zul = "~./zssapp/html/dialog/composeFormulaDialog.zul";
 	public static String _FormatNumberDialog_zul = "~./zssapp/html/dialog/formatNumber.zul";
 	public static String _HeaderSize_zul = "~./zssapp/html/dialog/headerSize.zul";
-	public static String _RenameDialog_zul = "~./zssapp/html/renameDlg.zul";
-	public static String _CustomSortDialog_zul = "~./zssapp/html/dialog/customSort.zul";
-	public static String _ExportToPDF_zul = "~./zssapp/html/dialog/exportToPDF.zul";
-	public static String _ExportToHTML_zul = "~./zssapp/html/dialog/exportToHTML.zul";
-	public static String _AutoFilter_zul = "~./zssapp/html/dialog/autoFilter.zul";
-	public static String _InsertWidgetAtDialog_zul = "~./zssapp/html/dialog/insertWidgetAtDialog.zul";
 
 	/* Key */
 	public static String KEY_ARG_FORMULA_METAINFO = "KEY_ARG_FORMULA_METAINFO";

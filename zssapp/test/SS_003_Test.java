@@ -1,19 +1,16 @@
+import org.zkoss.ztl.JQuery;
 
 
 public class SS_003_Test extends SSAbstractTestCase {
 
-	/**
-	 * Open file dialog
-	 */
     @Override
     protected void executeTest() {
-    	verifyFalse(isWidgetVisible("$_openFileDialog"));
-    	
-    	click("$fileMenu");
+    	click("jq('$fileMenu button.z-menu-btn')");
     	waitResponse();
-    	click("$openFile");
+    	click("jq('$openFile a.z-menu-item-cnt')");
     	waitResponse();
     	
-    	verifyTrue(isWidgetVisible("$_openFileDialog"));
+    	// TODO verify if open file window is opened
+    	verifyTrue(widget(jq("$fileOpenWin div.z-window-highlighted-header")).exists());
     }
 }

@@ -1,5 +1,4 @@
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.Test;
@@ -29,7 +28,6 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
                 windowFocus();
                 waitResponse();
                 windowMaximize();
-                sleep(2000L);
                 waitResponse();
                 executeTest();
             }catch(Exception e){
@@ -50,193 +48,27 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * @return
      */
     public String getCellStyle(int col, int row){
-    	if (isIE6() || isIE7()) {
-    		return getSpecifiedCell(col, row).attr("style");
-    	}
-    	return jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"]").first().attr("style")
-    	+jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"] div").first().attr("style");
-    }
-    
-    public String getCellBackgroundColor(int col, int row) {
-    	return getSpecifiedCellOuter(col, row).css("background-color");
-    }
-    
-    public String getCellFontFamily(int col, int row) {
-    	String font = getSpecifiedCell(col, row).css("font-family");
-    	return font != null ? font.replaceAll("'", "") : "";
-    }
-    
-    public String getCellFontColor(int col, int row) {
-    	String color = getSpecifiedCell(col, row).css("color");
-    	return color;
-    }
-    
-    public final static int BORDER_TOP = 0;
-    public final static int BORDER_RIGHT = 1;
-    public final static int BORDER_BOTTOM = 2;
-    public final static int BORDER_LEFT = 3;
-
-    public String getCellBorderStyle(JQuery cell, int borderType) {
-    	String style = cell.attr("style");
-    	
-    	int startIdx = -1;
-    	int borderLength = 0;
-    	switch (borderType) {
-    	case BORDER_TOP:
-    		borderLength = "border-top:".length();
-    		startIdx = Math.max(style.indexOf("border-top:"), style.indexOf("BORDER-TOP:"));
-    		break;
-    	case BORDER_RIGHT:
-    		borderLength = "border-right:".length();
-    		startIdx = Math.max(style.indexOf("border-right:"), style.indexOf("BORDER-RIGHT:"));
-    		break;
-    	case BORDER_BOTTOM:
-    		borderLength = "border-bottom:".length();
-    		startIdx = Math.max(style.indexOf("border-bottom:"), style.indexOf("BORDER-BOTTOM:"));
-    		break;
-    	case BORDER_LEFT:
-    		borderLength = "border-right:".length();
-    		startIdx = Math.max(style.indexOf("border-right:"), style.indexOf("BORDER-RIGHT:"));
-    		break;
-    	}
-    	
-		if (startIdx < 0)
-			return "";
-    	int endIdx = style.indexOf(";", startIdx);
-    	endIdx = endIdx > 0 ? endIdx : style.length();
-    	return style.substring(startIdx + borderLength, endIdx).trim();
-    }
-    
-    public String getCellBorderStyle(int col, int row, int borderType) {
-    	return getCellBorderStyle(getSpecifiedCellOuter(col, row), borderType);
-    }
-    
-    public String getCellFontAlign(int col, int row) {
-    	return getSpecifiedCell(col, row).css("text-align");
-    }
-    
-
-//    /**
-//     * Set cell font color by top toolbar button
-//     * 
-//     * @param lCol
-//     * @param tRow
-//     * @param rCol
-//     * @param bRow
-//     * @param nthColorPalette
-//     * @return
-//     */
-//    public String setCellFontColorByToolbarbutton(int lCol, int tRow, int rCol, int bRow, int nthColorPalette) {
-//    	click(jq("$fontCtrlPanel $fontColorBtn"));
-//    	click(jq());
-//    }
-    public String setCellFontColorByToolbarbutton(int col, int row, int nthColorPalette) {
-    	return setCellFontColorByToolbarbutton(col, row, col, row, nthColorPalette);
-    }
-    
-    public String setCellFontColorByToolbarbutton(int lCol, int tRow, int rCol, int bRow, int nthColorPalette) {
-    	selectCells(lCol, tRow, rCol, bRow);
-    	click(jq("$fontCtrlPanel $fontColorBtn"));
-        JQuery color = jq(".z-colorpalette:visible div.z-colorpalette-colorbox:nth-child(" + nthColorPalette + ")");
-        String selectedColor = color.first().text();
-    	mouseOver(color);
-    	click(color);
-    	waitResponse();
-    	return selectedColor;
-    }
-    
-    public String setCellBackgroundColorByToolbarbutton(int col, int row, int nthColorPalette) {
-    	return setCellBackgroundColorByToolbarbutton(col, row, col, row, nthColorPalette);
-    }
-    
-    public String setCellBackgroundColorByToolbarbutton(int lCol, int tRow, int rCol, int bRow, int nthColorPalette) {
-    	selectCells(lCol, tRow, rCol, bRow);
-    	click(jq("$fontCtrlPanel $cellColorBtn"));
-        JQuery color = jq(".z-colorpalette:visible div.z-colorpalette-colorbox:nth-child(" + nthColorPalette + ")");
-        String selectedColor = color.first().text();
-    	mouseOver(color);
-    	click(color);
-    	waitResponse();
-    	return selectedColor;
-    }
-    
-    /**
-     * Sets cell font color by fast toolbar button
-     */
-    public String setCellFontColorByFastToolbarbutton(int lCol, int tRow, int rCol, int bRow, int nthColorPalette) {
-    	rightClickCells(lCol, tRow, rCol, bRow);
-    	click("$cellContext $fontCtrlPanel:visible $fontColorBtn");
-    	
-        JQuery color = jq(".z-colorpalette:visible div.z-colorpalette-colorbox:nth-child(" + nthColorPalette + ")");
-        String selectedColor = color.first().text();
-    	mouseOver(color);
-    	click(color);
-    	waitResponse();
-    	return selectedColor;
-    }
-    
-    public String setCellBackgroundColorByFastToolbarbutton(int lCol, int tRow, int rCol, int bRow, int nthColorPalette) {
-    	rightClickCells(lCol, tRow, rCol, bRow);
-    	click("$cellContext $fontCtrlPanel:visible $cellColorBtn");
-    	
-        JQuery color = jq(".z-colorpalette:visible div.z-colorpalette-colorbox:nth-child(" + nthColorPalette + ")");
-        String selectedColor = color.first().text();
-    	mouseOver(color);
-    	click(color);
-    	waitResponse();
-    	return selectedColor;
-    }
-    
-    public String setCellBackgroundColorByFastToolbarbutton(int col, int row, int nthColorPalette) {
-    	return setCellBackgroundColorByFastToolbarbutton(col, row, col, row, nthColorPalette);
-    }
-    
-    /**
-     * Sets cell font color
-     * 
-     * @param col
-     * @param row
-     * @param nthColorPalette
-     * @return
-     */
-    public String setCellFontColorByFastToolbarbutton(int col, int row, int nthColorPalette) {
-    	return setCellFontColorByFastToolbarbutton(col, row, col, row, nthColorPalette);
+    	return jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"]").attr("style")
+    	+jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"] div").attr("style");
     }
     
     public static final String CELL_WITHOUT_STYLE = "rgba(0, 0, 0, 0):Arial:left";
-    public static final String CELL_WITHOUT_STYLE2 = "transparent:Arial:left";
     
     /**
      * 
      * Get some style related property of a cell. Including background-color, font-family, text-align
-     * "rgba(0, 0, 0, 0):Arial:left" or "transparent:Arial:left" is the value for cleared style
+     * "rgba(0, 0, 0, 0):Arial:left" is the value for cleared style
      * @param col
      * @param row
      * @return
      */
     public String getCellCompositeStyle(int col, int row){
     	String result ="";
-    	if (isIE6() || isIE7()) {
-    		result += getCellBackgroundColor(col, row);
-    		result += (":" + getCellFontFamily(col, row));
-    		result += (":" + getCellFontAlign(col, row));
-    		return result;
-    	}
-    	
     	result += jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"]").css("background-color");
     	result += ":"+jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"] div").css("font-family");
     	result += ":"+jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"] div").css("text-align");
     	return result;
     }
-    
-//    public boolean isDefaultCellStyle(int row, int col) {
-//    	
-//    }
-//    
-//    public boolean isSameCellStyle() {
-//    	
-//    }
-    
     /**
      * 
      * @param col - Base on 0
@@ -244,54 +76,9 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * @return A JQuery object of cell. (Inner div)
      */
     public JQuery getSpecifiedCell(int col, int row) {
-    	if (isIE6() || isIE7()) {
-    		JQuery r = getRow(row);
-    		JQuery cell = r.children().eq(col);
-    		return cell.children().first();
-    	}
-    	return jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"] div").first();	
+        return jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"] div");
     }
-    
-    public String getCellTextColor(int col, int row) {
-    	String cellStyle = getCellStyle(col, row);
-    	cellStyle = cellStyle.replaceAll(" ", "");
-    	int startIdx = Math.max(cellStyle.indexOf(";color:"), cellStyle.indexOf(";COLOR:"));
-    	return startIdx >=0 ? cellStyle.substring(startIdx + 1, cellStyle.indexOf(";", startIdx + ";color:".length())) : "";
-    }
-    
-//    public String getCellBackground(int col, int row) {
-//    	
-//    }
 
-    private boolean isFF3(){
-    	String ffVer = String.valueOf(getEval("zk.ff"));
-    	return ffVer.startsWith("3");
-    }
-    
-    protected boolean isIE() {
-    	String ieVer = String.valueOf(getEval("zk.ie"));
-    	return ieVer != null && ieVer.length() > 0;
-    }
-    
-    protected boolean isIE7() {
-    	return isIE() && isIE(7);
-    }
-    protected boolean isIE6() {
-    	return isIE() && isIE(6);
-    }
-    
-    protected boolean isIE(int version) {
-    	if (!isIE())
-    		return false;
-    	Integer ver = null;
-    	try {
-    		ver = Integer.valueOf(getEval("zk.ie"));
-    	} catch (NumberFormatException ex) {
-    		return false;
-    	}
-    	return ver != null && ver == version;
-    }
-    
     /**
      * 
      * @param col - Base on 0
@@ -299,8 +86,6 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * @return A JQuery object of cell Outer div.
      */    
     public JQuery getSpecifiedCellOuter(int col, int row) {
-    	if (isIE6() || isIE7())
-    		return getSpecifiedCell(col, row).parent();
         return jq("div.zscell[z\\\\.c=\"" + col + "\"][z\\\\.r=\"" + row + "\"]");
     }
 
@@ -310,10 +95,6 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * @return A JQuery object of column header.
      */
     public JQuery getColumnHeader(int col) {
-    	if (isIE6() || isIE7()) {
-    		JQuery cols =  jq("div.zstopcell");
-    		return cols.eq(col);
-    	}
         return jq("div.zstopcell[z\\\\.c=\"" + col + "\"] div");
     }
     
@@ -323,76 +104,18 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * @return A JQuery object of row header.
      */
     public JQuery getRowHeader(int row) {
-    	if (isIE6() || isIE7()) {
-    		JQuery rows = jq("div.zsleftcell");
-    		return rows.eq(row);
-    	}
        return jq("div.zsleftcell[z\\\\.r=\"" + row + "\"] div"); 
     }
     
-    public String getCellText(int col, int row) {
-    	if (isFF3() || isIE()) {
-    		JQuery cell = getSpecifiedCell(col, row).children().children();
-    		Iterator<JQuery> i = cell.iterator();
-    		while (i.hasNext()) {
-    			JQuery j = i.next();
-    			if (!j.isVisible())
-    				continue;
-    			String str = j.text();
-    			if (str != null && str.length() > 0) {
-    				return str;
-    			}
-    		}
-    		return "";
-    	}
-    	return getSpecifiedCell(col, row).text();
-    }
-    
-    public String getCellText(JQuery cellLocator) {
-    	if (isFF3() || isIE()) {
-    		JQuery cell = cellLocator.children().children();
-    		Iterator<JQuery> i = cell.iterator();
-    		while (i.hasNext()) {
-    			JQuery j = i.next();
-    			if (!j.isVisible())
-    				continue;
-    			String str = j.text();
-    			if (str != null && str.length() > 0) {
-    				return str;
-    			}
-    		}
-    		return "";
-    	}
+    public String getCellContent(JQuery cellLocator) {
         return cellLocator.text();
     }
     
-    /**
-     * {@link Deprecated}
-     * 
-     * @param cellLocator
-     */
     public void clickCell(JQuery cellLocator) {
-    	//works for FF3,
-    	mouseMoveAt(cellLocator, "4,4");
-    	waitResponse();
-        mouseDownAt(cellLocator, "4,4");
+        mouseDownAt(cellLocator, "1,2");
         waitResponse();
-        mouseUpAt(cellLocator, "4,4");
+        mouseUpAt(cellLocator, "1,2");
         waitResponse();
-        
-//        mouseDown(cellLocator);
-//        waitResponse();
-//        mouseUp(cellLocator);
-//        waitResponse();
-    }
-    
-    public void dragFill(int srcCol, int srcRow, int targetCol, int targetRow) {
-    	focusOnCell(srcCol, srcRow);
-    	mouseOver(jq(".zsseldot"));
-    	mouseDownAt(jq(".zsseldot"), ""+ 1 + "," + 1);
-    	mouseMoveAt(getSpecifiedCell(targetCol, targetRow), "2,2");
-    	mouseUpAt(getSpecifiedCell(targetCol, targetRow), "2,2");
-    	waitResponse();
     }
     
     public void rightClickCell(JQuery cellLocator) {
@@ -438,16 +161,19 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * @param column: 0-based
      * @param row: 0-based
      */
-    public JQuery rightClickCell(int column, int row){
-    	JQuery cell = getSpecifiedCell(column, row);
-		mouseDownAt(cell,"4,4");
-		mouseUpAt(cell,"4,4");
+    public void rightClickCell(int column, int row){
+		mouseDownAt(getSpecifiedCell(column, row),"2,2");
 		waitResponse();
-		mouseDownAt(cell,"4,4");
-		mouseUpAt(cell,"4,4");
-		contextMenuAt(cell, "4,4");
+		mouseUpAt(getSpecifiedCell(column, row),"2,2");
 		waitResponse();
-		return cell;
+	
+		mouseDownAt(getSpecifiedCell(column, row),"2,2");
+		waitResponse();
+		mouseUpAt(getSpecifiedCell(column, row),"2,2");
+		waitResponse();
+
+		contextMenuAt(getSpecifiedCell(column, row), "2,2");
+		waitResponse();
     }
 
     /**
@@ -458,50 +184,18 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * @param bottom: row number of right bottom cell, 0-based
      */
     public void selectCells(int left, int top, int right, int bottom) {
-    	//It's necessary to duplicate mouseDownAt target cell,
-    	//because the first time may not really focused on target cell,
-    	//but focus on cell A1
-		mouseDownAt(getSpecifiedCell(left, top),"4,4");
+		mouseDownAt(getSpecifiedCell(left, top),"2,2");
 		waitResponse();
-		mouseUpAt(getSpecifiedCell(left, top),"4,4");
+		mouseUpAt(getSpecifiedCell(left, top),"2,2");
 		waitResponse();
 	
-		mouseDownAt(getSpecifiedCell(left, top),"4,4");
+		mouseDownAt(getSpecifiedCell(left, top),"2,2");
 		waitResponse();
-		mouseMoveAt(getSpecifiedCell(right, bottom),"4,4");
+		mouseMoveAt(getSpecifiedCell(right, bottom),"2,2");
 		waitResponse();
-		mouseUpAt(getSpecifiedCell(right, bottom),"4,4");
+		mouseUpAt(getSpecifiedCell(right, bottom),"2,2");
 		waitResponse();
     }
-    
-    public JQuery focusOnCell(int left, int top) {
-    	selectCells(left, top, left, top);
-    	return getSpecifiedCell(left, top);
-    }
-    
-    public boolean isFocusOnCell(int left, int top) {
-    	return isFocusOnCell(getSpecifiedCell(left, top));
-    }
-    
-    public boolean isFocusOnCell(JQuery cell) {
-    	boolean isDisplayFocus = jq("div.zsscroll .zsdata .zsselect").isVisible();
-    	int[] cellOffset = cell.zk().revisedOffset();
-    	int[] focusOffset = jq("div.zsselect").zk().revisedOffset();
-    	
-    	//tested on chrome only
-    	return isDisplayFocus && 
-    		(cellOffset[0] - 4 == focusOffset[0]) &&
-    		(cellOffset[1] - 2 == focusOffset[1]);
-    }
-    
-    public boolean isFocusVisible() {
-    	return jq("div.zsscroll .zsdata .zsselect").isVisible();
-    }
-    
-    public boolean isHighlighVisible() {
-    	return jq("div.zsscroll .zsdata .zshighlight").isVisible();
-    }
-    
     /**
      * 
      * @param left: column number of left top cell, 0-based
@@ -558,19 +252,6 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
 		waitResponse();
     }
     
-    /**
-     * Returns number string, remove all others
-     * @param val
-     * @return
-     */
-    public String numberOnly(String val) {
-    	return val.replaceAll("[^0-9]", "");
-    }
-    
-    public boolean containsIgnoreCase(String source, String target) {
-    	return source.toUpperCase().contains(target.toUpperCase());
-    }
-    
     public Map<String, String> getCellStyleMap(JQuery cellLocator) {
         Map<String, String> styleMap = new HashMap<String, String>();
         String[] style1 = null;
@@ -602,135 +283,4 @@ public abstract class SSAbstractTestCase extends ZKClientTestCase {
      * Note: You also have to implement your validation in this method.
      */
     protected abstract void executeTest();
-    
-    /**
-     * Returns whether widget is exist and visible 
-     * @param selector
-     * @return
-     */
-    public boolean isWidgetVisible(String selector) {
-    	return widget(jq(selector)).exists() && jq(selector).isVisible();
-    }
-    
-    /**
-     * Click dropdown button at nth-menu
-     * @param selector
-     */
-    public void clickDropdownButtonMenu(String buttonSelector, int nthIndex) {
-    	JQuery jq = jq(buttonSelector);
-    	mouseOver(jq);
-    	clickAt(jq, "30, 0");
-    	click(jq(".z-menu-popup:visible .z-menu-item:eq(" + nthIndex + ")"));
-    	waitResponse();
-    }
-    
-    /**
-     * Click dropdown button at menu
-     * @param selector
-     * @param string
-     */
-    public void clickDropdownButtonMenu(String buttonSelector, String menuLabel) {
-    	JQuery jq = jq(buttonSelector);
-    	mouseOver(jq);
-    	clickAt(jq, "30, 0");
-    	waitResponse();
-    	JQuery menus = jq(".z-menu-popup:visible .z-menu-item .z-menu-item-cnt");
-    	int size = menus.length();
-    	if (size == 0)
-    		throw new RuntimeException("menu item not found: " + menuLabel);
-    	for (int i = 0; i < size; i++) {
-    		JQuery menu = jq(".z-menu-popup:visible .z-menu-item .z-menu-item-cnt:eq(" + i + ")");
-    		if (menu.text().indexOf(menuLabel) >= 0) {
-    			click(menu.parent());
-    			return;
-    		}
-    	}
-    	throw new RuntimeException("menu item not found: " + menuLabel);
-    }
-    
-    /**
-     * Returns row JQuery elements
-     * @param row - Base on 0
-     * @return A JQuery object of row.
-     */
-    public JQuery getRow(int row) {
-    	if (isIE6() || isIE7()) {
-    		JQuery r = jq(".zsscroll .zsblock").children().eq(row);
-    		if (r.length() >= 1)
-    			return r;
-    	}
-    	return jq(".zsscroll div.zsrow[z\\\\.r=\"" + row + "\"]"); //IE7 does not work
-    }
-    
-//    public void setFontColor(String hex) {
-//    	click(jq("$fontColorBtn"));
-//    	waitResponse();
-//        JQuery colorTextbox = jq(".z-colorpalette-hex-inp:visible");
-//        type(colorTextbox, hex);
-//        waitResponse();
-//        keyPressEnter(colorTextbox);
-//    }
-//    
-//    public void setCellBackgroundColor(String hex) {
-//    	click(jq("$cellColorBtn"));
-//    	waitResponse();
-//        JQuery colorTextbox = jq(".z-colorpalette-hex-inp:visible");
-//        type(colorTextbox, hex);
-//        waitResponse();
-//        keyPressEnter(colorTextbox);
-//    }
-    
-    /**
-     *  Set cell plain text as input by the end user.
-     */
-    public void setCellEditText(int col, int row, String txt) {
-    	JQuery cell = getSpecifiedCell(col, row);
-    	clickCell(cell);
-    	typeKeys(cell, txt);
-    	keyPressEnter(jq(".zsedit"));
-    }
-    
-    final int RIGHT = 0;
-    final int DOWN = 1;
-    final int LEFT = 2;
-    final int UP = 3;
-    public void setRangeEditText(int col, int row, int orientation, String[] data) {
-    	//ensure focus
-    	JQuery cell = getSpecifiedCell(col, row);
-    	clickCell(cell);
-    	
-    	int topRow = row;
-    	int btmRow = row;
-    	int leftCol = col;
-    	int rightCol = col;
-    	
-    	final int size = data.length;
-    	switch (orientation) {
-    	case RIGHT:
-    		rightCol += size;
-    		break;
-    	case DOWN:
-    		btmRow += size;
-    		break;
-    	case LEFT:
-    		leftCol -= size;
-    		leftCol++;
-    		break;
-    	case UP:
-    		topRow -= size;
-    		topRow++;
-    		break;
-    	}
-    	
-    	int iter = 0;
-    	for (int r = topRow; r <= btmRow; r++) {
-    		for (int c = leftCol; c <= rightCol; c++) {
-    			if (r <= 0 || c <= 0)
-    				continue;
-    			if (iter < size) {
-    				setCellEditText(c, r, data[iter++]);
-    			}
-    		}
-    	}
-    }
 }

@@ -1,10 +1,13 @@
 package org.zkoss.zss.app;
 
 import org.zkoss.poi.ss.usermodel.Cell;
+import org.zkoss.zss.model.Worksheet;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.ext.AfterCompose;
-import org.zkoss.zss.model.Worksheet;
+//import org.zkoss.zss.model.Cell;
+//import org.zkoss.zss.model.Sheet;
+//import org.zkoss.zss.model.impl.SheetImpl;
 import org.zkoss.zss.ui.Spreadsheet;
 import org.zkoss.zss.ui.event.CellEvent;
 import org.zkoss.zss.ui.event.Events;
@@ -58,9 +61,9 @@ public class MultiSpreadsheetWindow extends Window implements AfterCompose{
 		
 		Spreadsheet targetSpreadsheet;
 		if(event.getTarget()==ss[0])
-			ss[1].moveEditorFocus("ss1", "ss1", "red", row, col);
+			ss[1].moveEditorFocus("ss1", "red", row, col);
 		else
-			ss[0].moveEditorFocus("ss0", "ss0", "green", row, col);
+			ss[0].moveEditorFocus("ss0", "green", row, col);
 	}
 	
 	

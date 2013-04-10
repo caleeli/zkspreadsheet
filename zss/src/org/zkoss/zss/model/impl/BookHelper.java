@@ -14,9 +14,7 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 package org.zkoss.zss.model.impl;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -25,12 +23,9 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map.Entry;
 
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCell;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCellFormula;
@@ -38,12 +33,13 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor;
 import org.zkoss.lang.Classes;
 import org.zkoss.lang.Library;
 import org.zkoss.lang.Objects;
-import org.zkoss.lang.Strings;
 import org.zkoss.poi.hssf.record.CellValueRecordInterface;
 import org.zkoss.poi.hssf.record.FormulaRecord;
-import org.zkoss.poi.hssf.record.FullColorExt;
 import org.zkoss.poi.hssf.record.aggregates.FormulaRecordAggregate;
-import org.zkoss.poi.hssf.usermodel.HSSFAutoFilter;
+import org.zkoss.poi.hssf.record.formula.Area3DPtg;
+import org.zkoss.poi.hssf.record.formula.AreaPtgBase;
+import org.zkoss.poi.hssf.record.formula.Ptg;
+import org.zkoss.poi.hssf.record.formula.RefPtgBase;
 import org.zkoss.poi.hssf.usermodel.HSSFCell;
 import org.zkoss.poi.hssf.usermodel.HSSFCellHelper;
 import org.zkoss.poi.hssf.usermodel.HSSFCellStyle;
@@ -55,31 +51,18 @@ import org.zkoss.poi.hssf.usermodel.HSSFRichTextString;
 import org.zkoss.poi.hssf.usermodel.HSSFSheet;
 import org.zkoss.poi.hssf.usermodel.HSSFWorkbook;
 import org.zkoss.poi.hssf.util.HSSFColor;
-import org.zkoss.poi.hssf.util.HSSFColorExt;
 import org.zkoss.poi.hssf.util.PaneInformation;
 import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.format.CellFormat;
-import org.zkoss.poi.ss.format.Formatters;
 import org.zkoss.poi.ss.formula.FormulaParser;
 import org.zkoss.poi.ss.formula.FormulaParsingWorkbook;
 import org.zkoss.poi.ss.formula.FormulaRenderer;
 import org.zkoss.poi.ss.formula.FormulaType;
-import org.zkoss.poi.ss.formula.LazyAreaEval;
 import org.zkoss.poi.ss.formula.PtgShifter;
-import org.zkoss.poi.ss.formula.eval.AreaEval;
-import org.zkoss.poi.ss.formula.eval.ArrayEval;
-import org.zkoss.poi.ss.formula.eval.ValueEval;
-import org.zkoss.poi.ss.formula.ptg.Area3DPtg;
-import org.zkoss.poi.ss.formula.ptg.AreaPtgBase;
-import org.zkoss.poi.ss.formula.ptg.Ptg;
-import org.zkoss.poi.ss.formula.ptg.RefPtgBase;
-import org.zkoss.poi.ss.usermodel.AutoFilter;
 import org.zkoss.poi.ss.usermodel.BorderStyle;
-import org.zkoss.poi.ss.usermodel.BuiltinFormats;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.CellStyle;
 import org.zkoss.poi.ss.usermodel.CellValue;
-import org.zkoss.poi.ss.usermodel.Chart;
 import org.zkoss.poi.ss.usermodel.ClientAnchor;
 import org.zkoss.poi.ss.usermodel.Color;
 import org.zkoss.poi.ss.usermodel.Comment;
@@ -87,34 +70,24 @@ import org.zkoss.poi.ss.usermodel.CreationHelper;
 import org.zkoss.poi.ss.usermodel.DataFormatter;
 import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.DataValidationConstraint;
-import org.zkoss.poi.ss.usermodel.DataValidationConstraint.OperatorType;
-import org.zkoss.poi.ss.usermodel.DataValidationConstraint.ValidationType;
 import org.zkoss.poi.ss.usermodel.DataValidationHelper;
-import org.zkoss.poi.ss.usermodel.DateUtil;
 import org.zkoss.poi.ss.usermodel.Drawing;
 import org.zkoss.poi.ss.usermodel.ErrorConstants;
-import org.zkoss.poi.ss.usermodel.FilterColumn;
 import org.zkoss.poi.ss.usermodel.Font;
 import org.zkoss.poi.ss.usermodel.Hyperlink;
-import org.zkoss.poi.ss.usermodel.Picture;
 import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.poi.ss.usermodel.Row;
-import org.zkoss.poi.ss.usermodel.Sheet;
+import org.zkoss.zss.model.Worksheet;
 import org.zkoss.poi.ss.usermodel.Workbook;
-import org.zkoss.poi.ss.usermodel.ZssChartX;
-import org.zkoss.poi.ss.usermodel.ZssContext;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 import org.zkoss.poi.ss.util.CellRangeAddressList;
-import org.zkoss.poi.ss.util.CellReference;
 import org.zkoss.poi.ss.util.NumberToTextConverter;
 import org.zkoss.poi.xssf.model.ThemesTable;
-import org.zkoss.poi.xssf.usermodel.XSSFAutoFilter;
 import org.zkoss.poi.xssf.usermodel.XSSFCell;
 import org.zkoss.poi.xssf.usermodel.XSSFCellStyle;
 import org.zkoss.poi.xssf.usermodel.XSSFColor;
 import org.zkoss.poi.xssf.usermodel.XSSFDataFormat;
 import org.zkoss.poi.xssf.usermodel.XSSFDataValidation;
-import org.zkoss.poi.xssf.usermodel.XSSFDataValidationConstraint;
 import org.zkoss.poi.xssf.usermodel.XSSFEvaluationWorkbook;
 import org.zkoss.poi.xssf.usermodel.XSSFFont;
 import org.zkoss.poi.xssf.usermodel.XSSFRichTextString;
@@ -136,7 +109,6 @@ import org.zkoss.zss.engine.impl.RefSheetImpl;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.BookSeries;
 import org.zkoss.zss.model.Range;
-import org.zkoss.zss.model.Worksheet;
 import org.zkoss.zss.ui.impl.Styles;
 
 /**
@@ -199,10 +171,17 @@ public final class BookHelper {
 	public final static int FILL_WEEKDAYS = 0x20;
 	public final static int FILL_MONTHS = 0x30;
 	public final static int FILL_YEARS = 0x40;
-	public final static int FILL_HOURS = 0x50;
 	public final static int FILL_GROWTH_TREND = 0x100; //multiplicative relation
 	public final static int FILL_LINER_TREND = 0x200; //additive relation
 	public final static int FILL_SERIES = FILL_LINER_TREND;
+	
+	//inner filterOp for #filter
+	public final static int FILTEROP_AND = 0x01;
+	public final static int FILTEROP_BOTTOM10 = 0x02;
+	public final static int FILTEROP_BOTOOM10PERCENT = 0x03;
+	public final static int FILTEROP_OR = 0x04;
+	public final static int FILTEROP_TOP10 = 0x05;
+	public final static int FILTEROP_TOP10PERCENT = 0x06;
 	
 	public static RefBook getRefBook(Book book) {
 		return book instanceof HSSFBookImpl ? 
@@ -254,12 +233,6 @@ public final class BookHelper {
 		return targetBook.getWorksheet(sheetName);
 	}
 	
-	public static Worksheet getSheet(Book book, RefSheet refSheet) {
-		final Book targetBook = BookHelper.getBook(book, refSheet);
-		final String sheetName = refSheet.getSheetName();
-		return targetBook.getWorksheet(sheetName);
-	}
-	
 	public static VariableResolver getVariableResolver(Book book) {
 		if (book instanceof HSSFBookImpl) 
 			return ((HSSFBookImpl)book).getVariableResolver();
@@ -272,12 +245,6 @@ public final class BookHelper {
 			return ((HSSFBookImpl)book).getFunctionMapper();
 		else
 			return ((XSSFBookImpl)book).getFunctionMapper();
-	}
-	
-	public static void clearFormulaCache(Cell cell) {
-		if (cell != null) {
-			((Book)cell.getSheet().getWorkbook()).getFormulaEvaluator().notifySetFormula(cell);
-		}
 	}
 	
 	/*package*/ static void clearFormulaCache(Book book, Set<Ref> all) {
@@ -326,73 +293,6 @@ public final class BookHelper {
 		}
 	}
 	
-	public static void notifyWidgetChanges(Set<Ref> all) {
-		if (all != null) {
-			for(Ref ref : all) {
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				refBook.publish(new SSDataEvent(SSDataEvent.ON_WIDGET_CHANGE, ref, SSDataEvent.MOVE_NO));
-			}
-		}
-	}
-	
-	public static void notifyChartAdd(Ref ref, ZssChartX chartX) {
-		if (ref != null) {
-			final RefSheet refSheet = ref.getOwnerSheet();
-			final RefBook refBook = refSheet.getOwnerBook();
-			refBook.publish(new SSDataEvent(SSDataEvent.ON_CHART_ADD, ref, chartX));
-		}
-	}
-	
-	public static void notifyChartDelete(Ref ref, Chart chart) {
-		if (ref != null) {
-			final RefSheet refSheet = ref.getOwnerSheet();
-			final RefBook refBook = refSheet.getOwnerBook();
-			refBook.publish(new SSDataEvent(SSDataEvent.ON_CHART_DELETE, ref, chart));
-		}
-	}
-
-	public static void notifyPictureAdd(Ref ref, Picture picture) {
-		if (ref != null) {
-			final RefSheet refSheet = ref.getOwnerSheet();
-			final RefBook refBook = refSheet.getOwnerBook();
-			refBook.publish(new SSDataEvent(SSDataEvent.ON_PICTURE_ADD, ref, picture));
-		}
-	}
-
-	public static void notifyPictureDelete(Ref ref, Picture picture) {
-		if (ref != null) {
-			final RefSheet refSheet = ref.getOwnerSheet();
-			final RefBook refBook = refSheet.getOwnerBook();
-			refBook.publish(new SSDataEvent(SSDataEvent.ON_PICTURE_DELETE, ref, picture));
-		}
-	}
-
-	public static void notifyPictureUpdate(Ref ref, Picture picture) {
-		if (ref != null) {
-			final RefSheet refSheet = ref.getOwnerSheet();
-			final RefBook refBook = refSheet.getOwnerBook();
-			refBook.publish(new SSDataEvent(SSDataEvent.ON_PICTURE_UPDATE, ref, picture));
-		}
-	}
-
-	public static void notifyChartUpdate(Ref ref, Chart chart) {
-		if (ref != null) {
-			final RefSheet refSheet = ref.getOwnerSheet();
-			final RefBook refBook = refSheet.getOwnerBook();
-			refBook.publish(new SSDataEvent(SSDataEvent.ON_CHART_UPDATE, ref, chart));
-		}
-	}
-
-	public static void notifyBtnChanges(Set<Ref> all) {
-		if (all != null) {
-			for(Ref ref : all) {
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				refBook.publish(new SSDataEvent(SSDataEvent.ON_BTN_CHANGE, ref, SSDataEvent.MOVE_NO));
-			}
-		}
-	}
 	/*package*/ static void notifyGridlines(Book book, Set<Ref> all, boolean show) {
 		if (all != null) {
 			for(Ref ref : all) {
@@ -401,52 +301,6 @@ public final class BookHelper {
 				refBook.publish(new SSDataEvent(SSDataEvent.ON_DISPLAY_GRIDLINES, ref, show));
 			}
 		}
-	}
-	
-	/*package*/ static void notifyProtectSheet(Book book, Set<Ref> all,	String password) {
-		if (all != null) {
-			for(Ref ref : all) {
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				refBook.publish(new SSDataEvent(SSDataEvent.ON_PROTECT_SHEET, ref, password));
-			}
-		}
-	}
-	
-	/*package*/ static void notifyMoveFriendFocus(Ref ref, Object obj) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_FRIEND_FOCUS_MOVE, ref, obj));
-	}
-	
-	/*package*/ static void notifyDeleteFriendFocus(Ref ref, Object obj) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_FRIEND_FOCUS_DELETE, ref, obj));
-	}
-	
-	/*package*/ static void notifyDeleteSheet(Ref ref, Object[] namePairs) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_DELETE, ref, namePairs));
-	}
-	
-	/*package*/ static void notifyCreateSheet(Ref ref, String sheetName) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_CREATE, ref, sheetName));
-	}
-
-	/*package*/ static void notifyChangeSheetName(Ref ref, String sheetName) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_NAME_CHANGE, ref, sheetName));
-	}
-	
-	/*package*/ static void notifyChangeSheetOrder(Ref ref, String sheetName) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_ORDER_CHANGE, ref, sheetName));
 	}
 	
 	public static void reevaluateAndNotify(Book book, Set<Ref> last, Set<Ref> all) {
@@ -625,13 +479,6 @@ public final class BookHelper {
 
 		return sb.toString();
 	}
-	
-	public static String awtColorToHTMLColor(java.awt.Color color) {
-		final int r = color.getRed();
-		final int g = color.getGreen();
-		final int b = color.getBlue();
-		return "#"+BookHelper.toHex(r)+BookHelper.toHex(g)+BookHelper.toHex(b);
-	}
 
 	/* given alignment and cell type, return real alignment */
 	//Halignment determined by style alignment, text format and value type  
@@ -661,45 +508,6 @@ public final class BookHelper {
 		return align;
 	}
 	
-	public static String getFontCSSStyle(Cell cell, Font font) {
-		final StringBuffer sb = new StringBuffer();
-		
-		String fontName = font.getFontName();
-		if (fontName != null) {
-			sb.append("font-family:").append(fontName).append(";");
-		}
-		
-		String textColor = BookHelper.getFontHTMLColor(cell, font);
-		
-		if (BookHelper.AUTO_COLOR.equals(textColor)) {
-			textColor = "#000000";
-		}
-		if (textColor != null) {
-			sb.append("color:").append(textColor).append(";");
-		}
-
-		final int fontUnderline = font.getUnderline(); 
-		final boolean strikeThrough = font.getStrikeout();
-		boolean isUnderline = fontUnderline == Font.U_SINGLE || fontUnderline == Font.U_SINGLE_ACCOUNTING;
-		if (strikeThrough || isUnderline) {
-			sb.append("text-decoration:");
-			if (strikeThrough)
-				sb.append(" line-through");
-			if (isUnderline)	
-				sb.append(" underline");
-			sb.append(";");
-		}
-
-		final short weight = font.getBoldweight();
-		final boolean italic = font.getItalic();
-		sb.append("font-weight:").append(weight).append(";");
-		if (italic)
-			sb.append("font-style:").append("italic;");
-
-		final int fontSize = font.getFontHeightInPoints();
-		sb.append("font-size:").append(fontSize).append("pt;");
-		return sb.toString();
-	}
 	public static String getFontCSSStyle(Book book, Font font) {
 		final StringBuffer sb = new StringBuffer();
 		
@@ -745,8 +553,7 @@ public final class BookHelper {
 				((XSSFRichTextString)rstr).getFontOfFormattingRun(run);
 		
 	}
-
-	//TODO see if we can remove this function to use getFontHTMLColor(Cell, Font);
+	
 	public static String getFontHTMLColor(Book book, Font font) {
 		if (font instanceof XSSFFont) {
 			final XSSFFont f = (XSSFFont) font;
@@ -755,21 +562,6 @@ public final class BookHelper {
 		} else {
 			return indexToHSSFRGB((HSSFWorkbook)book, font.getColor());
 		}
-	}
-
-	public static String getFontHTMLColor(Cell cell, Font font) {
-		if (font instanceof XSSFFont) {
-			final XSSFFont f = (XSSFFont) font;
-			final XSSFColor color = f.getXSSFColor();
-			return BookHelper.colorToHTML(cell.getSheet().getWorkbook(), color);
-		} else {
-			return getHSSFRGBString((HSSFCell)cell, font.getColor());
-		}
-	}
-	
-	private static String getHSSFRGBString(HSSFCell cell, short index) {
-		final HSSFColor color = ((HSSFCellStyle)cell.getCellStyle()).getFontColorColor();
-		return HSSFColorToHTML((HSSFWorkbook) cell.getSheet().getWorkbook(), color);
 	}
 	
 	/*
@@ -884,10 +676,7 @@ public final class BookHelper {
 			    if (theme != null) {
 			    	XSSFColor themecolor = theme.getThemeColor(color.getTheme());
 			    	if (themecolor != null) {
-			    		if (ctcolor.isSetTint()) {
-			    			themecolor.setTint(ctcolor.getTint());
-			    		}
-			    		return XSSFColorToHTML(book, themecolor); //recursive
+			    		return XSSFColorToHTML(book, themecolor);
 			    	}
 			    }
 			}
@@ -896,20 +685,9 @@ public final class BookHelper {
  	}
 	
 	private static String HSSFColorToHTML(HSSFWorkbook book, HSSFColor color) {
-		return color == null || HSSFColor.AUTOMATIC.getInstance().equals(color) ? AUTO_COLOR : 
-			color.isIndex() ? indexToHSSFRGB(book, color.getIndex()) : HSSFColorToHTML((HSSFColorExt)color); 
+		return color == null ? AUTO_COLOR : indexToHSSFRGB(book, color.getIndex());
 	}
-	private static String HSSFColorToHTML(HSSFColorExt color) {
-		short[] triplet = color.getTriplet();
-		byte[] argb = new byte[3];
-		for (int j = 0; j < 3; ++j) {
-			argb[j] = (byte) triplet[j];
-		}
-		if (color.isTint()) {
-			argb = getRgbWithTint(argb, color.getTint());
-		}
-		return 	"#"+ toHex(argb[0])+ toHex(argb[1])+ toHex(argb[2]); 
-	}
+	
 	private static String indexToHSSFRGB(HSSFWorkbook book, int index) {
 		HSSFPalette palette = book.getCustomPalette();
 		HSSFColor color = null;
@@ -920,17 +698,15 @@ public final class BookHelper {
 		if (color != null)
 			triplet =  color.getTriplet();
 		else {
-			final Map<Integer, HSSFColor> colors = HSSFColor.getIndexHash();
+			final Hashtable<Integer, HSSFColor> colors = HSSFColor.getIndexHash();
 			color = colors.get(Integer.valueOf(index));
 			if (color != null)
 				triplet = color.getTriplet();
 		}
-		return triplet == null ? null : 
-			HSSFColor.AUTOMATIC.getInstance().equals(color) ? AUTO_COLOR : tripletToHTML(triplet);
+		return triplet == null ? null : color == HSSFColor.AUTOMATIC.getInstance() ? AUTO_COLOR : 
+			"#"+ toHex(triplet[0])+ toHex(triplet[1])+ toHex(triplet[2]);
 	}
-	private static String tripletToHTML(short[] triplet) {
-		return triplet == null ? null : "#"+ toHex(triplet[0])+ toHex(triplet[1])+ toHex(triplet[2]);
-	}
+	
 	public static short rgbToIndex(Book book, String color) {
 		HSSFPalette palette = ((HSSFWorkbook)book).getCustomPalette();
 		short red = Short.parseShort(color.substring(1,3), 16); //red
@@ -944,7 +720,7 @@ public final class BookHelper {
 		if (pcolor != null) { //find default palette
 			return pcolor.getIndex();
 		} else {
-			final Hashtable<short[], HSSFColor> colors = HSSFColor.getRgbHash();
+			final Hashtable<short[], HSSFColor> colors = HSSFColor.getTripletHash();
 			HSSFColor tcolor = colors.get(new short[] {red, green, blue});
 			if (tcolor != null)
 				return tcolor.getIndex();
@@ -990,9 +766,7 @@ public final class BookHelper {
 		}
 		return null;
 	}
-	private static RichTextString newRichTextString(Cell cell, String str) {
-		return cell instanceof HSSFCell ? new HSSFRichTextString(str) : new XSSFRichTextString(str);
-	}
+	
 	public static RichTextString getText(Cell cell) {
 		int cellType = cell.getCellType();
 		if (cellType == Cell.CELL_TYPE_FORMULA) {
@@ -1002,8 +776,8 @@ public final class BookHelper {
 		} else if (cellType == Cell.CELL_TYPE_STRING) {
 			return cell.getRichStringCellValue();
 		}
-	    final String result = new DataFormatter(ZssContext.getCurrent().getLocale(), false).formatCellValue(cell, cellType); //ZSS-68
-		return newRichTextString(cell, result);
+	    final String result = new DataFormatter().formatCellValue(cell, cellType);
+		return cell instanceof HSSFCell ? new HSSFRichTextString(result) : new XSSFRichTextString(result);
 	}
 	public static FormatTextImpl getFormatText(Cell cell) {
 		int cellType = cell.getCellType();
@@ -1022,8 +796,7 @@ public final class BookHelper {
 				return new FormatTextImpl(cell.getRichStringCellValue());
 			}
 		}
-	
-		final CellFormat format = CellFormat.getInstance(formatStr == null ? "" : formatStr, ZssContext.getCurrent().getLocale()); //ZSS-68
+		final CellFormat format = CellFormat.getInstance(formatStr == null ? "" : formatStr);
 		return new FormatTextImpl(format.apply(cell));
 	}
 
@@ -1035,8 +808,7 @@ public final class BookHelper {
 				final RichTextString rstr = ft.getRichTextString();
 				return rstr == null ? "" : rstr.getString();
 			} else if (ft.isCellFormatResult()) {
-				return ft.getCellFormatResult().text;			
-			}
+				return ft.getCellFormatResult().text;			}
 		}
 		return "";
 	}
@@ -1070,48 +842,13 @@ public final class BookHelper {
 		case Cell.CELL_TYPE_FORMULA:
 			return "="+(cell instanceof XSSFCell ? getFormulaString((XSSFCell)cell) : cell.getCellFormula());
 		case Cell.CELL_TYPE_NUMERIC:
-			final double val = cell.getNumericCellValue();
-			if (DateUtil.isCellDateFormatted(cell)) { //ZSS-15 edit date cells doesn't work
-				final Locale locale = ZssContext.getCurrent().getLocale(); //ZSS-68
-				String formatString = null;
-				if (Math.abs(val) < 1) { //time only
-					formatString = getDateFormatString(TIME, locale);//"h:mm:ss AM/PM"; //ZSS-67
-					if (formatString == null) { //ZSS-76
-						formatString = "h:mm:ss AM/PM";
-					}
-				} else if (isInteger(Double.valueOf(val))) { //date only
-					formatString = getDateFormatString(DATE, locale); //"mm/dd/yyyy"; //ZSS-67
-					if (formatString == null) { //ZSS-76
-						formatString = "mm/dd/yyyy";
-					}
-				} else { //date + time
-					formatString = getDateFormatString(DATE_TIME, locale);//"mm/dd/yyyy h:mm:ss AM/PM" //ZSS-67
-					if (formatString == null) { //ZSS-76
-						formatString = "mm/dd/yyyy h:mm:ss AM/PM";
-					}
-				}
-				final boolean date1904 = ((Book)cell.getSheet().getWorkbook()).isDate1904();
-				return new DataFormatter(locale, false).formatRawCellContents(val, -1, formatString, date1904); //ZSS-68
-			} else {
-				return NumberToTextConverter.toText(val);
-			}
+			return NumberToTextConverter.toText(cell.getNumericCellValue());
 		case Cell.CELL_TYPE_STRING:
 			return cell.getStringCellValue(); 
 		default:
 			throw new UiException("Unknown cell type:"+cellType);
 		}
 	}
-
-	//ZSS-67
-	//date format type
-	private static final int TIME = 0x13;
-	private static final int DATE = 0x0e;
-	private static final int DATE_TIME = 0x100;
-	
-	private static String getDateFormatString(int formatType, Locale locale) {
-		return BuiltinFormats.getBuiltinFormat(formatType, locale);
-	}
-	
 	//check sheet reference; sheet could have been deleted
     private static String getFormulaString(XSSFCell cell){
     	String formula = cell.getCellFormula();
@@ -1131,15 +868,11 @@ public final class BookHelper {
 		}
 	}
 
-	public static Object getEvalCellValue(Cell cell) {
-		return getCellObject(cell);
-	}
-	
 	public static Object getCellValue(Cell cell) {
 		final int cellType = cell.getCellType();
 		switch(cellType) {
 		case Cell.CELL_TYPE_BLANK:
-			return null;
+			return "";
 		case Cell.CELL_TYPE_BOOLEAN:
 			return Boolean.valueOf(cell.getBooleanCellValue());
 		case Cell.CELL_TYPE_ERROR:
@@ -1150,7 +883,7 @@ public final class BookHelper {
 			return new Double(cell.getNumericCellValue());
 		case Cell.CELL_TYPE_STRING:
 			final RichTextString rtstr = cell.getRichStringCellValue();
-			return rtstr; 
+			return rtstr == null ? cell.getSheet().getWorkbook().getCreationHelper().createRichTextString("") : rtstr; 
 		default:
 			throw new UiException("Unknown cell type:"+cellType);
 		}
@@ -1281,7 +1014,7 @@ public final class BookHelper {
 	}
 
 	public static Set<Ref>[] setCellValue(Cell cell, String value) {
-		return setCellValue(cell, value == null || value.length() == 0 ? null : cell.getSheet().getWorkbook().getCreationHelper().createRichTextString(value));
+		return setCellValue(cell, value == null ? null : cell.getSheet().getWorkbook().getCreationHelper().createRichTextString(value));
 	}
 	
 	public static Set<Ref>[] setCellValue(Cell cell, RichTextString value) {
@@ -1352,33 +1085,8 @@ public final class BookHelper {
 		}
 	}
 	
-	private static boolean isStringFormat(String formatStr) {
-		return "@".equals(formatStr); //TODO, shall prepare a reqular expression match check!
-	}
-	public static Object[] editTextToValue(String txt, Cell cell) {
+	public static Object[] editTextToValue(String txt) {
 		if (txt != null) {
-			final String formatStr = cell == null ? 
-					null : cell.getCellStyle().getDataFormatString();
-			return editTextToValue(txt, formatStr);
-		}
-		return null;
-		
-	}
-	/**
-	 * 
-	 * @param txt the text to be input
-	 * @param formatStr the cell text format 
-	 * @return object array with the value type in 0(an Integer), 
-	 * 		the value in 1(an Object), and the date format in 2(a String if parse as a date)   
-	 */
-	public static Object[] editTextToValue(String txt, String formatStr) {
-		if (txt != null) {
-			//bug #300:	Numbers in Text-cells are not treated as text (leading zero is removed)
-			if (formatStr != null) {
-				if (isStringFormat(formatStr)) { 
-					return new Object[] {new Integer(Cell.CELL_TYPE_STRING), txt}; //string
-				}
-			}
 			if (txt.startsWith("=")) {
 				if (txt.trim().length() > 1) {
 					return new Object[] {new Integer(Cell.CELL_TYPE_FORMULA), txt.substring(1)}; //formula 
@@ -1393,39 +1101,20 @@ public final class BookHelper {
 					new Object[] {Integer.valueOf(Cell.CELL_TYPE_STRING), txt}: //string
 					new Object[] {Integer.valueOf(Cell.CELL_TYPE_ERROR), new Byte(err)}; //error
 			} else {
-	            return parseEditTextToDoubleDateOrString(txt); //ZSS-67
+				try {
+					final Double val = Double.parseDouble(txt);
+					return new Object[] {new Integer(Cell.CELL_TYPE_NUMERIC), val}; //double
+				} catch (NumberFormatException ex) {
+					final Object[] results = parseToDate(txt); 
+					if (results[0] instanceof String) { 
+						return new Object[] {new Integer(Cell.CELL_TYPE_STRING), results[0]}; //string
+					} else { //if (result[0] instanceof Date)
+						return new Object[] {Integer.valueOf(Cell.CELL_TYPE_NUMERIC), results[0], results[1]}; //date with format
+					}
+				}
 			}
 		}
 		return null;
-	}
-	private static Object[] parseEditTextToDoubleDateOrString(String txt) {
-		//TODO prepare a NumberInputMask that will set number format if input with comma thousand separator.
-		final Locale locale = ZssContext.getCurrent().getLocale(); //ZSS-67
-        final char dot = Formatters.getDecimalSeparator(locale);
-        final char comma = Formatters.getGroupingSeparator(locale);
-		String txt0 = txt;
-		if (dot != '.' || comma != ',') {
-	    	final int dotPos = txt.lastIndexOf(dot);
-			txt0 = txt.replace(comma, ',');
-	    	if (dotPos >= 0) {
-	    		txt0 = txt0.substring(0, dotPos)+'.'+txt0.substring(dotPos+1);
-	    	}
-		}
-
-		try {
-			final Double val = Double.parseDouble(txt0);
-			return new Object[] {new Integer(Cell.CELL_TYPE_NUMERIC), val}; //double
-		} catch (NumberFormatException ex) {
-			return parseEditTextToDateOrString(txt);
-		}
-	}
-	private static Object[] parseEditTextToDateOrString(String txt) {
-		final Object[] results = parseToDate(txt); 
-		if (results[0] instanceof String) { 
-			return new Object[] {new Integer(Cell.CELL_TYPE_STRING), results[0]}; //string
-		} else { //if (result[0] instanceof Date)
-			return new Object[] {Integer.valueOf(Cell.CELL_TYPE_NUMERIC), results[0], results[1]}; //date with format
-		}
 	}
 
 	private static byte getErrorCode(String errString) {
@@ -1471,28 +1160,25 @@ public final class BookHelper {
 			return style;
 		}
 		if ((pasteType & BookHelper.INNERPASTE_BORDERS) == 0) { //no border
-			final CellStyle newStyle = dstCell.getSheet().getWorkbook().createCellStyle();
-			final CellStyle dstStyle = dstCell.getCellStyle();
-			
-			final short borderLeft = dstStyle.getBorderLeft();
-			final short borderTop = dstStyle.getBorderTop();
-			final short borderRight = dstStyle.getBorderRight();
-			final short borderBottom = dstStyle.getBorderBottom();
-			final short borderLeftColor = dstStyle.getLeftBorderColor();
-			final short borderTopColor = dstStyle.getTopBorderColor();
-			final short borderRightColor = dstStyle.getRightBorderColor();
-			final short borderBottomColor = dstStyle.getBottomBorderColor();
-			
-			newStyle.cloneStyleFrom(srcStyle);
-			newStyle.setBorderLeft(borderLeft );
-			newStyle.setBorderTop(borderTop);
-			newStyle.setBorderRight(borderRight);
-			newStyle.setBorderBottom(borderBottom);
-			newStyle.setLeftBorderColor(borderLeftColor);
-			newStyle.setTopBorderColor(borderTopColor);
-			newStyle.setRightBorderColor(borderRightColor);
-			newStyle.setBottomBorderColor(borderBottomColor);
-			return newStyle;
+			final CellStyle style = dstCell.getSheet().getWorkbook().createCellStyle();
+			final short borderLeft = style.getBorderLeft();
+			final short borderTop = style.getBorderTop();
+			final short borderRight = style.getBorderRight();
+			final short borderBottom = style.getBorderBottom();
+			final short borderLeftColor = style.getLeftBorderColor();
+			final short borderTopColor = style.getTopBorderColor();
+			final short borderRightColor = style.getRightBorderColor();
+			final short borderBottomColor = style.getBottomBorderColor();
+			style.cloneStyleFrom(srcStyle);
+			style.setBorderLeft(borderLeft );
+			style.setBorderTop(borderTop);
+			style.setBorderRight(borderRight);
+			style.setBorderBottom(borderBottom);
+			style.setLeftBorderColor(borderLeftColor);
+			style.setTopBorderColor(borderTopColor);
+			style.setRightBorderColor(borderRightColor);
+			style.setBottomBorderColor(borderBottomColor);
+			return style;
 		}
 		return srcStyle;
 	}
@@ -1612,18 +1298,10 @@ public final class BookHelper {
 	public static ChangeInfo copyCell(Cell srcCell, Worksheet sheet, int rowIndex, int colIndex, int pasteType, int pasteOp, boolean transpose) {
 		//TODO not handle pastType == pasteValidation and pasteOp(assume none)
 		final Cell dstCell = getOrCreateCell(sheet, rowIndex, colIndex);
-		final Object cellValue = getCellValue(srcCell);
-		return copyCell(cellValue, srcCell, dstCell, pasteType, pasteOp, transpose);
+		return copyCell(srcCell, dstCell, pasteType, pasteOp, transpose);
 	}
 	
-	//[0]:last, [1]:all
-	private static ChangeInfo copyCell(Object cellValue, Cell srcCell, Worksheet sheet, int rowIndex, int colIndex, int pasteType, int pasteOp, boolean transpose) {
-		//TODO not handle pastType == pasteValidation and pasteOp(assume none)
-		final Cell dstCell = getOrCreateCell(sheet, rowIndex, colIndex);
-		return copyCell(cellValue, srcCell, dstCell, pasteType, pasteOp, transpose);
-	}
-	
-	private static ChangeInfo copyCell(Object cellValue, Cell srcCell, Cell dstCell, int pasteType, int pasteOp, boolean transpose) {
+	public static ChangeInfo copyCell(Cell srcCell, Cell dstCell, int pasteType, int pasteOp, boolean transpose) {
 		final Set<Ref> toEval = new HashSet<Ref>();
 		final Set<Ref> affected = new HashSet<Ref>();
 		final List<MergeChange> mergeChanges = new ArrayList<MergeChange>();
@@ -1641,7 +1319,7 @@ public final class BookHelper {
 				final int dstcol2 = dstaddr.getLastColumn();
 				final ChangeInfo changeInfo0 = unMerge(dstSheet, dstrow, dstcol, dstrow2, dstcol2);
 				assignChangeInfo(toEval, affected, mergeChanges, changeInfo0);
-			}
+			} 
 			final int srcrow = srcCell.getRowIndex();
 			final int srccol = srcCell.getColumnIndex();
 			final CellRangeAddress srcaddr = ((SheetCtrl)srcCell.getSheet()).getMerged(srcrow, srccol);
@@ -1673,35 +1351,31 @@ public final class BookHelper {
 			switch(cellType) {
 			case Cell.CELL_TYPE_BOOLEAN:
 			{
-				final Set<Ref>[] refs = setCellValue(dstCell, cellValue instanceof Boolean ? (Boolean)cellValue : srcCell.getBooleanCellValue());
+				final Set<Ref>[] refs = setCellValue(dstCell, srcCell.getBooleanCellValue());
 				assignRefs(toEval, affected, refs);
 				break;
 			}
 			case Cell.CELL_TYPE_ERROR:
 			{
-				final Set<Ref>[] refs = setCellErrorValue(dstCell, cellValue instanceof Byte ? (Byte)cellValue : srcCell.getErrorCellValue());
+				final Set<Ref>[] refs = setCellErrorValue(dstCell, srcCell.getErrorCellValue());
 				assignRefs(toEval, affected, refs);
 				break;
 			}
 	        case Cell.CELL_TYPE_NUMERIC:
 	        {
-	        	final Set<Ref>[] refs = cellValue instanceof Date ? 
-	        			setCellValue(dstCell, (Date)cellValue) :
-	        				cellValue instanceof Number ?
-	        					setCellValue(dstCell, (Number)cellValue) :
-	        					setCellValue(dstCell, Double.valueOf(srcCell.getNumericCellValue()));
+	        	final Set<Ref>[] refs = setCellValue(dstCell, srcCell.getNumericCellValue());
 				assignRefs(toEval, affected, refs);
 				break;
 	        }
 	        case Cell.CELL_TYPE_STRING:
 	        {
-	        	final Set<Ref>[] refs = setCellValue(dstCell, cellValue instanceof String? newRichTextString(dstCell, (String)cellValue) : cellValue instanceof RichTextString ? (RichTextString)cellValue : srcCell.getRichStringCellValue());
+	        	final Set<Ref>[] refs = setCellValue(dstCell, srcCell.getRichStringCellValue());
 				assignRefs(toEval, affected, refs);
 				break;
 	        }
 	        case Cell.CELL_TYPE_BLANK:
 	        {
-	        	final Set<Ref>[] refs = setCellValue(dstCell, (RichTextString)cellValue);
+	        	final Set<Ref>[] refs = setCellValue(dstCell, (RichTextString) null);
 				assignRefs(toEval, affected, refs);
 				break;
 	        }
@@ -2484,7 +2158,7 @@ public final class BookHelper {
 			final Set<Ref> affected = new HashSet<Ref>();
 			final List<MergeChange> changes = new ArrayList<MergeChange>();
 			for(int r = tRow; r <= bRow; ++r) {
-				final ChangeInfo info = merge0(sheet, r, lCol, r, rCol);
+				final ChangeInfo info = merge0(sheet, tRow, lCol, bRow, rCol);
 				changes.addAll(info.getMergeChanges());
 				toEval.addAll(info.getToEval());
 				affected.addAll(info.getAffected());
@@ -2829,7 +2503,7 @@ public final class BookHelper {
 	private static class KeyComparator implements Comparator<SortKey>, Serializable {
 		final private boolean[] _descs;
 		final private boolean _matchCase;
-		final private int _sortMethod; //TODO byNumberOfStroks, byPinyYin
+		final private int _sortMethod; //TODO byNumberOfStorks, byPinyYin
 		final private int _type; //TODO PivotTable only: byLabel, byValue
 		
 		public KeyComparator(boolean[] descs, boolean matchCase, int sortMethod, int type) {
@@ -2917,7 +2591,7 @@ public final class BookHelper {
 		if (font == null) {
 			font = book.createFont();
 			font.setBoldweight(boldWeight);
-			BookHelper.setFontColor(book, font, color);
+			BookHelper.setFontColor(font, color);
 			font.setFontHeight(fontHeight);
 			font.setFontName(name);
 			font.setItalic(italic);
@@ -3145,27 +2819,24 @@ public final class BookHelper {
 		return all;
 	}
 	
-	public static Set<Ref> setRowHeight(Worksheet sheet, int tRow, int bRow, short twips, boolean customHeight) {
+	public static Set<Ref> setRowHeight(Worksheet sheet, int tRow, int bRow, short twips) {
 		final Book book = (Book) sheet.getWorkbook();
 		final int maxcol = book.getSpreadsheetVersion().getLastColumnIndex();
 		final RefSheet refSheet = BookHelper.getRefSheet(book, sheet);
 		final Set<Ref> all = new HashSet<Ref>();
 		for (int row = tRow; row <= bRow; ++row) {
-			Row rowobj = sheet.getRow(row);
-			final int orgTwips = rowobj == null ? sheet.getDefaultRowHeight() : rowobj.getHeight();
-			if ((twips < 0 && orgTwips < 0) || twips == orgTwips) {
-				continue;
+			final int orgTwips = sheet.getColumnWidth(row);
+			if (twips != orgTwips) {
+				BookHelper.setRowHeight(sheet, row, twips);
+				all.add(new AreaRefImpl(row, 0, row, maxcol, refSheet));
 			}
-			BookHelper.setRowHeight(sheet, row, twips, customHeight);
-			all.add(new AreaRefImpl(row, 0, row, maxcol, refSheet));
 		}
 		return all;
 	}
 	
-	public static void setRowHeight(Worksheet sheet, int row, short twips, boolean customHeight) {
+	public static void setRowHeight(Worksheet sheet, int row, short twips) {
 		final Row rowx = BookHelper.getOrCreateRow(sheet, row);
 		rowx.setHeight(twips);
-		rowx.setCustomHeight(twips < 0 ? false : customHeight);
 	}
 	
 	public static short getRowHeight(Worksheet sheet, int row) {
@@ -3202,6 +2873,10 @@ public final class BookHelper {
 	
 	//[0]:last [1]:all
 	public static ChangeInfo fill(Worksheet sheet, Ref srcRef, Ref dstRef, int fillType) {
+//TODO, FILL_DEFAULT shall check the contents of the source cell, now we default to FILL_COPY
+if (fillType == FILL_DEFAULT) {
+	fillType = FILL_COPY;
+}
 		final int fillDir = BookHelper.getFillDirection(sheet, srcRef, dstRef);
 		if (fillDir == BookHelper.FILL_NONE) { //nothing to fill up, just return
 			return null;
@@ -3219,660 +2894,12 @@ public final class BookHelper {
 		//FILL_INVALID
 		throw new UiException("Destination range must include source range and can be fill in one direction only"); 
 	}
-	private static int getShortWeekIndex(String x, Locale locale) { //ZSS-69
-		return ShortWeekData.getInstance(CircularData.NORMAL, locale).getIndex(x);
-	}
-	private static int getFullWeekIndex(String x, Locale locale) { //ZSS-69
-		return FullWeekData.getInstance(CircularData.NORMAL, locale).getIndex(x); 
-	}
-	private static int getShortMonthIndex(String x, Locale locale) { //ZSS-69
-		return ShortMonthData.getInstance(CircularData.NORMAL, locale).getIndex(x);
-	}
-	private static int getFullMonthIndex(String x, Locale locale) { //ZSS-69
-		return FullMonthData.getInstance(CircularData.NORMAL, locale).getIndex(x);
-	}
-	private static boolean isShortWeek(String x, Locale locale) { //ZSS-69
-		return getShortWeekIndex(x, locale) >= 0;
-	}
-	private static boolean isFullWeek(String x, Locale locale) { //ZSS-69
-		return getFullWeekIndex(x, locale) >= 0;
-	}
-	private static boolean isShortMonth(String x, Locale locale) { //ZSS-69
-		return getShortMonthIndex(x, locale) >= 0;
-	}
-	private static boolean isFullMonth(String x, Locale locale) { //ZSS-69
-		return getFullMonthIndex(x, locale) >= 0;
-	}
-	private static int nextWeekIndex(int current, int step) {
-		return nextCircularIndex(current, step, 7);
-	}
-	private static int nextMonthIndex(int current, int step) {
-		return nextCircularIndex(current, step, 12);
-	}
-	private static int nextCircularIndex(int current, int step, int modulo) {
-		current += step;
-		if (current < 0) {
-			current += modulo;
-		}
-		return current % modulo;
-	}
-	//ZSS-69, locale then US when doing drag-fill
-	private static int getWeekMonthSubType(String x, Locale locale) { 
-		if (isShortWeek(x, locale)) {
-			return Step.SHORT_WEEK; //a short week
-		}
-		if (isShortMonth(x, locale)) {
-			return Step.SHORT_MONTH; //a  short month
-		}
-		if (isFullWeek(x, locale)) {
-			return Step.FULL_WEEK; //a full week
-		}
-		if (isFullMonth(x, locale)) {
-			return Step.FULL_MONTH; //a  full month
-		}
-		if (isShortWeek(x, Locale.US)) {
-			return Step.US_SHORT_WEEK; //a US short week
-		}
-		if (isShortMonth(x, Locale.US)) {
-			return Step.US_SHORT_MONTH; //a US short month
-		}
-		if (isFullWeek(x, Locale.US)) {
-			return Step.US_FULL_WEEK; //a US full week
-		}
-		if (isFullMonth(x, Locale.US)) {
-			return Step.US_FULL_MONTH; //a US full month
-		}
-		if (Strings.isBlank(x)){
-			return Step.BLANK; //a blank string
-		} else {
-			return Step.STRING; //a pure string
-		}
-	}
-    private static final Pattern datePattern = Pattern.compile("[yMwWDdFE]+");
-    private static final Pattern timePattern = Pattern.compile("[HhKkmsS]+");
-    private static boolean isDatePattern(String pattern) {
-		Matcher dateM = datePattern.matcher(pattern);
-		return dateM.find();
-    }
-    private static boolean isTimePattern(String pattern) {
-		Matcher dateM = timePattern.matcher(pattern);
-		return dateM.find();
-    }
-	private static int getDateTimeSubType(Cell cell) {
-        if (DateUtil.isCellDateFormatted(cell)) {
-        	//check if a pure time format
-        	SimpleDateFormat format = (SimpleDateFormat) DataFormatter.getJavaFormat(cell, ZssContext.getCurrent().getLocale()); //ZSS-69
-        	final String pattern = format.toPattern();
-        	return isDatePattern(pattern) ? Step.DATE : Step.TIME; //a date or a time
-        }
-        return Step.NUMBER; //a nubmer
-	}
-	private static class StepChunk {
-		private Step[] _steps;
-		protected StepChunk() {}
-		
-		public StepChunk(Cell[] srcCells, int fillType, boolean positive, int siblingCount) {
-			_steps = new Step[srcCells.length];
-			int b = 0, e = 0;
-			int prevtype = -1;
-			int subType = -1;
-			final Locale locale = ZssContext.getCurrent().getLocale(); //ZSS-69
-			for (int j = 0; j < srcCells.length; ++j) {
-				final Cell cell = srcCells[j];
-				final int type = cell == null ? Cell.CELL_TYPE_BLANK : cell.getCellType();
-				if (type != prevtype) {
-					if (prevtype >= 0) {
-						prepareSteps(srcCells, b, e, positive, fillType, subType, siblingCount); //per the chunk, get the proper Step
-					}
-					b = e = j;
-					prevtype = type;
-					if (type == Cell.CELL_TYPE_STRING) { //could be Blank, String, short week/month, full week/month
-						final String x = cell.getStringCellValue();
-						subType = getWeekMonthSubType(x, locale); //ZSS-69
-					} else if (type == Cell.CELL_TYPE_NUMERIC) { //could be number/date/time
-						subType = getDateTimeSubType(cell);
-					}
-					continue;
-				}
-				//type == prevtype
-				if (type == Cell.CELL_TYPE_STRING) { //check if week/month
-					final String x = cell.getStringCellValue();
-					final int curSubType = getWeekMonthSubType(x, locale); //ZSS-69
-					if (curSubType == subType) {
-						e = j;
-						continue;
-					}
-					//subType changed
-					prepareSteps(srcCells, b, e, positive, fillType, subType, siblingCount); //prepare steps
-					b = e = j;
-					subType = curSubType;
-				} else if (type == Cell.CELL_TYPE_NUMERIC) { //special case, date or number
-					final int curSubType = getDateTimeSubType(cell);
-					if (subType == curSubType) {
-						e = j;
-						continue;
-					}
-					//subType changed
-					prepareSteps(srcCells, b, e, positive, fillType, subType, siblingCount); //prepare steps
-					b = e = j;
-					subType = curSubType;
-				}
-				e = j;
-			}
-			//last one
-			prepareSteps(srcCells, b, e, positive, fillType, subType, siblingCount); //per the chunk, get the proper Step
-		}
-		public Step getStep(int srcIndex) {
-			return _steps[srcIndex];
-		}
-		private void replaceWithCopyStep(int index) {
-			_steps[index] = CopyStep.instance;
-		}
-		private void prepareSteps(Cell[] srcCells, int b, int e, boolean positive, int fillType, int subType, int siblingCount) {
-			final Cell srcCell = srcCells[b];
-			final int type = srcCell == null ? Cell.CELL_TYPE_BLANK : srcCell.getCellType();
-			Step step;
-			switch(type) {
-			default:
-			case Cell.CELL_TYPE_FORMULA:
-			case Cell.CELL_TYPE_BOOLEAN:
-			case Cell.CELL_TYPE_ERROR:
-				step = CopyStep.instance; //copy
-				break;
-			case Cell.CELL_TYPE_BLANK:
-				step = BlankStep.instance; //blank
-				break;
-			case Cell.CELL_TYPE_NUMERIC:
-				switch(subType) {
-				default:
-				case Step.NUMBER:
-					step = srcCells.length == 1 && siblingCount == 1 ? CopyStep.instance : 	//number, one source cell, copy only  
-						fillType == BookHelper.FILL_GROWTH_TREND ? 
-							getGrowthStep(srcCells, b, e, positive) : //a growth trend 
-							getLinearStep(srcCells, b, e, positive) ; //a linear trend
-					break;
-				case Step.DATE: //date
-					step = getDateStep(srcCells, b, e, positive, fillType, subType);
-					break;
-				case Step.TIME: //time
-					step = getTimeStep(srcCells, b, e, positive, fillType, subType);
-					break;
-				}
-				break;
-			case Cell.CELL_TYPE_STRING:
-				final Locale locale = ZssContext.getCurrent().getLocale(); //ZSS-69 locale aware then US when drag-fill
-				switch(subType) {
-				default:
-				case Step.BLANK:
-					step = BlankStep.instance;
-					break;
-				case Step.STRING:
-					step = CopyStep.instance;
-					break;
-				case Step.SHORT_WEEK: //short week
-					step = getShortWeekStep(srcCells, b, e, positive, locale);
-					break;
-				case Step.SHORT_MONTH: //short month
-					step = getShortMonthStep(srcCells, b, e, positive, locale);
-					break;
-				case Step.FULL_WEEK: //full week
-					step = getFullWeekStep(srcCells, b, e, positive, locale);
-					break;
-				case Step.FULL_MONTH: //full month
-					step = getFullMonthStep(srcCells, b, e, positive, locale);
-					break;
-				case Step.US_SHORT_WEEK: //US short week
-					step = getShortWeekStep(srcCells, b, e, positive, Locale.US);
-					break;
-				case Step.US_SHORT_MONTH: //US short month
-					step = getShortMonthStep(srcCells, b, e, positive, Locale.US);
-					break;
-				case Step.US_FULL_WEEK: //US full week
-					step = getFullWeekStep(srcCells, b, e, positive, Locale.US);
-					break;
-				case Step.US_FULL_MONTH: //US full month
-					step = getFullMonthStep(srcCells, b, e, positive, Locale.US);
-					break;
-				}
- 				break;
-			}
-			for(int k = b; k <= e; ++k) { //associate step to the cells chunk
-				_steps[k] = step; 
-			}
-		}
-	}
-	private static class CopyStepChunk extends StepChunk {
-		public static final StepChunk instance = new CopyStepChunk();
-		@Override
-		public Step getStep(int index) {
-			return CopyStep.instance;
-		}
-	}
-	private static int[] getTimeParts(Cell srcCell) {
-		int[] parts = new int[7]; //year, month, day, hour, mintue, second, millsecond
-		int j = 0;
-		Date date = srcCell.getDateCellValue();
-		final Calendar cal = Calendar.getInstance(); //TODO Timezone?
-		cal.setTimeInMillis(date.getTime());
-		parts[j++]= cal.get(Calendar.YEAR);
-		parts[j++]= cal.get(Calendar.MONTH);
-		parts[j++]= cal.get(Calendar.DAY_OF_MONTH);
-		
-    	final SimpleDateFormat format = (SimpleDateFormat) DataFormatter.getJavaFormat(srcCell, ZssContext.getCurrent().getLocale()); //ZSS-68
-    	final String pattern1 = format.toPattern();
-		final boolean withtime = isTimePattern(pattern1);
-		if (withtime) {
-			parts[j++]= cal.get(Calendar.HOUR_OF_DAY);
-			parts[j++]= cal.get(Calendar.MINUTE);
-			parts[j++]= cal.get(Calendar.SECOND);
-			parts[j++]= cal.get(Calendar.MILLISECOND);
-		} else {
-			parts[j++]= -1;
-		}
-		return parts;
-	}
-	private static Step getTimeStep(Cell[] srcCells, int b, int e, boolean positive, int fillType, int subType) {
-		final Cell srcCell1 = srcCells[b];
-		if (b == e) { //only one srcCell
-			return new MsecondStep(srcCell1.getDateCellValue(), positive ? 60*60*1000 : -60*60*1000, subType);
-		}
-		
-		//more than one srcCell
-		Date date1 = srcCell1.getDateCellValue();
-		Cell srcCell2 = srcCells[b+1];
-		Date date2 = srcCell2.getDateCellValue();
-		final long step = date2.getTime() - date1.getTime();
-    	for(int k = b+2; k <= e; ++k) {
-    		srcCell2 = srcCells[k];
-    		date1 = date2;
-    		date2 = srcCell2.getDateCellValue();
-    		if (step != (date2.getTime() - date1.getTime())) {
-    			return CopyStep.instance;
-    		}
-    	}
-		return new MsecondStep(date2, step, subType);
-	}
-	private static Step getDateStep(Cell[] srcCells, int b, int e, boolean positive, int fillType, int subType) {
-		if (fillType == FILL_DEFAULT) {
-			fillType = FILL_DAYS;
-		}
-		return myGetDateStep(srcCells, b, e, positive, fillType, subType); 
-	}
-	private static Step myGetDateStep(Cell[] srcCells, int b, int e, boolean positive, int fillType, int subType) {
-		final Cell srcCell1 = srcCells[b]; 
-		final int[] time1 = getTimeParts(srcCell1);
-    	int j = 0;
-    	int y1 = time1[j]; ++j; 
-    	int m1 = time1[j]; ++j; 
-    	int d1 = time1[j]; ++j; 
-    	int h1 = time1[j]; ++j;
-    	int min1 = time1[j]; ++j;
-    	int s1 = time1[j]; ++j;
-    	int ms1 = time1[j];
-    	int t1 = (h1 < 0 ? 0 : h1 * 60 * 60 * 1000) + min1 * 60 * 1000 + s1 * 1000 + ms1;
-		if (b == e) { //only one srcCell
-			switch(fillType) {
-			case FILL_DAYS:
-				return new MsecondStep(srcCells[b].getDateCellValue(), positive ? 24*60*60*1000 : -24*60*60*1000, subType);
-			case FILL_HOURS:
-				return new MsecondStep(srcCells[b].getDateCellValue(), positive ? 60*60*1000 : -60*60*1000, subType);
-			case FILL_MONTHS:
-				return new DateStep(y1, m1, d1, t1, positive ? 1 : -1, 0, subType);
-			case FILL_YEARS:
-				return new DateStep(y1, m1, d1, t1, positive ? 12 : -12, 0, subType);
-			case FILL_WEEKDAYS:
-				return new MsecondStep(srcCells[b].getDateCellValue(), positive ? 7*24*60*60*1000 : -7*24*60*60*1000, subType);
-			default:
-				return CopyStep.instance;
-			}
-		}
-		
-		//more than one srcCell
-    	final Cell srcCell2  = srcCells[b+1];
-    	final int[] time2 = getTimeParts(srcCell2);
-    	j = 0;
-    	int y2 = time2[j]; ++j; 
-    	int m2 = time2[j]; ++j; 
-    	int d2 = time2[j]; ++j; 
-    	int h2 = time2[j]; ++j;
-    	int min2 = time2[j]; ++j;
-    	int s2 = time2[j]; ++j;
-    	int ms2 = time2[j];
-    	int diffM = m2 - m1 + (y2 - y1) * 12;
-    	int diffD = d2 - d1;
-    	if (h1 < 0 && h2 >= 0) {
-    		h1 = h2;
-    		min1 = min2;
-    		s1 = s2;
-    		ms1 = ms2;
-    	} else if (h1 >= 0 && h2 < 0) {
-    		h2 = h1;
-    		min2 = min1;
-    		s2 = s1;
-    		ms2 = ms1;
-    	}
-    	int t2 = (h2 < 0 ? 0 : h2 * 60 * 60 * 1000) + min2 * 60 * 1000 + s2 * 1000 + ms2;
-    	int diffT = t2 - t1;
-    	for(int k = b+2; k <= e; ++k) {
-        	y1 = y2;
-        	m1 = m2;
-        	d1 = d2;
-        	h1 = h2;
-        	min1 = min2;
-        	s1 = s2;
-        	ms1 = ms2;
-        	t1 = t2;
-        	
-        	final Cell srcCell = srcCells[k];
-        	final int[] time = getTimeParts(srcCell);
-        	j = 0;
-        	y2 = time[j]; ++j; 
-        	m2 = time[j]; ++j; 
-        	d2 = time[j]; ++j; 
-        	h2 = time[j]; ++j;
-        	min2 = time[j]; ++j;
-        	s2 = time[j]; ++j;
-        	ms2 = time[j];
-        	if ((diffM != m2 - m1 + (y2 - y1) * 12) || (diffD != d2 - d1)) {
-        		return CopyStep.instance;
-        	}
-        	if (h1 < 0 && h2 >= 0) {
-        		h1 = h2;
-        		min1 = min2;
-        		s1 = s2;
-        		ms1 = ms2;
-        	} else if (h1 >= 0 && h2 < 0) {
-        		h2 = h1;
-        		min2 = min1;
-        		s2 = s1;
-        		ms2 = ms1;
-        	}
-        	t2 = (h2 < 0 ? 0 : h2 * 60 * 60 * 1000) + min2 * 60 * 1000 + s2 * 1000 + ms2;
-        	
-        	if (diffT != t2 - t1) {
-        		diffT  = 0;
-        	}
-    	}
-    	
-		if (diffD != 0) {
-			if (h1 < 0) {
-				h1 = 0;
-			}
-			if (h2 < 0) {
-				h2 = 0;
-			}
-			final Calendar cal1 = Calendar.getInstance(); //TODO Timezone?
-			final Calendar cal2 = Calendar.getInstance(); //TODO Timezone?
-			cal1.set(y1, m1, d1, h1, min1, s1);
-			cal1.set(Calendar.MILLISECOND, ms1);
-			cal2.set(y2, m2, d2, h2, min2, s2);
-			cal2.set(Calendar.MILLISECOND, ms2);
-    		final long step = cal2.getTime().getTime() - cal1.getTime().getTime();
-    		return new MsecondStep(cal2.getTime(), step, -1);
-    	} else { //date stepping
-        	return new DateStep(y2, m2, d2, t2, diffM, diffT, -1);
-    	}
-	}
-	private static Step getGrowthStep(Cell[] srcCells, int b, int e, boolean positive) {
-		if (b == e) { //only one source cell
-			return CopyStep.instance;
-		}
-		//calc first ratio
-		double prev = srcCells[b].getNumericCellValue();
-		double curv = srcCells[b+1].getNumericCellValue();
-		double ratio = curv / prev;
-		prev = curv;
-		for (int k = b+2; k <=e; ++k) {
-			final Cell srcCell = srcCells[k];
-			curv = srcCell.getNumericCellValue();
-			if (ratio != (curv / prev)) {
-				return CopyStep.instance;
-			}
-			prev = curv;
-		}
-		return new GrowthStep(curv, ratio, -1);
-	}
-	private static Step getLinearStep(Cell[] srcCells, int b, int e, boolean positive) {
-		int count = e-b+1;
-		final double[] values = new double[count];
-		for (int j = 0, k = b; k <=e; ++k) {
-			final Cell srcCell = srcCells[k];
-			values[j++] = srcCell.getNumericCellValue();
-		}
-		if (count == 1) {
-			final double step = positive ? 1 : -1;
-			return new LinearStep(values[count-1], step, step, Step.NUMBER);
-		} else if (count == 2) { //standard linear series
-			final double step = values[1] - values[0];
-			return new LinearStep(values[count-1], step, step, -1);
-		} else if (count == 3) { //3 source case (by experiment)
-			double step = values[2] - values[0];
-			double initStep	= (step + values[1] - values[0]) / 3;
-			step /= 2;
-			return new LinearStep(values[count-1], initStep, step, -1);
-		} else if (count == 4) { //4 source case (by experiment)
-			double initStep = (values[2] - values[0]) / 2;
-			double step = (values[3]-values[0]) * 0.3 + (values[2]-values[1]) * 0.1;
-			return new LinearStep(values[count-1], initStep, step, -1);
-		}
-		//TODO, for values equals to 5 or above 5, we apply the 5 values rule, though it is not the same to the Excel!
-		//else if (j >= 5) { //5 source case (by experiment) 
-			double initStep = -0.4 * values[0] - 0.1 * values[1] + 0.2 * values[2] + 0.5 * values[3] - 0.2 * values[4];
-			double step = -0.2 * values[0] - 0.1 * values[1] + 0.1 * values[3] + 0.2 * values[4];
-			return new LinearStep(values[count-1], initStep, step, -1);
-		//}
-	}
-	private static int getCaseType(String x) {
-		if (Character.isLowerCase(x.charAt(0))) {
-			return 1; //lowercase
-		} else if (Character.isUpperCase(x.charAt(1))) {
-			return 2; //uppercase
-		}
-		return 0; //normal case
-	}
-	private static Step getShortWeekStep(Cell[] srcCells, int b, int e, boolean positive, Locale locale) { //ZSS-69
-		final int count = e-b+1;
-		String bWeek = null;
-		int preIndex = -1;
-		int step = 0;
-		for (int j = b; j <= e; ++j) {
-			final Cell srcCell = srcCells[j];
-			final String x = srcCell.getStringCellValue(); 	
-			final int weekIndex = getShortWeekIndex(x, locale); //ZSS-69
-			if (step == 0) {
-				if (preIndex >= 0) {
-					step = weekIndex - preIndex;
-					preIndex = weekIndex;
-				} else {
-					bWeek = x;
-					preIndex = weekIndex;
-					if (count == 1) { //no more, step default to 1
-						step = positive ? 1 : -1;
-					}
-				}
-			} else {
-				preIndex = nextWeekIndex(preIndex, step);
-				if (preIndex != weekIndex) { //not a week sequence
-					return CopyStep.instance; //a copy step
-				}
-			}
-		}
-		return new ShortWeekStep(preIndex, step, getCaseType(bWeek), b == e ? Step.SHORT_WEEK : -1, locale); //ZSS-69
-	}
-	private static Step getFullWeekStep(Cell[] srcCells, int b, int e, boolean positive, Locale locale) { //ZSS-69
-		final int count = e-b+1;
-		String bWeek = null;
-		int preIndex = -1;
-		int step = 0;
-		for (int j = b; j <= e; ++j) {
-			final Cell srcCell = srcCells[j];
-			final String x = srcCell.getStringCellValue(); 	
-			final int weekIndex = getFullWeekIndex(x, locale); //ZSS-69
-			if (step == 0) {
-				if (preIndex >= 0) {
-					step = weekIndex - preIndex;
-					preIndex = weekIndex;
-				} else {
-					bWeek = x;
-					preIndex = weekIndex;
-					if (count == 1) { //no more, step default to 1
-						step = positive ? 1 : -1;
-					}
-				}
-			} else {
-				preIndex = nextWeekIndex(preIndex, step);
-				if (preIndex != weekIndex) { //not a week sequence
-					return CopyStep.instance; //a copy step
-				}
-			}
-		}
-		return new FullWeekStep(preIndex, step, getCaseType(bWeek), b == e ? Step.FULL_WEEK : -1, locale); //ZSS-69
-	}
-	private static Step getShortMonthStep(Cell[] srcCells, int b, int e, boolean positive, Locale locale) {
-		final int count = e-b+1;
-		String bMonth = null;
-		int preIndex = -1;
-		int step = 0;
-		for (int j = b; j <= e; ++j) {
-			final Cell srcCell = srcCells[j];
-			final String x = srcCell.getStringCellValue(); 	
-			final int monthIndex = getShortMonthIndex(x, locale); //ZSS-69
-			if (step == 0) {
-				if (preIndex >= 0) {
-					step = monthIndex - preIndex;
-					preIndex = monthIndex;
-				} else {
-					bMonth = x;
-					preIndex = monthIndex;
-					if (count == 1) { //no more, step default to 1
-						step = positive ? 1 : -1;
-					}
-				}
-			} else {
-				preIndex = nextMonthIndex(preIndex, step);
-				if (preIndex != monthIndex) { //not a month sequence
-					return CopyStep.instance; //a copy step
-				}
-			}
-		}
-		return new ShortMonthStep(preIndex, step, getCaseType(bMonth), b == e ? Step.SHORT_MONTH : -1, locale); //ZSS-69
-	}
-	private static Step getFullMonthStep(Cell[] srcCells, int b, int e, boolean positive, Locale locale) { //ZSS-69
-		final int count = e-b+1;
-		String bMonth = null;
-		int preIndex = -1;
-		int step = 0;
-		for (int j = b; j <= e; ++j) {
-			final Cell srcCell = srcCells[j];
-			final String x = srcCell.getStringCellValue(); 	
-			final int monthIndex = getFullMonthIndex(x, locale); //ZSS-69
-			if (step == 0) {
-				if (preIndex >= 0) {
-					step = monthIndex - preIndex;
-					preIndex = monthIndex;
-				} else {
-					bMonth = x;
-					preIndex = monthIndex;
-					if (count == 1) { //no more, step default to 1
-						step = positive ? 1 : -1;
-					}
-				}
-			} else {
-				preIndex = nextMonthIndex(preIndex, step);
-				if (preIndex != monthIndex) { //not a month sequence
-					return CopyStep.instance; //a copy step
-				}
-			}
-		}
-		return new FullMonthStep(preIndex, step, getCaseType(bMonth), b == e ? Step.FULL_MONTH : -1, locale); //ZSS-69
-	}
 	
-	private static StepChunk getRowStepChunk(Worksheet sheet, int fillType, int col, int row1, int row2, boolean pos, int colCount) {
-		switch(fillType) {
-		case FILL_DEFAULT:
-			final int diff = row2 - row1;
-			final Cell[] cells = new Cell[(pos ? diff : -diff) + 1];
-			if (pos) {
-				for (int row = row1, j = 0; row <= row2; ++row) {
-					final Cell srcCell = BookHelper.getCell(sheet, row, col);
-					cells[j++] = srcCell;
-				}
-			} else {
-				for (int row = row1, j = 0; row >= row2; --row) {
-					final Cell srcCell = BookHelper.getCell(sheet, row, col);
-					cells[j++] = srcCell;
-				}
-			}
-			return new StepChunk(cells, fillType, pos, colCount);
-		case FILL_COPY:
-		case FILL_FORMATS:
-		case FILL_VALUES:
-		default:
-			return CopyStepChunk.instance; //pure copy
-		}
-	}
-	private static StepChunk getColStepChunk(Worksheet sheet, int fillType, int row, int col1, int col2, boolean pos, int rowCount) {
-		switch(fillType) {
-		case FILL_DEFAULT:
-			final int diff = col2 - col1;
-			final Cell[] cells = new Cell[(pos ? diff : -diff) + 1];
-			if (pos) {
-				for (int col = col1, j = 0; col <= col2; ++col) {
-					final Cell srcCell = BookHelper.getCell(sheet, row, col);
-					cells[j++] = srcCell;
-				}
-			} else {
-				for (int col = col1, j = 0; col >= col2; --col) {
-					final Cell srcCell = BookHelper.getCell(sheet, row, col);
-					cells[j++] = srcCell;
-				}
-			}
-			return new StepChunk(cells, fillType, pos, rowCount);
-		case FILL_COPY:
-		case FILL_FORMATS:
-		case FILL_VALUES:
-		default:
-			return CopyStepChunk.instance; //pure copy
-		}
-	}
-	private static void replaceWithCopyStep(StepChunk[] stepChunks, int index, int b, int e) {
-		for(int j = b; j < e; ++j) {
-			stepChunks[j].replaceWithCopyStep(index);
-		}
-	}
-	private static void handleSpecialCopyStep(StepChunk[] stepChunks, int srcCount, int siblingCount) {
-		//handle special copy only case (two consecutive same type of row)
-		for(int index = 0; index < srcCount; ++index) {
-			int b = 0, preType = -1, j = 0, count = 0;
-			for(; j < siblingCount; ++j) {
-				final StepChunk stepChunk = stepChunks[j];
-				final Step step = stepChunk.getStep(index);
-				final int stepType = step.getDataType();
-				if (preType != stepType) { //something different
-					if (stepType != Step.BLANK) {
-						if (preType >= 0 && count > 0) {
-							replaceWithCopyStep(stepChunks, index, b, j);
-						}
-						count = 0;
-						b = j;
-						preType = stepType;
-					}
-				} else {
-					if (stepType != Step.BLANK) { //count of equal type
-						++count;
-					}
-				}
-			}
-			if (preType >= 0 && count > 0) { //last segment
-				replaceWithCopyStep(stepChunks, index, b, j);
-			}
-		}
-	}
+	@SuppressWarnings("unchecked")
 	public static ChangeInfo fillDown(Worksheet sheet, Ref srcRef, Ref dstRef, int fillType) {
-		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND
+		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND, FILL_LINER_TREND, FILL_SERIES
 		int pasteType = BookHelper.INNERPASTE_FILL_COPY;
 		switch(fillType) {
-		default: //FILL_DEFAULT, FILL_LINEAR_TREND, FILL_SERIES,  
 		case FILL_COPY:
 			pasteType = BookHelper.INNERPASTE_FILL_COPY;
 			break;
@@ -3882,38 +2909,29 @@ public final class BookHelper {
 		case FILL_VALUES:
 			pasteType = BookHelper.INNERPASTE_FILL_VALUE;
 			break;
+		default:
+			return null;
 		}
 		final Set<Ref> toEval = new HashSet<Ref>();
 		final Set<Ref> affected = new HashSet<Ref>();
 		final List<MergeChange> mergeChanges = new ArrayList<MergeChange>();
 		final ChangeInfo changeInfo = new ChangeInfo(toEval, affected, mergeChanges);
 		final int rowCount = srcRef.getRowCount();
-		final int colCount = srcRef.getColumnCount();
 		final int srctRow = srcRef.getTopRow();
 		final int srcbRow = srcRef.getBottomRow();
 		final int srclCol = srcRef.getLeftCol();
 		final int srcrCol = srcRef.getRightCol();
 		
 		final int dstbRow = dstRef.getBottomRow();
-		final StepChunk[] stepChunks = new StepChunk[colCount];
-		//prepare StepChunks
-		for(int c = srclCol, j = 0; c <= srcrCol; ++c) {
-			final StepChunk stepChunk = getRowStepChunk(sheet, fillType, c, srctRow, srcbRow, true, colCount);
-			stepChunks[j++] = stepChunk;
-		}
-		//handle special copy only case (two consecutive same type of row)
-		handleSpecialCopyStep(stepChunks, rowCount, colCount);
-		for(int c = srclCol, j = 0; c <= srcrCol; ++c) {
-			final StepChunk stepChunk = stepChunks[j++];
-			for(int srcIndex = 0, r = srcbRow + 1; r <= dstbRow; ++r, ++srcIndex) {
-				final int index = srcIndex % rowCount;
-				final int srcrow = srctRow + index;
+		for(int srcIndex = 0, r = srcbRow + 1; r <= dstbRow; ++r, ++srcIndex) {
+			for(int c = srclCol; c <= srcrCol; ++c) {
+				final int srcrow = srctRow + srcIndex % rowCount;
 				final Cell srcCell = BookHelper.getCell(sheet, srcrow, c);
 				if (srcCell == null) {
 					final Set<Ref>[] refs = BookHelper.removeCell(sheet, r, c);
 					assignRefs(toEval, affected, refs);
 				} else {
-					final ChangeInfo changeInfo0 = BookHelper.copyCell(stepChunk.getStep(index).next(srcCell), srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
+					final ChangeInfo changeInfo0 = BookHelper.copyCell(srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
 					assignChangeInfo(toEval, affected, mergeChanges, changeInfo0);
 				}
 			}
@@ -3923,11 +2941,11 @@ public final class BookHelper {
 		return changeInfo;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static ChangeInfo fillUp(Worksheet sheet, Ref srcRef, Ref dstRef, int fillType) {
-		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND
+		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND, FILL_LINER_TREND, FILL_SERIES
 		int pasteType = BookHelper.INNERPASTE_FILL_COPY;
 		switch(fillType) {
-		case FILL_DEFAULT:
 		case FILL_COPY:
 			pasteType = BookHelper.INNERPASTE_FILL_COPY;
 			break;
@@ -3945,31 +2963,21 @@ public final class BookHelper {
 		final List<MergeChange> mergeChanges = new ArrayList<MergeChange>();
 		final ChangeInfo changeInfo = new ChangeInfo(toEval, affected, mergeChanges);
 		final int rowCount = srcRef.getRowCount();
-		final int colCount = srcRef.getColumnCount();
 		final int srctRow = srcRef.getTopRow();
 		final int srcbRow = srcRef.getBottomRow();
 		final int srclCol = srcRef.getLeftCol();
 		final int srcrCol = srcRef.getRightCol();
 		
 		final int dsttRow = dstRef.getTopRow();
-		final StepChunk[] stepChunks = new StepChunk[colCount];
-		for(int c = srclCol, j = 0; c <= srcrCol; ++c) {
-			final StepChunk stepChunk = getRowStepChunk(sheet, fillType, c, srcbRow, srctRow, false, colCount);
-			stepChunks[j++] = stepChunk;
-		}
-		//handle special copy only case (two consecutive same type of row)
-		handleSpecialCopyStep(stepChunks, rowCount, colCount);
-		for(int c = srclCol, j = 0; c <= srcrCol; ++c) {
-			final StepChunk stepChunk = stepChunks[j++];
-			for(int srcIndex = 0, r = srctRow - 1; r >= dsttRow; --r, ++srcIndex) {
-				final int index = srcIndex % rowCount;
-				final int srcrow = srcbRow - index;
+		for(int srcIndex = 0, r = srctRow - 1; r >= dsttRow; --r, ++srcIndex) {
+			for(int c = srclCol; c <= srcrCol; ++c) {
+				final int srcrow = srcbRow - srcIndex % rowCount;
 				final Cell srcCell = BookHelper.getCell(sheet, srcrow, c);
 				if (srcCell == null) {
 					final Set<Ref>[] refs = BookHelper.removeCell(sheet, r, c);
 					assignRefs(toEval, affected, refs);
 				} else {
-					final ChangeInfo changeInfo0 = BookHelper.copyCell(stepChunk.getStep(index).next(srcCell), srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
+					final ChangeInfo changeInfo0 = BookHelper.copyCell(srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
 					assignChangeInfo(toEval, affected, mergeChanges, changeInfo0);
 				}
 			}
@@ -3979,11 +2987,11 @@ public final class BookHelper {
 		return changeInfo;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static ChangeInfo fillRight(Worksheet sheet, Ref srcRef, Ref dstRef, int fillType) {
-		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND
+		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND, FILL_LINER_TREND, FILL_SERIES
 		int pasteType = BookHelper.INNERPASTE_FILL_COPY;
 		switch(fillType) {
-		case FILL_DEFAULT:
 		case FILL_COPY:
 			pasteType = BookHelper.INNERPASTE_FILL_COPY;
 			break;
@@ -4000,7 +3008,6 @@ public final class BookHelper {
 		final Set<Ref> affected = new HashSet<Ref>();
 		final List<MergeChange> mergeChanges = new ArrayList<MergeChange>();
 		final ChangeInfo changeInfo = new ChangeInfo(toEval, affected, mergeChanges);
-		final int rowCount = srcRef.getRowCount();
 		final int colCount = srcRef.getColumnCount();
 		final int srclCol = srcRef.getLeftCol();
 		final int srcrCol = srcRef.getRightCol();
@@ -4008,24 +3015,15 @@ public final class BookHelper {
 		final int srcbRow = srcRef.getBottomRow();
 		
 		final int dstrCol = dstRef.getRightCol();
-		final StepChunk[] stepChunks = new StepChunk[rowCount];
-		for(int r = srctRow, j = 0; r <= srcbRow; ++r) {
-			final StepChunk stepChunk = getColStepChunk(sheet, fillType, r, srclCol, srcrCol, true, rowCount);
-			stepChunks[j++] = stepChunk;
-		}
-		//handle special copy only case (two consecutive same type of row)
-		handleSpecialCopyStep(stepChunks, colCount, rowCount);
-		for(int r = srctRow, j = 0; r <= srcbRow; ++r) {
-			final StepChunk stepChunk = stepChunks[j++];
+		for(int r = srctRow; r <= srcbRow; ++r) {
 			for(int srcIndex = 0, c = srcrCol + 1; c <= dstrCol; ++c, ++srcIndex) {
-				final int index = srcIndex % colCount;
-				final int srccol = srclCol + index;
+				final int srccol = srclCol + srcIndex % colCount;
 				final Cell srcCell = BookHelper.getCell(sheet, r, srccol);
 				if (srcCell == null) {
 					final Set<Ref>[] refs = BookHelper.removeCell(sheet, r, c);
 					assignRefs(toEval, affected, refs);
 				} else {
-					final ChangeInfo changeInfo0 = BookHelper.copyCell(stepChunk.getStep(index).next(srcCell), srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
+					final ChangeInfo changeInfo0 = BookHelper.copyCell(srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
 					assignChangeInfo(toEval, affected, mergeChanges, changeInfo0);
 				}
 			}
@@ -4035,11 +3033,11 @@ public final class BookHelper {
 		return changeInfo;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static ChangeInfo fillLeft(Worksheet sheet, Ref srcRef, Ref dstRef, int fillType) {
-		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND
+		//TODO FILL_DEFAULT, FILL_DAYS, FILL_WEEKDAYS, FILL_MONTHS, FILL_YEARS, FILL_GROWTH_TREND, FILL_LINER_TREND, FILL_SERIES
 		int pasteType = BookHelper.INNERPASTE_FILL_COPY;
 		switch(fillType) {
-		case FILL_DEFAULT:
 		case FILL_COPY:
 			pasteType = BookHelper.INNERPASTE_FILL_COPY;
 			break;
@@ -4056,7 +3054,6 @@ public final class BookHelper {
 		final Set<Ref> affected = new HashSet<Ref>();
 		final List<MergeChange> mergeChanges = new ArrayList<MergeChange>();
 		final ChangeInfo changeInfo = new ChangeInfo(toEval, affected, mergeChanges);
-		final int rowCount = srcRef.getRowCount();
 		final int colCount = srcRef.getColumnCount();
 		final int srclCol = srcRef.getLeftCol();
 		final int srcrCol = srcRef.getRightCol();
@@ -4064,24 +3061,15 @@ public final class BookHelper {
 		final int srcbRow = srcRef.getBottomRow();
 		
 		final int dstlCol = dstRef.getLeftCol();
-		final StepChunk[] stepChunks = new StepChunk[rowCount];
-		for(int r = srctRow, j = 0; r <= srcbRow; ++r) {
-			final StepChunk stepChunk = getColStepChunk(sheet, fillType, r, srcrCol, srclCol, false, rowCount);
-			stepChunks[j++] = stepChunk;
-		}
-		//handle special copy only case (two consecutive same type of row)
-		handleSpecialCopyStep(stepChunks, colCount, rowCount);
-		for(int r = srctRow, j = 0; r <= srcbRow; ++r) {
-			final StepChunk stepChunk = stepChunks[j++];
+		for(int r = srctRow; r <= srcbRow; ++r) {
 			for(int srcIndex = 0, c = srclCol - 1; c >= dstlCol; --c, ++srcIndex) {
-				final int index = srcIndex % colCount;
-				final int srccol = srcrCol - index;
+				final int srccol = srcrCol - srcIndex % colCount;
 				final Cell srcCell = BookHelper.getCell(sheet, r, srccol);
 				if (srcCell == null) {
 					final Set<Ref>[] refs = BookHelper.removeCell(sheet, r, c);
 					assignRefs(toEval, affected, refs);
 				} else {
-					final ChangeInfo changeInfo0 = BookHelper.copyCell(stepChunk.getStep(index).next(srcCell), srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
+					final ChangeInfo changeInfo0 = BookHelper.copyCell(srcCell, sheet, r, c, pasteType, BookHelper.PASTEOP_NONE, false);
 					assignChangeInfo(toEval, affected, mergeChanges, changeInfo0);
 				}
 			}
@@ -4547,7 +3535,7 @@ public final class BookHelper {
 		if (pcolor != null) { //find default palette
 			return pcolor;
 		} else {
-			final Hashtable<short[], HSSFColor> colors = HSSFColor.getRgbHash();
+			final Hashtable<short[], HSSFColor> colors = HSSFColor.getTripletHash();
 			HSSFColor tcolor = colors.get(new short[] {red, green, blue});
 			if (tcolor != null)
 				return tcolor;
@@ -4556,9 +3544,14 @@ public final class BookHelper {
 					HSSFColor ncolor = palette.addColor(r, g, b);
 					return ncolor;
 				} catch (RuntimeException ex) {
-					//try to create a fullcolor if not a built in palette color
-					FullColorExt fullColor = new FullColorExt(red, green, blue);
-					return new HSSFColorExt(fullColor);
+					//return similar color if can't add new color to palette
+					/*
+					 * TODO: find a better solution for fix this issue
+					 * 
+					 * While there is no space for adding a color into palette
+					 * return similar color cause return inexact color
+					 */
+					return palette.findSimilarColor(red, green, blue);
 				}
 				
 			}
@@ -4611,11 +3604,8 @@ public final class BookHelper {
 		return indexHash.get(Integer.valueOf(index));
 	}
 	
-	private static void setFontColor(Workbook book, Font font, Color color) {
+	private static void setFontColor(Font font, Color color) {
 		if (font instanceof HSSFFont) {
-			if (color instanceof HSSFColorExt) { //not palette color
-				color = ((HSSFColorExt)color).getSimilarColor(((HSSFWorkbook)book).getCustomPalette());
-			}
 			((HSSFFont)font).setColor(((HSSFColor)color).getIndex());
 		} else {
 			((XSSFFont)font).setColor((XSSFColor)color);
@@ -4646,466 +3636,5 @@ public final class BookHelper {
 			final short fmt = df.getFormat(formatString);
 			style.setDataFormat(fmt);
 		}
-	}
-	
-	//20110511, peterkuo@potix.com
-	public static DataValidation getDataValidationByCell(Cell cell) {
-		final Worksheet srcSheet = (Worksheet)cell.getSheet();
-		
-		final int row = cell.getRowIndex();
-		final int col = cell.getColumnIndex();
-		
-		final List<? extends DataValidation> dataValidations= BookHelper.getDataValidations(srcSheet);
-		for(DataValidation dataValidation : dataValidations) {
-			CellRangeAddressList addrList = dataValidation.getRegions();
-			for(int j = addrList.countRanges(); --j >= 0;) {
-				final CellRangeAddress addr = addrList.getCellRangeAddress(j);
-				boolean inRange = addr.isInRange(row, col);
-				if (inRange) { 
-					return dataValidation;
-				}
-			}
-		}
-		
-		return null;
-	}
-
-	//20110511, peterkuo@potix.com
-	public static void setDataValidationToRange(Range range, String[] list) {
-		if (range.getSheet() instanceof HSSFSheet) {
-			//TODO: not yet implemented for 2003
-		}else{
-			final DataValidationHelper helper = range.getSheet().getDataValidationHelper();
-			DataValidationConstraint constraint = new XSSFDataValidationConstraint(list);
-			CellRangeAddressList dstAddrList = new CellRangeAddressList(range.getRow(),range.getLastRow(), range.getColumn(), range.getLastColumn());		
-			DataValidation dstDataValidation = helper.createValidation(constraint, dstAddrList);
-			range.getSheet().addValidationData(dstDataValidation);			
-		}
-	}
-	
-	//20110511, peterkuo@potix.com
-	public static void setDataValidationToRange(Range range, Range ref){
-		if (range.getSheet() instanceof HSSFSheet) {
-			//TODO: not yet implemented for 2003
-		}else{
-			final DataValidationHelper helper = range.getSheet().getDataValidationHelper();
-			CellRangeAddress refCRA = new CellRangeAddress(ref.getRow(),ref.getLastRow(),ref.getColumn(),ref.getLastColumn());
-			DataValidationConstraint constraint = new XSSFDataValidationConstraint(ValidationType.LIST,convertToAbsoluteString(refCRA));
-			CellRangeAddressList dstAddrList = new CellRangeAddressList(range.getRow(),range.getLastRow(), range.getColumn(), range.getLastColumn());		
-			DataValidation dstDataValidation = helper.createValidation(constraint, dstAddrList);
-			range.getSheet().addValidationData(dstDataValidation);						
-		}	
-	}
-	
-	//20110511, peterkuo@potix.com
-	//modified from formatAsString() in CellRangeAddress.java
-	private static String convertToAbsoluteString(CellRangeAddress cra){
-        StringBuffer sb = new StringBuffer();
-        CellReference cellRefFrom = new CellReference(cra.getFirstRow(), cra.getFirstColumn(),true,true);
-        CellReference cellRefTo = new CellReference(cra.getLastRow(), cra.getLastColumn(),true,true);
-        sb.append(cellRefFrom.formatAsString());
-        //for a single-cell reference return A1 instead of A1:A1
-        if(!cellRefFrom.equals(cellRefTo)){
-            sb.append(':');
-            sb.append(cellRefTo.formatAsString());
-        }
-        return sb.toString();
-	}
-
-	//20110512, peterkuo@potix.com
-	public static void removeDataValidtionOfRange(Range range){
-		if (range.getSheet() instanceof HSSFSheet) {
-			//TODO: not yet implemented for 2003
-		}else{
-			final Worksheet srcSheet = (Worksheet)range.getSheet();
-			
-			final int rngRow = range.getRow();
-			final int rngCol = range.getColumn();
-			final int rngLastRow = range.getLastRow();
-			final int rngLastCol = range.getLastColumn();
-			
-			final List<? extends DataValidation> dataValidations = BookHelper.getDataValidations(srcSheet);
-				for(DataValidation dataValidation : dataValidations) {
-					CellRangeAddressList addrList = dataValidation.getRegions();
-					for(int j = addrList.countRanges(); --j >= 0;) {
-						final CellRangeAddress addr = addrList.getCellRangeAddress(j);
-						if (addr.isInRange(rngRow, rngCol, rngLastRow, rngLastCol)) {
-							//TODO: not fully mimic the scenario as excel
-							//have to remove the whole data validation first
-							range.getSheet().removeValidationData(dataValidation);
-							return;
-						}
-					}
-				}
-			}					
-	}
-	
-	//Whether a blank cell
-	public static boolean isBlankCell(Cell cell) {
-		if (cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
-			return true;
-		}
-		Object val = BookHelper.getEvalCellValue(cell);
-		if (val instanceof RichTextString) {
-			val = ((RichTextString)val).getString();
-		}
-		if (val instanceof String) {
-			return Strings.isEmpty((String)val);
-		}
-		return val == null;
-	}
-	
-	public static FilterColumn getOrCreateFilterColumn(AutoFilter af, int colId) {
-		if (af instanceof XSSFAutoFilter) {
-			return ((XSSFAutoFilter)af).getOrCreateFilterColumn(colId);
-		} else {
-			return ((HSSFAutoFilter)af).getOrCreateFilterColumn(colId);
-		}
-	}
-		
-	public static void setProperties(FilterColumn fc, Object criteria1, int filterOp, Object criteria2, Boolean visibleDropDown) {
-		if (fc instanceof XSSFAutoFilter.XSSFFilterColumn) {
-			((XSSFAutoFilter.XSSFFilterColumn)fc).setProperties(criteria1, filterOp, criteria2, visibleDropDown);
-		} else {
-			((HSSFAutoFilter.HSSFFilterColumn)fc).setProperties(criteria1, filterOp, criteria2, visibleDropDown);
-		}
-	}
-
-	//TODO enhance performance for locating mergearea
-	public static CellRangeAddress getMergeRegion(Worksheet sheet, int row, int col) {
-		for (int i = 0; i < sheet.getNumMergedRegions(); i++) {
-			final CellRangeAddress ref = sheet.getMergedRegion(i);
-			final int top = ref.getFirstRow();
-	        final int bottom = ref.getLastRow();
-	        final int left = ref.getFirstColumn();
-	        final int right = ref.getLastColumn();
-	        
-	        if (row >= top && row <= bottom && col >= left && col <= right) {
-	        	return ref;
-	        }
-		}
-		return new CellRangeAddress(row, row, col, col);
-	}
-	
-	public static boolean isOneCell(Worksheet sheet, CellRangeAddress rng) {
-		if (rng.getNumberOfCells() == 1) {
-			return true;
-		}
-		final int l = rng.getFirstColumn();
-		final int t = rng.getFirstRow();
-		final int r = rng.getLastColumn();
-		final int b = rng.getLastRow();
-		
-		for (int i = 0; i < sheet.getNumMergedRegions(); i++) {
-			final CellRangeAddress ref = sheet.getMergedRegion(i);
-			final int top = ref.getFirstRow();
-	        final int bottom = ref.getLastRow();
-	        final int left = ref.getFirstColumn();
-	        final int right = ref.getLastColumn();
-	    
-	        if (l == left && t == top && r == right && b == bottom) {
-	        	return true;
-	        }
-		}
-		return false;
-	}
-	
-	private static CellValue evaluateFormula(Book book, int sheetIndex, String formula) {
-		final XelContext old = XelContextHolder.getXelContext();
-		try {
-			final VariableResolver resolver = BookHelper.getVariableResolver(book);
-			final FunctionMapper mapper = BookHelper.getFunctionMapper(book);
-			final XelContext ctx = new SimpleXelContext(resolver, mapper);
-			ctx.setAttribute("zkoss.zss.CellType", Object.class);
-			XelContextHolder.setXelContext(ctx);
-			final CellValue cv = book.getFormulaEvaluator().evaluateFormula(sheetIndex, formula);
-			return cv;
-		} finally {
-			XelContextHolder.setXelContext(old);
-		}
-	}
-
-	private static ValueEval evaluateFormulaValueEval(Book book, int sheetIndex, String formula, boolean ignoreDereference) {
-		final XelContext old = XelContextHolder.getXelContext();
-		try {
-			final VariableResolver resolver = BookHelper.getVariableResolver(book);
-			final FunctionMapper mapper = BookHelper.getFunctionMapper(book);
-			final XelContext ctx = new SimpleXelContext(resolver, mapper);
-			ctx.setAttribute("zkoss.zss.CellType", Object.class);
-			XelContextHolder.setXelContext(ctx);
-			return book.getFormulaEvaluator().evaluateFormulaValueEval(sheetIndex, formula, ignoreDereference);
-		} finally {
-			XelContextHolder.setXelContext(old);
-		}
-	}
-
-	private static CellValue getEvalValue(Worksheet sheet, String txt) {
-		final Object[] values = BookHelper.editTextToValue(txt, (String)null);
-		int cellType = values == null ? -1 : ((Integer)values[0]).intValue();
-		Object value = values == null ? null : values[1];
-		return getCellValue(sheet, cellType, value);
-	}
-	
-	private static CellValue getCellValue(Worksheet sheet, int cellType, Object value) {
-		if (cellType != -1 && value != null) {
-			switch(cellType) {
-			case Cell.CELL_TYPE_FORMULA:
-				final Book book = sheet.getBook();
-				final int sheetIndex = book.getSheetIndex(sheet);
-				return BookHelper.evaluateFormula(book, sheetIndex, (String) value);
-			case Cell.CELL_TYPE_STRING:
-				return new CellValue((String)value); //String
-			case Cell.CELL_TYPE_BOOLEAN:
-				return CellValue.valueOf(((Boolean)value).booleanValue()); //boolean
-			case Cell.CELL_TYPE_NUMERIC:
-				if (value instanceof Date) {
-			        boolean date1904 = sheet.getBook().isDate1904();
-			        double num = DateUtil.getExcelDate((Date)value, date1904);
-					value = new Double(num);
-				}
-				return new CellValue(((Number)value).doubleValue());
-			case Cell.CELL_TYPE_ERROR:
-				return CellValue.getError(((Byte)value).intValue() & 0xff);
-			}
-		}
-		return null;
-	}
-	
-	private static boolean equalCellValue(CellValue cv1, CellValue cv2) {
-		if (cv1.getCellType() != cv2.getCellType()) {
-			return false;
-		}
-		switch(cv1.getCellType()) {
-		case Cell.CELL_TYPE_FORMULA:
-		case Cell.CELL_TYPE_STRING:
-			return Objects.equals(cv1.getStringValue(), cv2.getStringValue());
-		case Cell.CELL_TYPE_BOOLEAN:
-			return cv1.getBooleanValue() ==  cv2.getBooleanValue();
-		case Cell.CELL_TYPE_NUMERIC:
-			return cv1.getNumberValue() == cv2.getNumberValue();
-		case Cell.CELL_TYPE_ERROR:
-			return cv1.getErrorValue() == cv2.getErrorValue();
-		}
-		return false;
-	}
-	
-	//get validation list, null if not a LIST validation.
-	public static String[] getValidationList(Worksheet sheet, DataValidation validation) {
-		DataValidationConstraint constraint = validation.getValidationConstraint();
-		if (constraint.getValidationType() != ValidationType.LIST) {
-			return null;
-		}
-		String[] list = constraint.getExplicitListValues();
-		if (list != null) {
-			return list;
-		}
-		String txt = constraint.getFormula1();
-		Book book = sheet.getBook();
-		final ValueEval ve = BookHelper.evaluateFormulaValueEval(book, book.getSheetIndex(sheet), txt, true);
-		if (ve instanceof AreaEval) {
-			final AreaEval ae = (AreaEval) ve;
-			if (ae.isColumn() || ae.isRow()) {
-				Worksheet worksheet = null;
-				if (ae instanceof LazyAreaEval) {
-					worksheet = book.getWorksheet(((LazyAreaEval) ve).getSheetName());
-				} else {
-					worksheet = sheet;
-				}
-				
-				final int rows = ae.getHeight();
-				final int cols = ae.getWidth();
-				final int top = ae.getFirstRow();
-				final int left = ae.getFirstColumn();
-				String[] xlist = new String[rows*cols];
-				for (int r = 0, j=0; r < rows; ++r) {
-					int rowIndex = r + top; 
-					for (int c = 0; c < cols; ++c) {
-						int colIndex = c + left;
-						final Cell cell = BookHelper.getCell(worksheet, rowIndex, colIndex);
-						xlist[j++] = BookHelper.getCellText(cell);
-					}
-				}
-				return xlist;
-			}
-		}
-		return null;
-	}
-	
-	private static boolean validateListOperation(Worksheet sheet, DataValidationConstraint constraint, CellValue target) {
-		if (target == null) {
-			return false;
-		}
-		String[] list = constraint.getExplicitListValues();
-		if (list != null) {
-			CellValue candidate = null;
-			for(int j = 0; j < list.length; ++j) {
-				String txt = list[j];
-				if (txt == null) {
-					continue; //skip
-				} else if (txt.startsWith("=")) { //must be string
-					candidate = new CellValue(txt);
-				} else {
-					candidate = getEvalValue(sheet, txt);
-				}
-				if (candidate != null && equalCellValue(target, candidate)) {
-					return true;
-				}
-			}
-			return false;
-		} else {
-			String txt = constraint.getFormula1();
-			Book book = sheet.getBook();
-			final ValueEval ve = BookHelper.evaluateFormulaValueEval(book, book.getSheetIndex(sheet), txt, false);
-			if (ve instanceof ArrayEval) {
-				final ArrayEval ae = (ArrayEval) ve;
-				if (ae.isColumn() || ae.isRow()) {
-					final int rows = ae.getHeight();
-					final int cols = ae.getWidth();
-					for (int r = 0; r < rows; ++r) {
-						for (int c = 0; c < cols; ++c) {
-							ValueEval xve = ae.getValue(r, c);
-							final CellValue candidate = book.getFormulaEvaluator().getCellValueByValueEval(xve);
-							if (equalCellValue(target, candidate)) {
-								return true;
-							}
-						}
-					}
-				}
-			} else {
-				final CellValue candidate = book.getFormulaEvaluator().getCellValueByValueEval(ve);
-				if (equalCellValue(target, candidate)) {
-					return true;
-				}
-			}
-			return false;
-		}
-	}
-	private static boolean validateOperation(Worksheet sheet, DataValidationConstraint constraint, Number value) {
-		if (value == null) {
-			return false;
-		}
-		String f1 = constraint.getFormula1();
-		CellValue cv1 = getEvalValue(sheet, f1);
-		if (cv1 == null) {
-			return true;
-		}
-		if (cv1.getCellType() != Cell.CELL_TYPE_NUMERIC) { //type does not match
-			return false;
-		}
-		double v1 = cv1.getNumberValue();
-		double v = value.doubleValue();
-		switch(constraint.getOperator()) {
-			case OperatorType.BETWEEN:
-			{
-				final String f2 = constraint.getFormula2();
-				final CellValue cv2 = getEvalValue(sheet, f2);
-				if (cv2.getCellType() != Cell.CELL_TYPE_NUMERIC) { //type does not match
-					return false;
-				}
-				final double v2 = cv2.getNumberValue();
-				return v >= v1 && v <= v2;
-			}
-			case OperatorType.NOT_BETWEEN:
-			{
-				final String f2 = constraint.getFormula2();
-				final CellValue cv2 = getEvalValue(sheet, f2);
-				if (cv2.getCellType() != Cell.CELL_TYPE_NUMERIC) { //type does not match
-					return false;
-				}
-				final double v2 = cv2.getNumberValue();
-				return v < v1 || v > v2;
-			}
-			case OperatorType.EQUAL:
-				return v == v1;
-			case OperatorType.NOT_EQUAL:
-				return v != v1;
-			case OperatorType.GREATER_THAN:
-				return v > v1;
-			case OperatorType.LESS_THAN:
-				return v < v1;
-			case OperatorType.GREATER_OR_EQUAL:
-				return v >= v1;
-			case OperatorType.LESS_OR_EQUAL:
-				return v <= v1;
-		}
-		
-		return true;
-	}
-	
-	private static boolean isInteger(Object value) {
-		if (value instanceof Number) {
-			return ((Number)value).intValue() ==  ((Number)value).doubleValue();
-		}
-		return false;
-	}
-	
-	private static boolean isDecimal(Object value) {
-		return value instanceof Number;
-	}
-	
-	private static boolean isString(Object value) {
-		return value instanceof String; 
-	}
-	
-	/*package*/ static DataValidation validate(Worksheet sheet, int row, int col, Object value, int cellType) {
-		DataValidation dv = sheet.getDataValidation(row, col);
-		//no validation constraint
-		if (dv == null) {
-			return null;
-		}
-		final DataValidationConstraint constraint = dv.getValidationConstraint();
-		//allow any value => no need to do validation
-		if (constraint.getValidationType() == ValidationType.ANY) { //can be any value, meaning no validation
-			return null;
-		}
-		//ignore empty and value is empty
-		if (value == null || (value instanceof String && ((String)value).length() == 0)) {
-			if (dv.getEmptyCellAllowed()) {
-				return null;
-			}
-		}
-		//get new evaluated formula value 
-		if (cellType == Cell.CELL_TYPE_FORMULA) {
-			final Book book = sheet.getBook();
-			final int sheetIndex = book.getSheetIndex(sheet);
-			final CellValue cv = BookHelper.evaluateFormula(book, sheetIndex, (String) value);
-			value = BookHelper.getValueByCellValue(cv);
-			cellType = cv.getCellType();
-		}
-		//start validation
-		boolean success = true;
-		switch(constraint.getValidationType()) {
-			// Integer ('Whole number') type
-			case ValidationType.INTEGER:
-				if (!isInteger(value) || !validateOperation(sheet, constraint, (Number)value)) {
-					success = false;
-				}
-				break;
-			// Decimal type
-			case ValidationType.DECIMAL:
-			// Date type
-			case ValidationType.DATE:
-				// Time type
-			case ValidationType.TIME:
-				if (!isDecimal(value) || !validateOperation(sheet, constraint, (Number)value)) {
-					success = false;
-				}
-				break;
-			// List type ( combo box type )
-			case ValidationType.LIST:
-				if (!validateListOperation(sheet, constraint, getCellValue(sheet, cellType, value))) {;
-					success = false;
-				}
-				break;
-			// String length type
-			case ValidationType.TEXT_LENGTH:
-				if (!isString(value) || !validateOperation(sheet, constraint, Integer.valueOf(value == null ? 0 : ((String)value).length()))) {
-					success = false;
-				}
-			// Formula ( 'Custom' ) type
-			case ValidationType.FORMULA:
-				throw new UnsupportedOperationException("Custom Validation is not supported yet!");
-		}
-		return success ? null : dv;
 	}
 }

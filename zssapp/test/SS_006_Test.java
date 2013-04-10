@@ -1,22 +1,18 @@
+import org.zkoss.ztl.JQuery;
 
 
 public class SS_006_Test extends SSAbstractTestCase {
 
-
-	/**
-	 * Open export PDF dialog
-	 */
     @Override
     protected void executeTest() {
-    	click("$fileMenu");
-    	mouseOver(jq("@menu[label=\"Export\"]"));
-    	click("$exportPdf");
+    	click("jq('$fileMenu button.z-menu-btn')");
+    	waitResponse();
+    	click("jq('@menu[label=\"Export\"] a.z-menu-cnt-img')");
+    	waitResponse();
+    	click("jq('$exportToPdf a.z-menu-item-cnt')");
     	waitResponse();
     	
-    	/**
-    	 * Expected:
-    	 * Opens Export to PDF dialog
-    	 */
-    	verifyTrue("Export PDF dialog shall be visible", isWidgetVisible("$_exportToPdfDialog"));
+    	// TODO verify if open file window is opened
+    	verifyTrue(widget(jq("@window[mode=\"highlighted\"][title=\"Export to PDF\"] div.z-window-highlighted-header")).exists());
     }
 }

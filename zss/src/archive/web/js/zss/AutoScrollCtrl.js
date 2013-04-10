@@ -18,9 +18,6 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 */
 
 (function () {
-	var ROWINC = 40,
-		COLINC = 60,
-		TIMEOUT = 100;
 	/**
 	 * Sets scroll panel scroll position
 	 */
@@ -37,14 +34,14 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 		var spcmp = sheet.sp.comp,
 			rowoff = coloff = 0;
 		if (dir.indexOf("t") > -1)
-			rowoff = -ROWINC;
+			rowoff = -zss.AutoScrollCtrl.ROWINC;
 		else if (dir.indexOf("b") > -1)
-			rowoff = ROWINC;
+			rowoff = zss.AutoScrollCtrl.ROWINC;
 	
 		if (dir.indexOf("l") > -1)
-			coloff = -COLINC;
+			coloff = -zss.AutoScrollCtrl.COLINC;
 		else if(dir.indexOf("r") > -1)
-			coloff = COLINC;
+			coloff = zss.AutoScrollCtrl.COLINC;
 		
 		if (! (ctrl.dironly == zss.AutoScrollCtrl.COLONLY))
 			spcmp.scrollTop += rowoff;
@@ -77,6 +74,9 @@ zss.AutoScrollCtrl = zk.$extends(zk.Object, {
 		return this.dir;
 	}
 }, {
+	ROWINC: 40,
+	COLINC: 60,
+	TIMEOUT: 100,
 	ROWONLY: 1,
 	COLONLY: 2
 });

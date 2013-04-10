@@ -19,14 +19,16 @@ public class SS_109_2_Test extends SSAbstractTestCase {
 	@Override
 	protected void executeTest() {
 		//verify
-		verifyTrue(getColumnHeader(5).isVisible());
+		int width = getColumnHeader(5).width();
+		verifyTrue(width!=0);
 		
 		rightClickColumnHeader(5);
 		click(jq("$hide a.z-menu-item-cnt"));
 		waitResponse();
 
 		//verify
-		verifyFalse(getColumnHeader(5).isVisible());		
+		width = getColumnHeader(5).width();
+		verifyTrue(width==0);		
 	}
 }
 

@@ -24,6 +24,7 @@ zss.FocusMarkCtrl = zk.$extends(zk.Object, {
 	$init: function (sheet, cmp, pos) {
 		this.$supers('$init', arguments);
 		this.id = cmp.id;
+		this.sheetid = sheet.sheetid;
 		this.comp = cmp;
 		var local = this;
 		
@@ -50,13 +51,12 @@ zss.FocusMarkCtrl = zk.$extends(zk.Object, {
 		this.column = col;
 		var cell = sheet.getCell(row, col),
 			mr = cell && cell.merr ? cell.merr : col,
-			mb = cell && cell.merb ? cell.merb : row,
 			custColWidth = sheet.custColWidth,
 			custRowHeight = sheet.custRowHeight,
 			l = custColWidth.getStartPixel(col),
 			t = custRowHeight.getStartPixel(row),
 			w = custColWidth.getStartPixel(mr + 1) - l,
-			h = custRowHeight.getStartPixel(mb + 1) - t;
+			h = custRowHeight.getSize(row);
 		
 		this.relocate_(l, t, w, h);
 	},

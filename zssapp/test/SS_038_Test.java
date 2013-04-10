@@ -4,13 +4,12 @@ public class SS_038_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-    	verifyFalse(isWidgetVisible("$_insertFormulaDialog"));
-    	
-    	click(jq("$insertMenu"));
+    	click("jq('$insertMenu button.z-menu-btn')");
     	waitResponse();
-    	click(jq("$insertFormula"));
+    	click("jq('$insertFormula a.z-menu-item-cnt')");
     	waitResponse();
     	
-    	verifyTrue(isWidgetVisible("$_insertFormulaDialog"));
+    	// TODO verify if insert formula window twindow is opened
+    	verifyTrue(widget(jq("@window[mode=\"highlighted\"][title=\"Insert Function\"] div.z-window-highlighted-header")).exists());
     }
 }

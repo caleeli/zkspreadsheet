@@ -3,13 +3,12 @@ public class SS_093_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-    	verifyFalse(jq("$_insertFormulaDialog").isVisible());
-    	
         click(jq("$insertFormulaBtn"));
         waitResponse();
         
         // Verify
-        verifyTrue(jq("$_insertFormulaDialog").isVisible());
+        String titleOfPopup =  jq(".z-window-highlighted.z-window-highlighted-shadow .z-window-highlighted-header").attr("textContent");
+        verifyEquals(titleOfPopup,"Insert Function");
     }
 
 }

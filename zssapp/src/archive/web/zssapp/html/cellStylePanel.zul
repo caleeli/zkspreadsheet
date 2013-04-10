@@ -1,6 +1,33 @@
 <?taglib uri="http://www.zkoss.org/dsp/web/core" prefix="c"?>
 <zk>
-	<hlayout id="container" height="100%" spacing="0">
+	<style>
+		.arialFont .z-menu-item-cnt, .arialFont .z-combo-item-text{
+		font-size:14px; font-family:arial; } .calibriFont
+		.z-menu-item-cnt, .calibriFont .z-combo-item-text{
+		font-size:14px; font-family:calibri; } .timeFont
+		.z-menu-item-cnt,.timeFont .z-combo-item-text{ font-size:14px;
+		font-family:time new roman; } .courierFont
+		.z-menu-item-cnt,.courierFont .z-combo-item-text{
+		font-size:14px; font-family:courier new; } .comicFont
+		.z-menu-item-cnt,.comicFont .z-combo-item-text{ font-size:14px;
+		font-family:comic Sans MS; } .centuryFont
+		.z-menu-item-cnt,.centuryFont .z-combo-item-text{
+		font-size:14px; font-family:century gothic; } .georgiaFont
+		.z-menu-item-cnt,.georgiaFont .z-combo-item-text{
+		font-size:14px; font-family:georgia; } .impactFont
+		.z-menu-item-cnt,.impactFont .z-combo-item-text{ font-size:14px;
+		font-family:impact; }
+	</style>
+	<zscript><![CDATA[ 
+	import org.zkoss.web.fn.ServletFns;
+	]]></zscript>
+	<hlayout id="container" height="100%" spacing="0" >
+		<attribute name="onCreate"><![CDATA[
+	    //TODO: bug on IE6, cause div expand
+		if (ServletFns.isBrowser("ie6")) {
+			container.setHflex("min");
+		}
+		]]></attribute>
 		<combobox id="fontFamily" mold="rounded" width="125px">
 			<comboitem label="Calibri" sclass="calibriFont" />
 			<comboitem label="Courier New" sclass="courierFont" />
@@ -36,27 +63,27 @@
 		<colorbutton id="cellColorBtn" width="20px" height="12px" color="#FFFFFF" image="~./zssapp/image/paint-can-color.png" tooltiptext="${c:l('font.fill')}"></colorbutton>
 		<dropdownbutton id="borderBtn" image="~./zssapp/image/border-bottom.png" forward="onClick=onBorderSelector(bottom)" tooltiptext="${c:l('border.bottom')}">
 			<menupopup >
-				<menuitem id="bottomBorder" label="${c:l('border.bottom')}" image="~./zssapp/image/border-bottom.png"
+				<menuitem label="${c:l('border.bottom')}" image="~./zssapp/image/border-bottom.png"
 					forward="onBorderSelector(bottom)" />
-				<menuitem id="topBorder" label="${c:l('border.top')}" image="~./zssapp/image/border-top.png"
+				<menuitem label="${c:l('border.top')}" image="~./zssapp/image/border-top.png"
 					forward="onBorderSelector(top)" />
-				<menuitem id="leftBorder" label="${c:l('border.left')}" image="~./zssapp/image/border-left.png"
+				<menuitem label="${c:l('border.left')}" image="~./zssapp/image/border-left.png"
 					forward="onBorderSelector(left)" />
-				<menuitem id="rightBorder" label="${c:l('border.right')}" image="~./zssapp/image/border-right.png"
+				<menuitem label="${c:l('border.right')}" image="~./zssapp/image/border-right.png"
 					forward="onBorderSelector(right)" />
 				<menuseparator />			
-				<menuitem id="noBorder" label="${c:l('border.no')}" image="~./zssapp/image/border.png"
+				<menuitem label="${c:l('border.no')}" image="~./zssapp/image/border.png"
 					forward="onBorderSelector(no)" />
-				<menuitem id="fullBorder" label="${c:l('border.full')}" image="~./zssapp/image/border-all.png"
+				<menuitem label="${c:l('border.full')}" image="~./zssapp/image/border-all.png"
 					forward="onBorderSelector(full)" />
-				<menuitem id="outsideBorder" label="${c:l('border.outside')}"	image="~./zssapp/image/border-outside.png"
+				<menuitem label="${c:l('border.outside')}"	image="~./zssapp/image/border-outside.png"
 					forward="onBorderSelector(outside)" />
-				<menuitem id="insideBorder" label="${c:l('border.inside')}" image="~./zssapp/image/border-inside.png"
+				<menuitem label="${c:l('border.inside')}" image="~./zssapp/image/border-inside.png"
 					forward="onBorderSelector(inside)" />
 				<menuseparator />
-				<menuitem id="insideHorizontalBorder" label="${c:l('border.insideHorizontal')}" image="~./zssapp/image/border-horizontal.png"
+				<menuitem label="${c:l('border.insideHorizontal')}" image="~./zssapp/image/border-horizontal.png"
 					forward="onBorderSelector(insideHorizontal)" />
-				<menuitem id="insideVerticalBorder" label="${c:l('border.insideVertical')}" image="~./zssapp/image/border-vertical.png"
+				<menuitem label="${c:l('border.insideVertical')}" image="~./zssapp/image/border-vertical.png"
 					forward="onBorderSelector(insideVertical)" />
 <!--				 NOT IMPLEMENT menuitem label="${c:l('border.diagonalDown')}" image="~./zssapp/image/border-down.png"-->
 <!--					forward="onBorderSelector(diagonalDown)" />-->
@@ -64,26 +91,12 @@
 <!--					forward="onBorderSelector(diagonalUp)" /-->
 			</menupopup>
 		</dropdownbutton>
-		<dropdownbutton id="valignBtn" image="~./zssapp/image/edit-vertical-alignment-top.png">
-			<menupopup>
-				<menuitem id="valignTop" label="${c:l('align.top')}" image="~./zssapp/image/edit-vertical-alignment-top.png"
-					forward="onVerticalAlignSelector(top)"></menuitem>
-				<menuitem id="valignMiddle" label="${c:l('align.middle')}" image="~./zssapp/image/edit-vertical-alignment-middle.png"
-					forward="onVerticalAlignSelector(middle)"></menuitem>
-				<menuitem id="valignBottom" label="${c:l('align.bottom')}" image="~./zssapp/image/edit-vertical-alignment.png"
-					forward="onVerticalAlignSelector(bottom)"></menuitem>
-			</menupopup>
-		</dropdownbutton>
-		<dropdownbutton id="halignBtn" image="~./zssapp/image/edit-alignment.png">
-			<menupopup>
-				<menuitem id="halignLeft" label="${c:l('align.left')}" image="~./zssapp/image/edit-alignment.png"
-					forward="onAlignSelector(left)" />
-				<menuitem id="halignCenter" label="${c:l('align.center')}" image="~./zssapp/image/edit-alignment-center.png" 
-					forward="onAlignSelector(center)"></menuitem>
-				<menuitem id="halignRight" label="${c:l('align.right')}" image="~./zssapp/image/edit-alignment-right.png"
-					forward="onAlignSelector(right)"></menuitem>
-			</menupopup>
-		</dropdownbutton>
-		<toolbarbutton id="wrapTextBtn" image="~./zssapp/image/wrapText.gif" tooltiptext="Wrap Text"></toolbarbutton>
+		<toolbarbutton id="alignLeftBtn" image="~./zssapp/image/edit-alignment.png" tooltiptext="${c:l('align.left')}"
+							forward="onClick=onAlignHorizontalClick(left)">	</toolbarbutton>
+		<toolbarbutton id="alignCenterBtn" image="~./zssapp/image/edit-alignment-center.png" tooltiptext="${c:l('align.center')}"
+							forward="onClick=onAlignHorizontalClick(center)"></toolbarbutton>
+		<toolbarbutton id="alignRightBtn" image="~./zssapp/image/edit-alignment-right.png" tooltiptext="${c:l('align.right')}"
+							forward="onClick=onAlignHorizontalClick(right)" ></toolbarbutton>
+		<toolbarbutton id="wrapTextBtn" image="~./zssapp/image/wrapText.gif" tooltiptext="Wrap Text"></toolbarbutton>				
 	</hlayout>
 </zk>

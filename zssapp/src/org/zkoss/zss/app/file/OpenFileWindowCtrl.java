@@ -20,8 +20,6 @@ import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.event.UploadEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
-import org.zkoss.zss.app.zul.Dialog;
-import org.zkoss.zss.app.zul.Zssapp;
 import org.zkoss.zss.app.zul.ctrl.DesktopWorkbenchContext;
 import org.zkoss.zss.app.zul.ctrl.WorkspaceContext;
 import org.zkoss.zul.Button;
@@ -33,7 +31,6 @@ import org.zkoss.zul.Listheader;
 import org.zkoss.zul.Listitem;
 import org.zkoss.zul.ListitemRenderer;
 import org.zkoss.zul.Messagebox;
-import org.zkoss.zul.Window;
 
 /**
  * @author Sam
@@ -41,22 +38,16 @@ import org.zkoss.zul.Window;
  */
 public class OpenFileWindowCtrl extends GenericForwardComposer {
 	
-	private Dialog _openFileDialog;
 	private Listbox filesListbox;
 	
 	private Button uploadBtn;
-
+	
 	@Override
 	public void doAfterCompose(Component comp) throws Exception {
 		super.doAfterCompose(comp);
 		initFileListbox();
+		
 		uploadBtn.setDisabled(!FileHelper.hasImportPermission());
-	}
-	
-	public void onOpen$_openFileDialog() {
-		filesListbox.setModel(new ListModelList(
-				WorkspaceContext.getInstance(desktop).getMetainfos()));
-		_openFileDialog.setMode(Window.MODAL);
 	}
 
 	private void initFileListbox() {
@@ -71,8 +62,11 @@ public class OpenFileWindowCtrl extends GenericForwardComposer {
 		dateHeader.setParent(listhead);
 		filesListbox.appendChild(listhead);
 		
+		filesListbox.setModel(new ListModelList(
+				WorkspaceContext.getInstance(desktop).getMetainfos()));
 		filesListbox.setItemRenderer(new ListitemRenderer() {
 			
+			@Override
 			public void render(Listitem item, Object obj) throws Exception {
 				final SpreadSheetMetaInfo info = (SpreadSheetMetaInfo)obj;
 				item.setValue(info);
@@ -83,15 +77,9 @@ public class OpenFileWindowCtrl extends GenericForwardComposer {
 					public void onEvent(Event evt) throws Exception {
 						getDesktopWorkbenchContext().getWorkbookCtrl().openBook(info);
 						getDesktopWorkbenchContext().fireWorkbookChanged();
-						_openFileDialog.fireOnClose(null);
+						self.detach();
 					}
 				});
-			}
-
-			@Override
-			public void render(Listitem item, Object data, int index)
-					throws Exception {
-				render(item, data);
 			}
 		});
 	}
@@ -102,13 +90,17 @@ public class OpenFileWindowCtrl extends GenericForwardComposer {
 			getDesktopWorkbenchContext().getWorkbookCtrl().
 				openBook(WorkspaceContext.getInstance(desktop).store(event.getMedia()));
 			getDesktopWorkbenchContext().fireWorkbookChanged();
-			_openFileDialog.fireOnClose(null);
+			self.detach();
 		} catch (UnsupportedSpreadSheetFileException e) {
-			Messagebox.show("Import file format " + event.getMedia().getName() + " not supported");
+			try {
+				//TODO: I18n
+				Messagebox.show("Import file format " + event.getMedia().getName() + " not supported");
+			} catch (InterruptedException e1) {
+			}
 		}
 	}
 	
 	private DesktopWorkbenchContext getDesktopWorkbenchContext() {
-		return Zssapp.getDesktopWorkbenchContext(self);
+		return DesktopWorkbenchContext.getInstance(desktop);
 	}
 }

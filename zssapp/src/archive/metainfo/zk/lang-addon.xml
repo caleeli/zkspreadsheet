@@ -1,22 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <language-addon>
 	<addon-name>zssapp</addon-name>
-	<depends>zssex</depends>
 	<language-name>xul/html</language-name>
 
-	<version>
-		<version-class>org.zkoss.zss.app.Version</version-class>
-		<version-uid>2.6.0</version-uid>
-		<zk-version>5.0.7</zk-version><!-- or later -->
-	</version>
-	
 	<component>
 		<component-name>colorbutton</component-name>
 		<component-class>org.zkoss.zss.app.zul.Colorbutton</component-class>
-		<widget-class>zssapp.Simplecolorbutton</widget-class>
+		<widget-class>zssapp.Colorbutton</widget-class>
 		<mold>
 			<mold-name>default</mold-name>
-			<mold-uri>mold/simplecolorbutton.js</mold-uri>
+			<mold-uri>mold/colorbutton.js</mold-uri>
 			<css-uri>css/colorbutton.css.dsp</css-uri>
 		</mold>
 	</component>
@@ -31,6 +24,42 @@
 			<css-uri>css/dropdownbutton.css.dsp</css-uri>
 		</mold>
 	</component>
+	
+	<component>
+		<component-name>rowheadermenupopup</component-name>
+		<extends>menupopup</extends>
+		<component-class>org.zkoss.zss.app.zul.RowHeaderMenupopup</component-class>
+	</component>
+	
+	<component>
+		<component-name>columnheadermenupopup</component-name>
+		<extends>menupopup</extends>
+		<component-class>org.zkoss.zss.app.zul.ColumnHeaderMenupopup</component-class>
+	</component>
+	
+	<component>
+		<component-name>cellmenupopup</component-name>
+		<extends>menupopup</extends>
+		<component-class>org.zkoss.zss.app.zul.CellMenupopup</component-class>
+	</component>
+	
+	<component>
+		<component-name>sheets</component-name>
+		<extends>div</extends>
+		<component-class>org.zkoss.zss.app.zul.Sheets</component-class>
+	</component>
+	
+	<component>
+		<component-name>cellcontext</component-name>
+		<extends>window</extends>
+		<component-class>org.zkoss.zss.app.zul.CellContext</component-class>
+	</component>
+
+	<component>
+		<component-name>formulaeditor</component-name>
+		<extends>textbox</extends>
+		<component-class>org.zkoss.zss.app.zul.FormulaEditor</component-class>
+	</component>
 
 	<component>
 		<component-name>filemenu</component-name>
@@ -39,9 +68,27 @@
 	</component>
 	
 	<component>
+		<component-name>editmenu</component-name>
+		<extends>menu</extends>
+		<component-class>org.zkoss.zss.app.zul.EditMenu</component-class>
+	</component>
+	
+	<component>
 		<component-name>viewmenu</component-name>
 		<extends>menu</extends>
 		<component-class>org.zkoss.zss.app.zul.ViewMenu</component-class>
+	</component>
+	
+	<component>
+		<component-name>formatmenu</component-name>
+		<extends>menu</extends>
+		<component-class>org.zkoss.zss.app.zul.FormatMenu</component-class>
+	</component>
+	
+	<component>
+		<component-name>insertmenu</component-name>
+		<extends>menu</extends>
+		<component-class>org.zkoss.zss.app.zul.InsertMenu</component-class>
 	</component>
 
 	<component>

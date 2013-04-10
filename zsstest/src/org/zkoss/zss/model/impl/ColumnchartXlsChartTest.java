@@ -23,17 +23,15 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.zkoss.lang.Library;
 import org.zkoss.poi.hssf.usermodel.HSSFChart;
 import org.zkoss.poi.hssf.usermodel.HSSFSheet;
 import org.zkoss.poi.hssf.usermodel.HSSFWorkbook;
 import org.zkoss.poi.hssf.usermodel.HSSFChart.HSSFSeries;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.ZssChartX;
 import org.zkoss.util.resource.ClassLocator;
 import org.zkoss.zss.model.Book;
-import org.zkoss.zssex.model.impl.DrawingManagerImpl;
+import org.zkoss.zssex.model.impl.DrawingManager;
 
 /**
  * Test chart anchor and type. 
@@ -57,8 +55,6 @@ public class ColumnchartXlsChartTest {
 		assertEquals(filename, ((Book)_book).getBookName());
 		assertEquals("Sheet1", _book.getSheetName(0));
 		assertEquals(0, _book.getSheetIndex("Sheet1"));
-		Library.setProperty("org.zkoss.zss.model.EscherAggregate.class", "org.zkoss.zssex.model.impl.ZKEscherAggregate");
-		Library.setProperty("org.zkoss.zss.model.EscherAggregate.UTEST.class", "org.zkoss.zssex.model.impl.ZKEscherAggregate");
 	}
 
 	/**
@@ -72,7 +68,7 @@ public class ColumnchartXlsChartTest {
 	@Test
 	public void testColumnchart() {
 		HSSFSheet sheet1 = (HSSFSheet) _book.getSheet("Sheet1");
-		List<ZssChartX> chartXes = new DrawingManagerImpl(sheet1).getChartXs();
+		List<Chart> chartXes = new DrawingManager(sheet1).getCharts();
 		assertEquals(1, chartXes.size());
 		HSSFChart chart = (HSSFChart) chartXes.get(0).getChartInfo();
 		assertEquals("2003-2006 Income Summary", chart.getChartTitle());

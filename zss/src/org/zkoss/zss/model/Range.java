@@ -13,21 +13,11 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model;
 
-import org.zkoss.poi.ss.usermodel.AutoFilter;
 import org.zkoss.poi.ss.usermodel.BorderStyle;
 import org.zkoss.poi.ss.usermodel.CellStyle;
-import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.ClientAnchor;
-import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.Hyperlink;
-import org.zkoss.poi.ss.usermodel.Picture;
 import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.poi.ss.usermodel.Sheet;
-import org.zkoss.poi.ss.usermodel.Workbook;
-import org.zkoss.poi.ss.usermodel.charts.ChartData;
-import org.zkoss.poi.ss.usermodel.charts.ChartGrouping;
-import org.zkoss.poi.ss.usermodel.charts.ChartType;
-import org.zkoss.poi.ss.usermodel.charts.LegendPosition;
 import org.zkoss.zss.model.impl.BookHelper;
 
 /**
@@ -80,6 +70,14 @@ public interface Range {
 	public final static int FILL_YEARS = BookHelper.FILL_YEARS;
 	public final static int FILL_GROWTH_TREND = BookHelper.FILL_GROWTH_TREND;
 	public final static int FILL_LINER_TREND = BookHelper.FILL_LINER_TREND;
+	
+	//filterOp of #autoFilter
+	public final static int FILTEROP_AND = BookHelper.FILTEROP_AND;
+	public final static int FILTEROP_BOTTOM10 = BookHelper.FILTEROP_BOTTOM10;
+	public final static int FILTEROP_BOTOOM10PERCENT = BookHelper.FILTEROP_BOTOOM10PERCENT;
+	public final static int FILTEROP_OR = BookHelper.FILTEROP_OR;
+	public final static int FILTEROP_TOP10 = BookHelper.FILTEROP_TOP10;
+	public final static int FILTEROP_TOP10PERCENT = BookHelper.FILTEROP_TOP10PERCENT;
 	
 	//borderIndex of #setBorders
 	/**
@@ -277,28 +275,16 @@ public interface Range {
 	public void setColumnWidth(int char256);
 	
 	/**
-	 * Sets row height in points and always set customHeight flag to true.
+	 * Sets row height in points.
 	 * @param points new row height in points.
 	 */
 	public void setRowHeight(int points);
 
 	/**
-	 * Sets row height in points with customHeight flag.
-	 * @param points new row height in points
-	 * @param customHeight true if manually set by user. 
+	 * Returns associate sheet of this range.
+	 * @return associate sheet of this range.
 	 */
-	public void setRowHeight(int points, boolean customHeight);
-	
-	/**
-	 * Returns Whether the row with customHeight. 
-	 */
-	public boolean isCustomHeight();
-	
-	/**
-	 * Returns associate {@link Worksheet} of this range.
-	 * @return associate {@link Worksheet} of this range.
-	 */
-	public Worksheet getSheet();
+	public Sheet getSheet();
 	
 	/**
 	 * Return the range that contains the cell specified in row, col (relative to this Range).
@@ -348,24 +334,17 @@ public interface Range {
 	public void fillUp();
 	
 	/**
-	 * Filters a list specified by this Range and returns an AutoFilter object.
+	 * Filters a list specified by this Range.
 	 * @param field offset of the field on which you want to base the filter on (1-based; i.e. leftmost column in this range is field 1).
-	 * @param criteria1 "=" to find blank fields, "<>" to find non-blank fields. If null, means ALL. If filterOp == AutoFilter#FILTEROP_TOP10, 
+	 * @param criteria1 "=" to find blank fields, "<>" to find non-blank fields. If null, means ALL. If filterOp == Range#FILTEROP_TOP10, 
 	 * then this shall specifies the number of items (e.g. "10"). 
 	 * @param filterOp see Range#FILTEROP_xxx. Use FILTEROP_AND and FILTEROP_OR with criteria1 and criterial2 to construct compound criteria.
 	 * @param criteria2 2nd criteria; used with criteria1 and filterOP to construct compound criteria.
-	 * @param visibleDropDown true to show the autoFilter drop-down arrow for the filtered field; false to hide the autoFilter drop-down arrow; null
-	 * to keep as is.
-	 * @return the applied AutoFiltering
+	 * @param visibleDropDown true to show the autoFilter drop-down arrow for the filtered field; false to hide the autoFilter drop-down arrow.
 	 */
-	public AutoFilter autoFilter(int field, Object criteria1, int filterOp, Object criteria2, Boolean visibleDropDown);
+//TODO UNTIL POI support reading/writing the autoFilter record	
+//	public void autoFilter(int field, String criteria1, int filterOp, String criteria2, boolean visibleDropDown);
 	
-	/**
-	 * Toggle the visibility of the AutoFilter dropdown buttons of this Range. Toggle off will remove current AutoFilter object. 
-	 * @return the applied AutoFiltering if toggle on; null if toggle off. 
-	 */
-	public AutoFilter autoFilter();
-
 	/**
 	 * Sets whether this rows or columns are hidden(useful only if this Range cover entire column or entire row)
 	 * @param hidden true to hide this rows or columns
@@ -377,12 +356,6 @@ public interface Range {
 	 * @param show true to show the gridlines; false to not show the gridlines. 
 	 */
 	public void setDisplayGridlines(boolean show);
-	
-    /**
-     * Sets the protection enabled as well as the password
-     * @param password to set for protection. Pass <code>null</code> to remove protection
-     */
-    public void protectSheet(String password);
 	
 	/**
 	 * Sets the hyperlink of this Range
@@ -493,120 +466,4 @@ public interface Range {
 	 * @return a {@link Range} that represents a range that offset from this Range.
 	 */
 	public Range getOffset(int rowOffset, int colOffset);
-	
-	/**
-	 * Returns a {@link Range} that bounds current Left-top cell of this Range with a combination of blank Rows and Columns.
-	 * @return a {@link Range} that bounds current Left-top cell of this Range with a combination of blank Rows and Columns.
-	 */
-	public Range getCurrentRegion();
-	
-	/**
-	 * Reapply current {@link AutoFilter}.
-	 */
-	public void applyFilter();
-	
-	/**
-	 * Clear all application of the current {@link AutoFilter}. 
-	 */
-	public void showAllData();
-
-	/**
-	 * Add a chart into the sheet of this Range 
-	 * @param anchor
-	 * @return the created chart 
-	 */
-	public Chart addChart(ClientAnchor anchor, ChartData data, ChartType type, ChartGrouping grouping, LegendPosition pos);
-
-	/**
-	 * Insert a picture into the sheet of this Range
-	 * @param anchor picture anchor
-	 * @param image image data
-	 * @param format image format
-	 * @see Workbook#PICTURE_TYPE_EMF
-     * @see Workbook#PICTURE_TYPE_WMF
-     * @see Workbook#PICTURE_TYPE_PICT
-     * @see Workbook#PICTURE_TYPE_JPEG
-     * @see Workbook#PICTURE_TYPE_PNG
-     * @see Workbook#PICTURE_TYPE_DIB
-     * @return the created picture
-	 */
-	public Picture addPicture(ClientAnchor anchor, byte[] image, int format);
-
-
-	/**
-	 * Delete an existing picture from the sheet of this Range.
-	 * @param picture the picture to be deleted
-	 */
-	public void deletePicture(Picture picture);
-	
-	/**
-	 * Update picture anchor.
-	 * @param picture the picture to change anchor
-	 * @param anchor the new anchor
-	 */
-	public void movePicture(Picture picture, ClientAnchor anchor);
-
-	/**
-	 * Update chart anchor.
-	 * @param chart the chart to change anchor
-	 * @param anchor the new anchor
-	 */
-	public void moveChart(Chart chart, ClientAnchor anchor);
-	
-	/**
-	 * Delete an existing chart from the sheet of this Range.
-	 * @param chart the chart to be deleted
-	 */
-	public void deleteChart(Chart chart);
-	
-	/**
-	 * Returns whether the plain text input by the end user is valid or not;
-	 * note the validation only applies to the left-top cell of this Range.
-	 * @param txt the string input by the end user.
-	 * @return null if a valid input to the specified range; otherwise, the DataValidation
-	 */
-	public DataValidation validate(String txt);
-	
-	/**
-	 * Returns whether any cell is protected and locked in this Range.
-	 * @return true if any cell is protected and locked in this Range.
-	 */
-	public boolean isAnyCellProtected();
-
-	/**
-	 * Move focus of the sheet of this Range(used for book collaboration).
-	 * @param token the token to identify the focus
-	 */
-	public void notifyMoveFriendFocus(Object token);
-	
-	/**
-	 * Delete focus of the sheet of this Range(used for book collaboration). 
-	 * @param token the token to identify the registration
-	 */
-	public void notifyDeleteFriendFocus(Object token);
-	
-	/**
-	 * Delete sheet of this Range.
-	 */
-	public void deleteSheet();
-	
-	/**
-	 * Create sheet of this book as specified in this Range.
-	 * @param name the name of the new created sheet; null would use default 
-	 * "SheetX" name where X is the next sheet number.
-	 */
-	public void createSheet(String name);
-	
-	/**
-     * Set(Rename) the name of the sheet as specified in this Range.
-	 * @param name
-	 */
-	public void setSheetName(String name);
-	
-    /**
-     * Sets the order of the sheet as specified in this Range.
-     *
-     * @param pos the position that we want to insert the sheet into (0 based)
-     */
-	public void setSheetOrder(int pos);
 }

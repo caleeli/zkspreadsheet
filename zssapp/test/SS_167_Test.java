@@ -23,11 +23,12 @@ public class SS_167_Test extends SSAbstractTestCase {
 		
 		//verify
 		String style = getCellCompositeStyle(1, 6);
-		verifyTrue("rgba(0, 0, 0, 0):Arial:left".equals(style) || "transparent:Arial:left".equals(style));		
+		verifyEquals(style,"rgba(0, 0, 0, 0):Arial:left");		
 		style = getCellCompositeStyle(1, 7);
-		verifyTrue("rgba(0, 0, 0, 0):Arial:left".equals(style) || "transparent:Arial:left".equals(style));
+		verifyEquals(style,"rgba(0, 0, 0, 0):Arial:left");
 		style = getCellCompositeStyle(5, 6);
-		verifyTrue("rgba(0, 0, 0, 0):Arial:right".equals(style) || "transparent:Arial:right".equals(style));
+		verifyEquals(style,"rgba(0, 0, 0, 0):Arial:right");
+		sleep(5000);
 	}
 }
 

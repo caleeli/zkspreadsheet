@@ -5,22 +5,6 @@
 		Reserved.
 	-->
 <zk>
-<!-- 
-<session-config>
-    <session-timeout>300</session-timeout>
-    <timer-keep-alive>false</timer-keep-alive>
-    <max-desktops-per-session>15</max-desktops-per-session>
-    <max-requests-per-session>5</max-requests-per-session>
-    <max-pushes-per-session>3</max-pushes-per-session>
-</session-config>
--->
-	<library-property>
-		<name>org.zkoss.zss.ui.Spreadsheet.linkToNewTab</name>
-		<value>false</value>
-	</library-property>
-	<client-config>
-		<debug-js>true</debug-js>
-	</client-config>
 	<library-property>
 		<name>org.zkoss.zss.app.file.fileHelper.importPermission</name>
 		<value>true</value>

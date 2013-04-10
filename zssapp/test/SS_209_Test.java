@@ -15,8 +15,6 @@ it will be useful, but WITHOUT ANY WARRANTY.
 
 //cell K1, choose function "SUM", and input "F7" in argument 1, and then press "Tab"
 public class SS_209_Test extends SSAbstractTestCase {
-	
-	
 	@Override
 	protected void executeTest() {		
 		rightClickCell(10,0);
@@ -35,14 +33,15 @@ public class SS_209_Test extends SSAbstractTestCase {
 		waitResponse();
 		type(jq("@window[mode=\"overlapped\"][title=\"Function Arguments\"] @textbox:eq(1)"), "f7");
 		waitResponse();
-		keyPressNative(TAB);	
+		keyPressNative(TAB);
 		waitResponse();
 		keyUpNative(TAB);
 		waitResponse();
 			
-		//TODO: verify current focus
-		String classname = jq("$_composeFormulaDialog @textbox:eq(2)").attr("class");
-		verifyTrue(classname.contains("focus"));	
+		//verify
+		String item2 = jq(".z-listitem:eq(1)").html();
+		String itemSelected = jq(".z-listitem-seld").html();		
+		verifyEquals(item2, itemSelected);
 	}
 }
 

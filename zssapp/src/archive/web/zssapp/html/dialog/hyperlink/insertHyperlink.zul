@@ -1,7 +1,8 @@
 <?page title="new page title" contentType="text/html;charset=UTF-8"?>
 <?taglib uri="http://www.zkoss.org/dsp/web/core" prefix="c"?>
+<?component name="linkmacro" macroURI="/menus/hyperlink/webLink.zul"?>
 <zk>
-	<window id="_insertHyperlinkDialog" title="${c:l('hyperlink.insert')}" border="normal" use="org.zkoss.zss.app.zul.Dialog"
+	<window title="${c:l('hyperlink.insert')}" border="normal"
 		mode="modal" closable="true" position="center" height="300px"
 		width="580px" apply="org.zkoss.zss.app.link.InsertHyperlinkWindowCtrl">
 		<borderlayout height="100%" width="100%">

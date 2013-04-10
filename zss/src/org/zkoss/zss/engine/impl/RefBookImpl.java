@@ -17,8 +17,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -38,7 +36,7 @@ public class RefBookImpl implements RefBook {
 	private final Map<String, RefSheet> _sheets;
 	private final int _maxrow;
 	private final int _maxcol;
-	private final ConcurrentMap<String, Ref> _variableRefs;
+	private final Map<String, Ref> _variableRefs;
 	private final EventQueue _queue;
 	
 	/**
@@ -47,18 +45,11 @@ public class RefBookImpl implements RefBook {
 	public RefBookImpl(String bookname, int maxrow, int maxcol) {
 		_bookname = bookname;
 		_sheets = new HashMap<String, RefSheet>(3);
-		_variableRefs = new ConcurrentHashMap<String, Ref>(4);
+		_variableRefs = new HashMap<String, Ref>(4);
 		_maxrow = maxrow;
 		_maxcol = maxcol;
-		EventQueue tmp = null;
-		try {
-			tmp = EventQueues.lookup(bookname);
-		} catch(IllegalStateException ex) {
-			//ignore for zsstest case(No execution)
-		}
-		_queue = tmp;
+		_queue = EventQueues.lookup(bookname);
 	}
-	
 	
 	@Override
 	public RefSheet getOrCreateRefSheet(String sheetname) {
@@ -92,10 +83,7 @@ public class RefBookImpl implements RefBook {
 	
 	@Override
 	public void publish(Event event) {
-		final EventQueue que = getEventQueue();
-		if (que != null) {
-			que.publish(event);
-		}
+		getEventQueue().publish(event);
 	}
 	
 	protected EventQueue getEventQueue() {
@@ -127,14 +115,23 @@ public class RefBookImpl implements RefBook {
 
 	@Override
 	public Ref getOrCreateVariableRef(String name, RefSheet dummy) {
-		final Ref ref = new VarRefImpl(name, dummy);
-		final Ref ret = _variableRefs.putIfAbsent(name, ref);
-		return ret != null ? ret : ref;
+		Ref ref = _variableRefs.get(name);
+		if (ref == null) {
+			synchronized(this) {
+				if (ref == null) {
+					ref = new VarRefImpl(name, dummy);
+					_variableRefs.put(name, ref);
+				}
+			}
+		}
+		return ref;
 	}
 
 	@Override
 	public Ref removeVariableRef(String name) {
-		return _variableRefs.remove(name);
+		synchronized(this) {
+			return _variableRefs.remove(name);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

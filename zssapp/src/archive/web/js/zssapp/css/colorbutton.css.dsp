@@ -56,8 +56,8 @@
 }
 <%-- Colorpicker --%>
 .z-colorpicker {
-	width: 382px;
-	height: 330px;
+	width: 380px;
+	height: 310px;
 	overflow: hidden;
 	position: relative;
 	background-color:#FFFFFF;
@@ -69,7 +69,7 @@
 }
 .z-colorpicker-gradient {
 	left: 7px;
-	top: 31px;
+	top: 9px;
 	position: absolute;
 	cursor: crosshair;
 }
@@ -89,7 +89,7 @@
 <%-- Colorpicker hue--%>
 .z-colorpicker-hue {
 	position: absolute;
-	top: 31px;
+	top: 9px;
 	left: 272px;
 	width: 27px;
 	height: 256px;
@@ -114,7 +114,7 @@
 }
 <%-- Colorpicker colors --%>
 .z-colorpicker-color {
-	top: 34px;
+	top: 12px;
 	left: 315px;
 	border: double;
 	position: absolute;
@@ -138,22 +138,22 @@
 	left: 310px;
 }
 .z-colorpicker-r {
-	top: 122px;
+	top: 100px;
 }
 .z-colorpicker-g {
-	top: 147px;
+	top: 125px;
 }
 .z-colorpicker-b {
-	top: 172px;
+	top: 150px;
 }
 .z-colorpicker-h {
-	top: 212px;
+	top: 190px;
 }
 .z-colorpicker-s {
-	top: 237px;
+	top: 215px;
 }
 .z-colorpicker-v {
-	top: 262px;
+	top: 240px;
 }
 .z-colorpicker-r-text, .z-colorpicker-g-text, .z-colorpicker-b-text,
 .z-colorpicker-h-text, .z-colorpicker-s-text, .z-colorpicker-v-text,
@@ -172,7 +172,7 @@
 <%-- Colorpicker input : hex --%>
 .z-colorpicker-hex {
 	position: absolute;
-	top: 300px;
+	top: 275px;
 	left: 10px;
 }
 .z-colorpicker-hex-inp {
@@ -181,7 +181,7 @@
 <%-- Colorpicker btn --%>
 .z-colorpicker-ok-btn, .z-colorpicker-cancel-btn {
 	cursor: pointer;
-	top: 300px;
+	top: 275px;
 	position: absolute;
 }
 .z-colorpicker-ok-btn {
@@ -194,11 +194,10 @@
 }
 <%-- Color Palette --%>
 .z-colorpalette {
-	width: 256px; 
+	width: 256px;
 	height: 220px;
 	border: 1px solid #86A4BE;
 	background-color: #FFFFFF;
-	padding-left: 4px;
 }
 .z-colorpalette-newcolor {
 	width: 50px;
@@ -237,7 +236,7 @@
 	height: 22px;
 	cursor: pointer;
 	position: absolute;
-	background: url(${c:encodeURL('~./zkex/img/colorbox/cb-buttons.gif')});
+	background: url(${c:encodeURL('~./zkex/img/breeze/colorbox/cb-buttons.gif')});
 }
 .z-colorbtn-palette-btn {
 	left: 6px;
@@ -262,7 +261,6 @@
 <%-- Color cell --%>
 .z-colorbtn-pp {
 	border: 1px solid #86A4BE;
-	background: #FFF;
 	position: absolute;
 	width: 180px;
 	height: 120px;

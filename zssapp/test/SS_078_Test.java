@@ -6,18 +6,23 @@ public class SS_078_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-        // Select L13:M14
-    	selectCells(11, 12, 12, 13);
-
+        // Select cells
+        clickCell(loadCellL13());
+        clickCell(loadCellL13());
+        mouseDownAt(loadCellL13(), "1,2");
+        waitResponse();
+        mouseMoveAt(loadCellM14(), "1,2");
+        waitResponse();
+        
         // Click Border icon
-        JQuery borderIcon = jq("$fastIconBtn $borderBtn:visible");
+        JQuery borderIcon = jq("$borderBtn");
         mouseOver(borderIcon);
         waitResponse();
         clickAt(borderIcon, "30,0");
         waitResponse();
         
         // Click inside vertical border
-        click(jq(".z-menu-popup:visible .z-menu-item:eq(9)"));
+        click(jq(".z-menu-item:eq(9)"));
         waitResponse();
         
         // Verify

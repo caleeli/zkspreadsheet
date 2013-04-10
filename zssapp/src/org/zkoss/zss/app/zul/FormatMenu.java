@@ -20,7 +20,6 @@ import org.zkoss.poi.ss.usermodel.CellStyle;
 import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.IdSpace;
-import org.zkoss.zk.ui.WebApps;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.ForwardEvent;
@@ -38,7 +37,7 @@ import org.zkoss.zul.Menupopup;
  * @author Sam
  *
  */
-public class FormatMenu extends Menu implements IdSpace {
+public class FormatMenu extends Menu implements IdSpace  {
 	//TODO provide font color menu
 	private Menupopup formatMenupopup;
 	
@@ -51,6 +50,15 @@ public class FormatMenu extends Menu implements IdSpace {
 		Executions.createComponents(Consts._FormatMenu_zul, this, null);
 		Components.wireVariables(this, this, '$', true, true);
 		Components.addForwards(this, this, '$');
+		
+		final DesktopWorkbenchContext workbenchCtrl = getDesktopWorkbenchContext();
+		workbenchCtrl.addEventListener(Consts.ON_WORKBOOK_CHANGED, new EventListener() {
+			
+			@Override
+			public void onEvent(Event event) throws Exception {
+				setDisabled(!workbenchCtrl.getWorkbookCtrl().hasBook());
+			}
+		});
 	}
 	
 	public void onFontFamilySelect(ForwardEvent event) {
@@ -122,28 +130,14 @@ public class FormatMenu extends Menu implements IdSpace {
 	}
 	
 	public void onClick$formatNumber() {
-//		getDesktopWorkbenchContext().getWorkbenchCtrl().openFormatNumberDialog();
+		DesktopWorkbenchContext.getInstance(getDesktop()).getWorkbenchCtrl().openFormatNumberDialog();
 	}
 	
 	protected DesktopWorkbenchContext getDesktopWorkbenchContext() {
-		return Zssapp.getDesktopWorkbenchContext(this);
+		return DesktopWorkbenchContext.getInstance(Executions.getCurrent().getDesktop());
 	}
 	
 	protected DesktopCellStyleContext getDesktopCellStyleContext() {
-		return Zssapp.getDesktopCellStyleContext(this);
-	}
-
-	public void onCreate() {
-		final DesktopWorkbenchContext workbenchCtrl = getDesktopWorkbenchContext();
-		workbenchCtrl.addEventListener(Consts.ON_WORKBOOK_CHANGED, new EventListener() {
-			public void onEvent(Event event) throws Exception {
-				setDisabled(!workbenchCtrl.getWorkbookCtrl().hasBook());
-			}
-		});
-		if (WebApps.getFeature("pe"))
-			backgroundColorMenu.setContent("#color=#FFFFFF");
-		else {
-			backgroundColorMenu.detach();
-		}
+		return DesktopCellStyleContext.getInstance(Executions.getCurrent().getDesktop());
 	}
 }

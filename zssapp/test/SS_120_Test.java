@@ -29,7 +29,8 @@ public class SS_120_Test extends SSAbstractTestCase {
 		click(jq("$unhide a.z-menu-item-cnt"));
 		waitResponse();
 				
-		//how to verify	
+		//how to verify
+		sleep(5000);		
 	}
 }
 

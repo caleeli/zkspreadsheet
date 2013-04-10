@@ -24,7 +24,7 @@ public class SS_089_Test extends SSAbstractTestCase {
         waitResponse();
         
         // Verify
-        verifyTrue(jq("$_customSortDialog").isVisible());
+        verifyTrue(jq("$sortWin").isVisible());
     }
 
 }

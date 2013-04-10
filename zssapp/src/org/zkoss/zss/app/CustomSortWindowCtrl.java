@@ -14,24 +14,22 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.app;
 
+import static org.zkoss.zss.app.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.zkoss.lang.Objects;
 import org.zkoss.poi.ss.usermodel.Cell;
+import org.zkoss.zss.model.Worksheet;
 import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Components;
-import org.zkoss.zk.ui.Executions;
-import org.zkoss.zk.ui.event.Event;
-import org.zkoss.zk.ui.event.ForwardEvent;
 import org.zkoss.zk.ui.event.SelectEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
-import org.zkoss.zss.app.zul.Dialog;
-import org.zkoss.zss.model.Worksheet;
+import org.zkoss.zss.app.zul.Zssapps;
 import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
 import org.zkoss.zss.ui.impl.Utils;
@@ -53,7 +51,6 @@ import org.zkoss.zul.Window;
  *
  */
 public class CustomSortWindowCtrl extends GenericForwardComposer {
-	private Dialog _customSortDialog;
 	/**
 	 * Sort by column
 	 */
@@ -89,40 +86,25 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 	private ListModelList sortIndexModel = new ListModelList();
 	
 	private Listbox sortLevel;
+	private Spreadsheet ss;
 	private Checkbox caseSensitive;
 	private Checkbox hasHeader;
 	private Combobox sortOrientationCombo;
+	private Window sortWin;
 	private Button addBtn;
 	private Button delBtn;
 	private Button upBtn;
 	private Button downBtn;
 	private Button okBtn;
 	
-	//TODO: remove Spreadsheet object, use WorkbookCtrl instead
-	private Spreadsheet ss;
-	private final static String KEY_ARG_SPREADSGEET = "org.zkoss.zss.app.customSortWindowCtrl.spreadsheetArg";
-	
-	public static Map newArg(Spreadsheet spreadsheet) {
-		HashMap<String, Object> arg = new HashMap<String, Object>();
-		arg.put(KEY_ARG_SPREADSGEET, spreadsheet);
-		return arg;
-	}
-	
-	public void onOpen$_customSortDialog(ForwardEvent event) {
-		Rect selection = (Rect) event.getOrigin().getData();
-		ss.setSelection(selection);
-		init();
-		_customSortDialog.setMode(Window.MODAL);
-	}
-	
 	public void doAfterCompose(Component comp) throws Exception {
 		super.doAfterCompose(comp);
-		ss = (Spreadsheet)Executions.getCurrent().getArg().get(KEY_ARG_SPREADSGEET);
+		ss = checkNotNull(Zssapps.getSpreadsheetFromArg(), "Spreadsheet is null");
+		sortOrientationCombo.setSelectedIndex(0);
+		initSortLevelListbox();
 	}
 
-	private void init () {
-		sortOrientationCombo.setSelectedIndex(0);
-		
+	private void initSortLevelListbox () {
 		List<SortLevel> ary = new ArrayList<SortLevel>();
 		ary.add(new SortLevel());
 		setAvailableSortTarget(availableSortIndex);
@@ -202,13 +184,19 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 	
 	public void onClick$okBtn () {
 		if (hasEmptyArgs(sortLevelModel.getInnerList())) {
-			Messagebox.show(getLabel("sort.err.hasEmptyField"));
+			try {
+				Messagebox.show(getLabel("sort.err.hasEmptyField"));
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		
 		String dupTarget = checkDuplicateSortIndex(sortLevelModel.getInnerList());
 		if (dupTarget != null) {
-			Messagebox.show(dupTarget + " " + getLabel("sort.err.duplicateField"));
+			try {
+				Messagebox.show(dupTarget + " " + getLabel("sort.err.duplicateField"));
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		
@@ -226,7 +214,7 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 		
 		//call utils
 		Utils.sort(ss.getSelectedSheet(), ss.getSelection(), index, algorithm, dataOption,  hasHeader.isChecked(), caseSensitive.isChecked(), sortOrientation);
-		_customSortDialog.fireOnClose(null);
+		sortWin.detach();
 	}
 	
 	/**
@@ -311,12 +299,6 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 			idxSel.setAttribute(SortAlgorithm.class.getCanonicalName(), sortMethod);
 			item.appendChild(cell);
 		}
-
-		@Override
-		public void render(Listitem item, Object data, int index)
-				throws Exception {
-			render(item, data);
-		}
 		
 	};
 	
@@ -336,8 +318,7 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 			if (sort.sortIndex >= 0 && getItemCount() > 0) {
 				int idx = getSpreadsheetIndexOffset(ss, sort.sortIndex, sortOrientation);
 				setSelectedIndex(idx >= 0 ? idx : 0);
-			} else
-				setSelectedIndex(-1);
+			}
 		}
 
 		public void onSelect () {

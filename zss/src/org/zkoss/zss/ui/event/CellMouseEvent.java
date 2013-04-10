@@ -32,11 +32,16 @@ public class CellMouseEvent extends MouseEvent{
 	private int _row;
 	private int _col;
 	
+	private int _clientx;
+	private int _clienty;
+
 	public CellMouseEvent(String name, Component target, int x,int y, int keys,Worksheet sheet, int row ,int col,int clientx,int clienty) {
 		super(name, target, x, y, clientx, clienty, keys);
 		_sheet = sheet;
 		this._row = row;
 		this._col = col;
+		this._clientx = clientx;
+		this._clienty = clienty;
 	}
 	
 	/*
@@ -91,7 +96,7 @@ public class CellMouseEvent extends MouseEvent{
 	 * @return x position
 	 */
 	public int getClientx(){
-		return super.getPageX();
+		return _clientx;
 	}
 	
 	/**
@@ -99,7 +104,7 @@ public class CellMouseEvent extends MouseEvent{
 	 * @return y position
 	 */
 	public int getClienty(){
-		return super.getPageY();
+		return _clienty;
 	}
 	
 	

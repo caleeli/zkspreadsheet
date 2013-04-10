@@ -25,8 +25,10 @@ import java.util.Map;
 import org.zkoss.io.Files;
 import org.zkoss.lang.Library;
 import org.zkoss.util.media.Media;
+import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.UiException;
+import org.zkoss.zss.app.Consts;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Exporter;
 import org.zkoss.zss.model.Exporters;
@@ -54,7 +56,7 @@ public class FileHelper {
 	/*has save permission or not, default is false*/
 	public final static String KEY_SAVE_PERMISSION = "org.zkoss.zss.app.file.fileHelper.savePermission";
 	
-	/*absolute file path that store all excel file*/
+	/*absolute file path that store all path*/
 	private static String storageFolderPath;
 	
 	private final static String EMPTY_FILE_NAME =  "Untitled";
@@ -105,7 +107,7 @@ public class FileHelper {
 		return false;
 	}
 	
-	public static String removeFolderPath(String src) {
+	private static String removeFolderPath(String src) {
 		int idx = -1;
 		String fileName = src;
 		if ((idx = fileName.lastIndexOf("\\")) >= 0 || (idx = fileName.lastIndexOf("/")) >= 0) {
@@ -121,7 +123,10 @@ public class FileHelper {
 			ss.setBookFromStream(input, info.getFileName());
 			return true;
 		} catch (FileNotFoundException e) {
-			Messagebox.show("Can not find file: " + info.getFileName());
+			try {
+				Messagebox.show("Can not find file: " + info.getFileName());
+			} catch (InterruptedException e1) {
+			}
 		} finally {
 			if (input != null)
 				try {
@@ -134,13 +139,11 @@ public class FileHelper {
 	}
 	
 	public static void openNewSpreadsheet(Spreadsheet ss) {
-		InputStream input = null;
+		FileInputStream input = null;
 		try {
-			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			input = loader.getResourceAsStream("web/zssapp/xls/Untitled");
-			
+			input = new FileInputStream(getSpreadsheetStorageFolderPath() + EMPTY_FILE_NAME);
 			ss.setBookFromStream(input, EMPTY_FILE_NAME);
-		} catch (Exception e) {
+		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		} finally {
 			if (input != null)
@@ -167,8 +170,11 @@ public class FileHelper {
 			c.export(wb, out);
 			SpreadSheetMetaInfo.add(info);
 		} catch (IOException e) {
-			Messagebox.show("Save excel failed");
-			e.printStackTrace();
+			try {
+				Messagebox.show("Save excel failed");
+				e.printStackTrace();
+			} catch (InterruptedException e1) {
+			}
 			return;
 		} finally {
 			if (out != null)
@@ -192,9 +198,8 @@ public class FileHelper {
 	public static void deleteSpreadsheet(String src) {
 		Map<String, SpreadSheetMetaInfo> infos = SpreadSheetMetaInfo.getMetaInfos();
 		SpreadSheetMetaInfo info = null;
-		String key = removeFolderPath(src);
-		if (infos.containsKey(key)) {
-			info = infos.get(key);
+		if (infos.containsKey(src)) {
+			info = infos.get(src);
 			deleteSpreadSheet(info);
 		}
 	}
@@ -212,7 +217,10 @@ public class FileHelper {
 		try {
 			SpreadSheetMetaInfo.delete(info);
 		} catch (IOException e) {
-			Messagebox.show("Delete file failed");
+			try {
+				Messagebox.show("Delete file failed");
+			} catch (InterruptedException e1) {
+			}
 		}
 	}
 
@@ -228,7 +236,7 @@ public class FileHelper {
 	 * @param string file name
 	 * @return
 	 */
-	public static boolean isSupportedSpreadSheetExtention(String fileName) {
+	private static boolean isSupportedSpreadSheetExtention(String fileName) {
 		//Note: <= 0, file name at least has one character
 		if (fileName == null || fileName.lastIndexOf(".") <= 0)
 			return false;
@@ -295,5 +303,13 @@ public class FileHelper {
 			storageFolderPath = Executions.getCurrent().getDesktop().getWebApp().getRealPath("xls") + File.separator;
 			
 		return storageFolderPath;
+	}
+	
+	public static void createOpenFileDialog(Component parent) {
+		Executions.createComponents(Consts._FileListOpen_zul, parent, null);
+	}
+	
+	public static void createImportFileDialog(Component parent) {
+		Executions.createComponents(Consts._ImportFile_zul,	parent, null);
 	}
 }

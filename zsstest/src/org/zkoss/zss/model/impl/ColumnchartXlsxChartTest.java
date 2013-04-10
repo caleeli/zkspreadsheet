@@ -25,12 +25,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.ZssChartX;
 import org.zkoss.poi.xssf.usermodel.XSSFSheet;
 import org.zkoss.poi.xssf.usermodel.XSSFWorkbook;
 import org.zkoss.util.resource.ClassLocator;
 import org.zkoss.zss.model.Book;
-import org.zkoss.zssex.model.impl.DrawingManagerImpl;
+import org.zkoss.zssex.model.impl.DrawingManager;
 
 /**
  * Test chart anchor and type. 
@@ -67,7 +66,7 @@ public class ColumnchartXlsxChartTest {
 	@Test
 	public void testColumnchart() {
 		XSSFSheet sheet1 = (XSSFSheet) _book.getSheet("Sheet1");
-		List<ZssChartX> chartInfos = new DrawingManagerImpl(sheet1).getChartXs();
+		List<Chart> chartInfos = new DrawingManager(sheet1).getCharts();
 /*		HSSFChart[] charts = HSSFChart.getSheetCharts(sheet1);
 		assertEquals(2, charts.length);
 		HSSFChart chart = charts[0];

@@ -16,12 +16,9 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 	<depends>zss</depends>
 
 	<version>
-		<version-class>org.zkoss.zss.app.Version</version-class>
-		<version-uid>2.6.0</version-uid>
-		<zk-version>5.0.7</zk-version>
+		<version-class>org.zkoss.zssex.Version</version-class>
+		<version-uid>2.0.0</version-uid>
+		<zk-version>5.0.2</zk-version><!-- or later -->
 	</version>
 
-	<listener>
-		<listener-class>org.zkoss.zss.app.init.ZssappWebInit</listener-class>
-	</listener>
 </config>

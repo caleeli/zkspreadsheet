@@ -17,18 +17,15 @@ it will be useful, but WITHOUT ANY WARRANTY.
 public class SS_162_Test extends SSAbstractTestCase {
 	@Override
 	protected void executeTest() {
-		verifyFalse(isWidgetVisible("$_openFileDialog"));
-		
 		selectCells(5,5,5,5);
 
 		//O:79
 		pressCtrlWithChar("79");
-		waitResponse();
 		
 		//verify
-		verifyTrue(isWidgetVisible("$_openFileDialog"));
-		
-		//TODO: in IE, will open browser dialog
+		String titleOfPopup =  jq(".z-window-highlighted.z-window-highlighted-shadow .z-window-highlighted-header").attr("textContent");
+		verifyEquals(titleOfPopup,"Open File");		
+
 	}
 }
 

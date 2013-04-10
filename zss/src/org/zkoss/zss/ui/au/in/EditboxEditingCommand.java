@@ -38,7 +38,9 @@ import org.zkoss.zss.ui.impl.Utils;
  * 
  */
 public class EditboxEditingCommand implements Command {
-	
+	final static String Command = org.zkoss.zss.ui.event.Events.ON_EDITBOX_EDITING;
+
+	// -- super --//
 	public void process(AuRequest request) {
 		final Component comp = request.getComponent();
 		if (comp == null)
@@ -56,5 +58,9 @@ public class EditboxEditingCommand implements Command {
 		}
 		EditboxEditingEvent event = new EditboxEditingEvent(org.zkoss.zss.ui.event.Events.ON_EDITBOX_EDITING, comp, sheet, clienttxt);
 		Events.postEvent(event);
+	}
+
+	public String getCommand() {
+		return Command;
 	}
 }

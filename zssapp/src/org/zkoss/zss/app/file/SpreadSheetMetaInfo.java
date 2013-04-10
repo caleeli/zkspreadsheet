@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 public class SpreadSheetMetaInfo {
+	
 	private String fileName;
 	private long timeInMillis;
 	private String hashFileName;
@@ -62,10 +63,6 @@ public class SpreadSheetMetaInfo {
 		importDate = formatter.format(calendar.getTime());
 	}
 
-	public String getSrc() {
-		return FileHelper.getSpreadsheetStorageFolderPath() + fileName;
-	}
-
 	public String getFileName() {
 		return fileName;
 	}
@@ -84,16 +81,17 @@ public class SpreadSheetMetaInfo {
 	
 	/**
 	 * 
-	 * @param src
+	 * @param fileName
 	 * @return
 	 */
-	public static SpreadSheetMetaInfo newInstance(String src){
+	public static SpreadSheetMetaInfo newInstance(String fileName){
 		SpreadSheetMetaInfo info = new SpreadSheetMetaInfo();
-		info.fileName = removeFolderPath(src);
-		String extName = FileHelper.getMediaExtention(src);
+
+		info.fileName = removeFolderPath(fileName);
+		String extName = FileHelper.getMediaExtention(fileName);
 
 		info.timeInMillis = System.currentTimeMillis();	
-		info.hashFileName = info.fileName.substring(0, info.fileName.indexOf("."))
+		info.hashFileName = info.fileName.substring(0, fileName.indexOf("."))
 				+ "-" + info.timeInMillis + "." + extName;
 		return info;
 	}
@@ -162,7 +160,7 @@ public class SpreadSheetMetaInfo {
 	}
 	
 	/**
-	 * Returns {@link #SpreadSheetMetaInfo} of all spreadsheet file
+	 * Returns metainfo of all spreadsheet file
 	 * @return
 	 */
 	public static Map<String, SpreadSheetMetaInfo> getMetaInfos() {

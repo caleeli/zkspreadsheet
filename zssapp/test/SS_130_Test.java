@@ -15,15 +15,11 @@ it will be useful, but WITHOUT ANY WARRANTY.
 
 //delete => shift cells up : F12
 public class SS_130_Test extends SSAbstractTestCase {
-	
-	/**
-	 * shift cell up
-	 */
 	@Override
 	protected void executeTest() {
 		//verify
-		String oriF12value = getCellText(5, 11);
-		String oriF13value = getCellText(5, 12);		
+		String oriF12value = getSpecifiedCell(5,11).text();
+		String oriF13value = getSpecifiedCell(5,12).text();		
 		verifyNotEquals(oriF12value, oriF13value);
 		
 		rightClickCell(5,11);
@@ -33,7 +29,7 @@ public class SS_130_Test extends SSAbstractTestCase {
 		waitResponse();
 		
 		//verify
-		String f12value = getCellText(5, 11);
+		String f12value = getSpecifiedCell(5,11).text();
 		verifyEquals(f12value, oriF13value);
 	}
 }

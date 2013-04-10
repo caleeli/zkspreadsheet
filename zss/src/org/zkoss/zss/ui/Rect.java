@@ -25,12 +25,6 @@ package org.zkoss.zss.ui;
  */
 public class Rect {
 
-	public static final int SELECT_CELLS = 0x01;
-	public static final int SELECT_ROW = 0x02;
-	public static final int SELECT_COLUMN = 0x03;
-	public static final int SELECT_ALL = 0x04;
-	
-	private int _action = SELECT_CELLS;//default
 	private int _left = -1;
 	private int _top = -1;
 	private int _right = -1;
@@ -41,15 +35,6 @@ public class Rect {
 	
 	public Rect(int left,int top,int right,int bottom){
 		set(left,top,right,bottom);
-	}
-	
-	public Rect(int action, int left,int top,int right,int bottom){
-		set(left,top,right,bottom);
-		_action = action;
-	}
-	
-	public int getSelectionType(){
-		return _action;
 	}
 
 	public void set(int left,int top,int right,int bottom){
@@ -92,16 +77,11 @@ public class Rect {
 	}
 	
 	public Object cloneSelf(){
-		return (Rect)new Rect(_left,_top,_right,_bottom);
+		return new Rect(_left,_top,_right,_bottom);
 	}
 	
 	public String toString(){
 		return "left:"+_left+",top:"+_top+",right:"+_right+",bottom:"+_bottom;
-	}
-	
-	public boolean contains(int tRow, int lCol, int bRow, int rCol) {
-		return	tRow >= _top && lCol >= _left &&
-				bRow <= _bottom && rCol <= _right;
 	}
 
 	public int hashCode() {

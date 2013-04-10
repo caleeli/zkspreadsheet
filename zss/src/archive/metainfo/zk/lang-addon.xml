@@ -14,18 +14,23 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 -->
 <language-addon>
 	<!-- The name of this addon. It must be unique -->
-	<addon-name>zss</addon-name>
+	<addon-name>ZK Spreadsheet</addon-name>
 	<!-- Specifies what other addon this depends
 	<depends></depends>
 	-->
 
 	<!-- Which language this addon will be added to -->
 	<language-name>xul/html</language-name>
+	
+	<!--TODO remove this before when release -->
+	<!-- javascript src="~./js/zss/debug.js" charset="UTF-8"/-->
+
+	<stylesheet href="~./zss/css/ss*.css.dsp*" type="text/css"/>
 
 	<version>
 		<version-class>org.zkoss.zss.ui.Version</version-class>
-		<version-uid>2.6.0</version-uid>
-		<zk-version>5.0.7</zk-version><!-- or later -->
+		<version-uid>2.0.0</version-uid>
+		<zk-version>5.0.0</zk-version><!-- or later -->
 	</version>
 
 	<zscript language="Java">
@@ -54,18 +59,6 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 		<mold>
 			<mold-name>default</mold-name>
 			<mold-uri>mold/spreadsheet.js</mold-uri>
-			<css-uri>css/ss.css.dsp</css-uri>
 		</mold>
-	</component>
-	
-	<component>
-		<component-name>zssupload</component-name>
-		<component-class>org.zkoss.zss.ui.impl.Upload</component-class>
-		<widget-class>zss.Upload</widget-class>
-	</component>
-	<component>
-		<component-name>zssuploader</component-name>
-		<component-class>org.zkoss.zss.ui.impl.Uploader</component-class>
-		<widget-class>zss.Uploader</widget-class>
 	</component>
 </language-addon>

@@ -1,24 +1,28 @@
 import org.zkoss.ztl.JQuery;
 import org.zkoss.ztl.util.ColorVerifingHelper;
 
-//Toolbar>>Border>>No border
 
 public class SS_073_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-        // Select L13:M14
-    	selectCells(11, 12, 12, 13);
+        // Select cells
+        clickCell(loadCellL13());
+        clickCell(loadCellL13());
+        mouseDownAt(loadCellL13(), "1,2");
+        waitResponse();
+        mouseMoveAt(loadCellM14(), "1,2");
+        waitResponse();
         
         // Click Border icon
-        JQuery borderIcon = jq("$fastIconBtn $borderBtn:visible");
+        JQuery borderIcon = jq("$borderBtn");
         mouseOver(borderIcon);
         waitResponse();
         clickAt(borderIcon, "30,0");
         waitResponse();
         
         // Click all border
-        click(jq(".z-menu-popup:visible .z-menu-item:eq(5)"));
+        click(jq(".z-menu-item:eq(5)"));
         waitResponse();
         
         // Verify
@@ -40,7 +44,7 @@ public class SS_073_Test extends SSAbstractTestCase {
         waitResponse();
         
         // Click no border
-        click(jq(".z-menu-popup:visible .z-menu-item:eq(4)"));
+        click(jq(".z-menu-item:eq(4)"));
         waitResponse();
         
         // Verify

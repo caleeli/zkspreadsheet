@@ -7,16 +7,15 @@
 public class Utils {
 
     public static String getTarget() {
-        //return "http://localhost:8088/zssapp/zssapp.jsp";
-        return "http://localhost:8080/zssapp/";
+        return "http://localhost:8080/zssdemos-xlsx";
     }
 
     public static String getBrowsers() {
-        return "ie";
+        return "firefox";
     }
 
     public static int getTimeout() {
-        return 10000;
+        return 6000;
     }
 
 }

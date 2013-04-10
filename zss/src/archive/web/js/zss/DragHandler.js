@@ -31,29 +31,6 @@ zss.DragHandler = zk.$extends(zk.Object, {
 
 		zk(document.body).disableSelection();
 	},
-	_isMenupopupOpen: function () {
-		var sheet = this.sheet,
-			p = sheet.getStyleMenupopup();
-		if (p && p.isOpen()) {
-			return true;
-		}
-		
-		p = sheet.getCellMenupopup();
-		if (p && p.isOpen()) {
-			return true;
-		}
-		
-		p = sheet.getColumnHeaderMenupopup();
-		if (p && p.isOpen()) {
-			return true;
-		}
-		
-		p = sheet.getRowHeaderMenupopup();
-		if (p && p.isOpen()) {
-			return true;
-		}
-		return false;
-	},
 	cleanup: function () {
 		var wgt = this.sheet._wgt;
 		wgt.domUnlisten_(document, "onMouseUp", '_doDragMouseUp');
@@ -64,25 +41,6 @@ zss.DragHandler = zk.$extends(zk.Object, {
 		this.stopAutoScroll();
 		zk(document.body).enableSelection();
 		this.sheet.stopDragging();
-		/* ZSS-169: set paste src only when user set selection by drag cells
-		//feature #26: Support copy/paste value to local Excel
-		var sheet = this.sheet,
-			self = this;
-		if (sheet.state != zss.SSheetCtrl.Editing && !sheet.editingFormulaInfo) {
-			var focustag = sheet.dp.focustag;
-			
-			//Note. mouse down -> mouse up (DragHandler cleanup) -> mouse click
-			//Menupopup open at mouse click event, delay focustag.focus 
-			sheet.runAfterMouseClick(function () {
-				setTimeout(function () {
-					if (!self._isMenupopupOpen()) {
-						focustag.focus();
-						jq(focustag).select();
-					}
-				}, 0);
-			});
-		}
-		*/
 	},
 	stopAutoScroll : function (){
 		if (this.scrollctrl) {
@@ -143,7 +101,7 @@ zss.SelDrag = zk.$extends(zss.DragHandler, {
 			cmp,
 			outside;
 		
-		if ( (cmp = zkS.parentByZSType(elm, ["SCell","SRow"], 1)) != null) {//move on cell or vertical merged cell
+		if ( (cmp = zkS.parentByZSType(elm, "SCell", 1)) != null) {//move on cell
 			var cellpos = zss.SSheetCtrl._calCellPos(sheet, mx, my, false);
 			row = cellpos[0];
 			col = cellpos[1];

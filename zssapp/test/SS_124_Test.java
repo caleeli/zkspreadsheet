@@ -17,8 +17,6 @@ it will be useful, but WITHOUT ANY WARRANTY.
 public class SS_124_Test extends SSAbstractTestCase {
 	@Override
 	protected void executeTest() {
-		verifyFalse(jq("$_pasteSpecialDialog").isVisible());
-		
 		//verify		
 		verifyTrue(jq("div.zshighlight").width() == 0);
 		
@@ -34,7 +32,8 @@ public class SS_124_Test extends SSAbstractTestCase {
 		waitResponse();
 
 		//verify
-		verifyTrue(jq("$_pasteSpecialDialog").isVisible());
+		String titleOfPopup =  jq(".z-window-highlighted.z-window-highlighted-shadow .z-window-highlighted-header").attr("textContent");
+		verifyEquals(titleOfPopup,"Paste Special");		
 	}
 }
 

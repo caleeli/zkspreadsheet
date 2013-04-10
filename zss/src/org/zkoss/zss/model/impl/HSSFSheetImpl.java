@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.zkoss.lang.Classes;
-import org.zkoss.lang.Library;
 import org.zkoss.poi.hssf.model.HSSFFormulaParser;
 import org.zkoss.poi.hssf.model.InternalSheet;
 import org.zkoss.poi.hssf.model.InternalWorkbook;
@@ -34,7 +32,7 @@ import org.zkoss.poi.hssf.record.Record;
 import org.zkoss.poi.hssf.record.RecordBase;
 import org.zkoss.poi.hssf.record.aggregates.DataValidityTable;
 import org.zkoss.poi.hssf.record.aggregates.RecordAggregate.RecordVisitor;
-import org.zkoss.poi.ss.formula.ptg.Ptg;
+import org.zkoss.poi.hssf.record.formula.Ptg;
 import org.zkoss.poi.hssf.usermodel.HSSFCell;
 import org.zkoss.poi.hssf.usermodel.HSSFCellHelper;
 import org.zkoss.poi.hssf.usermodel.HSSFCellStyle;
@@ -49,12 +47,9 @@ import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.formula.PtgShifter;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.CellStyle;
-import org.zkoss.poi.ss.usermodel.Chart;
 import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.DataValidationConstraint;
 import org.zkoss.poi.ss.usermodel.DataValidationHelper;
-import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.usermodel.Row;
 import org.zkoss.poi.ss.usermodel.DataValidationConstraint.ValidationType;
 import org.zkoss.poi.ss.util.CellRangeAddress;
@@ -1230,51 +1225,17 @@ public class HSSFSheetImpl extends HSSFSheet implements SheetCtrl, Worksheet {
     	super.removeMergedRegion(index);
     }
 
-    //--Worksheet--//
-    @Override
+    //--Sheet--//
     public Book getBook() {
     	return (Book) getWorkbook();
     }
-    
-	@Override
-	public List<Picture> getPictures() {
-		DrawingManager dm = getDrawingManager();
-		return new ArrayList<Picture>(dm.getPictures());
-	}
-    
-	@Override
-	public List<Chart> getCharts() {
-		DrawingManager dm = getDrawingManager();
-		return dm.getCharts();
-	}
-	
-	@Override
-	public List<PivotTable> getPivotTables() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-    
     //--SheetCtrl--//
-    private volatile SheetCtrl _sheetCtrl = null;
+    private SheetCtrl _sheetCtrl;
     private SheetCtrl getSheetCtrl() {
-    	SheetCtrl ctrl = _sheetCtrl;
-    	if (ctrl == null) {
-    		synchronized(this) {
-    			ctrl = _sheetCtrl;
-    			if (ctrl == null) {
-    				String clsnm = Library.getProperty("org.zkoss.zss.model.impl.SheetCtrl.class");
-    				if (clsnm == null) {
-    					clsnm = "org.zkoss.zss.model.impl.SheetCtrlImpl";
-    				}
-    				try {
-						ctrl = _sheetCtrl = (SheetCtrl) Classes.newInstanceByThread(clsnm, new Class[] {Book.class, Worksheet.class}, new Object[] {getBook(), this});
-					} catch (Exception e) {
-						ctrl = _sheetCtrl = new SheetCtrlImpl(getBook(), this); 
-					}
-    			}
-    		}
+    	if (_sheetCtrl == null) {
+    		_sheetCtrl = new SheetCtrlImpl(getBook(), this);
     	}
-    	return ctrl;
+    	return _sheetCtrl;
     }
 	@Override
 	public void evalAll() {
@@ -1306,13 +1267,5 @@ public class HSSFSheetImpl extends HSSFSheet implements SheetCtrl, Worksheet {
 	@Override
 	public void initMerged() {
 		getSheetCtrl().initMerged();
-	}
-	@Override
-	public DrawingManager getDrawingManager() {
-		return getSheetCtrl().getDrawingManager();
-	}
-	@Override
-	public void whenRenameSheet(String oldname, String newname) {
-		getSheetCtrl().whenRenameSheet(oldname, newname);
 	}
 }

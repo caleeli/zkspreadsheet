@@ -1,6 +1,6 @@
 <?page title="new page title" contentType="text/html;charset=UTF-8"?>
 <zk>
-<window id="_insertFormulaDialog" title="Insert Function" border="normal" use="org.zkoss.zss.app.zul.Dialog"
+<window title="Insert Function" border="normal"
 	width="480px" mode="modal" closable="true" position="center"
 	apply="org.zkoss.zss.app.ctrl.InsertFormulaCtrl2">
 <div height="5px"></div>
@@ -16,7 +16,7 @@
 	</hlayout>	
 </hlayout>
 <div height="5px"></div>
-<vlayout height="275px"  >
+<vlayout height="245px">
 	<label value="Select a function"/>
 	<listbox id="functionListbox" rows="6">
 	</listbox>

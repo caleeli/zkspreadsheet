@@ -25,16 +25,17 @@ public class SS_197_Test extends SSAbstractTestCase {
 		waitResponse();
 		
 		//verify
-		verifyTrue(jq("$_customSortDialog").isVisible());	
+		String titleOfPopup =  jq(".z-window-highlighted.z-window-highlighted-shadow .z-window-highlighted-header").attr("textContent");
+		verifyEquals(titleOfPopup,"Custom Sort");		
 		verifyFalse(jq("$sortWin @combobox i.z-combobox-rounded-btn-readonly:eq(3)").exists());
 
 		click(jq("$addBtn img"));
 		waitResponse();
 		
 		//verify
-		verifyTrue(jq("$_customSortDialog @combobox i.z-combobox-rounded-btn-readonly:eq(3)").exists());
+		verifyTrue(jq("$sortWin @combobox i.z-combobox-rounded-btn-readonly:eq(3)").exists());
 
-		click(jq("$_customSortDialog @listcell div.z-overflow-hidden:eq(0)"));
+		click(jq("$sortWin @listcell div.z-overflow-hidden:eq(0)"));
 		waitResponse();
 		
 		//verify

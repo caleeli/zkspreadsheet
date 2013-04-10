@@ -33,8 +33,8 @@ public class SS_215_Test extends SSAbstractTestCase {
 		waitResponse();
 		
 		//verify
-		String h1value = getCellText(7,0);
-		verifyEquals(h1value,"4:17\u00A0PM");
+		String h1value = getSpecifiedCell(7,0).text();
+		verifyEquals(h1value,"4:17 PM");
 	}
 }
 

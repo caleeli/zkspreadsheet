@@ -4,13 +4,12 @@ public class SS_168_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-    	verifyFalse(isWidgetVisible("$_openFileDialog"));
-    	
-    	click(jq("$fileMenu"));
+    	click("jq('$fileMenu button.z-menu-btn')");
     	waitResponse();
-    	click(jq("$openFile"));
+    	click("jq('$openFile a.z-menu-item-cnt')");
     	waitResponse();
     	
-    	verifyTrue(isWidgetVisible("$_openFileDialog"));
+    	// TODO verify if open file window is opened
+    	verifyTrue(widget(jq("$fileOpenWin div.z-window-highlighted-header")).exists());
     }
 }

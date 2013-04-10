@@ -1,17 +1,29 @@
 import org.zkoss.ztl.JQuery;
 import org.zkoss.ztl.util.ColorVerifingHelper;
 
-//Toolbar>>Border>>outside border
 
 public class SS_075_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-        // Select L13:M14
-    	selectCells(11, 12, 12, 13);
+        // Select cells
+        clickCell(loadCellL13());
+        clickCell(loadCellL13());
+        mouseDownAt(loadCellL13(), "1,2");
+        waitResponse();
+        mouseMoveAt(loadCellM14(), "1,2");
+        waitResponse();
         
-    	//click Outside borders in border toolbar button
-    	clickDropdownButtonMenu("$fastIconBtn $borderBtn","Outside borders");
+        // Click Border icon
+        JQuery borderIcon = jq("$borderBtn");
+        mouseOver(borderIcon);
+        waitResponse();
+        clickAt(borderIcon, "30,0");
+        waitResponse();
+        
+        // Click outside border
+        click(jq(".z-menu-item:eq(6)"));
+        waitResponse();
         
         // Verify
         verifyTrue(ColorVerifingHelper.isEqualColor("#FFFFFF", loadCellL13().parent().css("border-right-color")));

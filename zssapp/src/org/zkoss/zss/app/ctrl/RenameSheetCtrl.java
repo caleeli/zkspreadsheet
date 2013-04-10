@@ -14,18 +14,14 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.app.ctrl;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.zkoss.zk.ui.event.ForwardEvent;
+import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
-import org.zkoss.zss.app.zul.Dialog;
-import org.zkoss.zss.app.zul.Zssapp;
 import org.zkoss.zss.app.zul.ctrl.DesktopWorkbenchContext;
+import org.zkoss.zss.app.zul.ctrl.WorkbookCtrl;
 import org.zkoss.zul.Button;
 import org.zkoss.zul.Messagebox;
 import org.zkoss.zul.Textbox;
-import org.zkoss.zul.Window;
 
 /**
  * @author sam
@@ -33,47 +29,32 @@ import org.zkoss.zul.Window;
  */
 public class RenameSheetCtrl extends GenericForwardComposer {
 	
-	private final static String KEY_ARG_SHEET_NAME = "org.zkoss.zss.app.ctrl.renameSheetCtrl.sheetName";
+	public final static String KEY_ARG_SHEET_NAME = "org.zkoss.zss.app.ctrl.renameSheetCtrl.sheetName";
 	
-	private Dialog _renameSheetDialog;
 	private Button confirmRenameBtn;
+	
 	private Textbox sheetNameTB;
-	
-	/**
-	 * @param originalSheetName
-	 * @return
-	 */
-	public static Map newArg(String originalSheetName) {
-		HashMap<String, Object> arg = new HashMap<String, Object>(1);
-		arg.put(KEY_ARG_SHEET_NAME, originalSheetName);
-		return arg;
-	}
 
-	public void onOpen$_renameSheetDialog(ForwardEvent event) {
-		Map arg = (Map) event.getOrigin().getData();
-		sheetNameTB.setText((String)arg.get(KEY_ARG_SHEET_NAME));
-		sheetNameTB.focus();
-		_renameSheetDialog.setMode(Window.MODAL);
-	}
-	
-	public void onOK$sheetNameTB() {
-		rename();
+	@Override
+	public void doAfterCompose(Component comp) throws Exception {
+		super.doAfterCompose(comp);
+
+		sheetNameTB.setText((String)Executions.getCurrent().getArg().get(KEY_ARG_SHEET_NAME));
 	}
 	
 	public void onClick$confirmRenameBtn() {
-		rename();
-	}
-	
-	private void rename() {
 		String sheetName = sheetNameTB.getText();
 		if (sheetName == null || sheetName == "") {
-			Messagebox.show("invalid sheet name");
+			try {
+				Messagebox.show("invalid sheet name");
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
-		DesktopWorkbenchContext bookContent = Zssapp.getDesktopWorkbenchContext(self);
+		DesktopWorkbenchContext bookContent = DesktopWorkbenchContext.getInstance(desktop);
 		bookContent.getWorkbookCtrl().renameSelectedSheet(sheetName);
 		bookContent.fireRefresh();
 		
-		_renameSheetDialog.fireOnClose(null);
+		self.detach();
 	}
 }

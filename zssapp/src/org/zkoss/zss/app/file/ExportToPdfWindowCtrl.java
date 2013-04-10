@@ -26,14 +26,12 @@ import org.zkoss.poi.ss.usermodel.Sheet;
 import org.zkoss.poi.ss.util.AreaReference;
 import org.zkoss.util.media.AMedia;
 import org.zkoss.zk.ui.Component;
-import org.zkoss.zk.ui.event.ForwardEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
-import org.zkoss.zss.app.zul.Dialog;
 import org.zkoss.zss.app.zul.Zssapps;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Exporter;
 import org.zkoss.zss.model.Exporters;
-import org.zkoss.zss.model.impl.Headings;
+import org.zkoss.zss.model.impl.pdf.PdfExporter;
 import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
 import org.zkoss.zul.Button;
@@ -41,7 +39,6 @@ import org.zkoss.zul.Checkbox;
 import org.zkoss.zul.Filedownload;
 import org.zkoss.zul.Radio;
 import org.zkoss.zul.Radiogroup;
-import org.zkoss.zul.Window;
 
 /**
  * @author Sam
@@ -49,7 +46,6 @@ import org.zkoss.zul.Window;
  */
 public class ExportToPdfWindowCtrl extends GenericForwardComposer {
 	
-	private Dialog _exportToPdfDialog;
 	/**
 	 * The range to export. All sheets, current sheet or selection range
 	 * <p> Default: Selected sheet
@@ -81,24 +77,19 @@ public class ExportToPdfWindowCtrl extends GenericForwardComposer {
 	 */
 	Checkbox noGridlines;
 	
+	
 	Button export;
 	
-	Rect selection;
 	Spreadsheet ss;
 	
-	public void onOpen$_exportToPdfDialog(ForwardEvent event) {
-		loadPrintSetting();
-		selection = (Rect) event.getOrigin().getData();
-		currSelection.setDisabled(selection == null);
-		noHeader.setChecked(true);
-		_exportToPdfDialog.setMode(Window.MODAL);
-	}
 	
 	@Override
 	public void doAfterCompose(Component comp) throws Exception {
 		super.doAfterCompose(comp);
 		//TODO: use event, don't send arg
 		ss = checkNotNull(Zssapps.getSpreadsheetFromArg(), "Spreadsheet is null");
+		
+		loadPrintSetting();
 	}
 	
 	private void loadPrintSetting() {
@@ -156,9 +147,7 @@ public class ExportToPdfWindowCtrl extends GenericForwardComposer {
 		applyPrintSetting();
 		
 		Exporter c = Exporters.getExporter("pdf");
-		if (c instanceof Headings) {
-			((Headings)c).enableHeadings(includeHeadings());
-		}
+		((PdfExporter)c).enableHeadings(includeHeadings());
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		export(c, baos);
@@ -169,7 +158,7 @@ public class ExportToPdfWindowCtrl extends GenericForwardComposer {
 		
 		revertPrintSetting();
 
-		_exportToPdfDialog.fireOnClose(null);
+		((Component)self.getSpaceOwner()).detach();
 	}
 	
 	private void export(Exporter exporter, OutputStream outputStream) {
@@ -181,7 +170,7 @@ public class ExportToPdfWindowCtrl extends GenericForwardComposer {
 		if (seld == allSheet) {
 			exporter.export(book, outputStream);
 		} else if (seld == currSelection){
-			Rect rect = selection;
+			Rect rect = ss.getSelection();
 			String area = ss.getColumntitle(rect.getLeft()) + ss.getRowtitle(rect.getTop()) + ":" + 
 				ss.getColumntitle(rect.getRight()) + ss.getRowtitle(rect.getBottom());
 			exporter.exportSelection(ss.getSelectedSheet(), new AreaReference(area), outputStream);

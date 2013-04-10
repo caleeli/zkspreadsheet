@@ -1,6 +1,6 @@
 import org.zkoss.ztl.JQuery;
 
-//Format>>Font>>Align>>Center
+
 public class SS_035_Test extends SSAbstractTestCase {
 
     @Override
@@ -8,11 +8,11 @@ public class SS_035_Test extends SSAbstractTestCase {
         JQuery cell_J_22 = getSpecifiedCell(9, 21);
         clickCell(cell_J_22);
         clickCell(cell_J_22);
-		click(jq("$formatMenu"));
+		click("jq('$formatMenu button.z-menu-btn')");
 		waitResponse();
-		mouseOver(jq("$align"));		
+		mouseOver(jq("$align a.z-menu-cnt-img"));		
 		waitResponse();
-		click(jq("$alignCenter"));
+		click("jq('$alignCenter a.z-menu-item-cnt')");
 		waitResponse();
       
         cell_J_22 = getSpecifiedCell(9, 21);

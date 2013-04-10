@@ -42,7 +42,6 @@ import org.zkoss.poi.ss.util.CellReference;
 import org.zkoss.util.logging.Log;
 import org.zkoss.zk.ui.Execution;
 import org.zkoss.zk.ui.Executions;
-import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zss.engine.RefSheet;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Worksheet;
@@ -53,7 +52,6 @@ import org.zkoss.zss.model.impl.BookHelper;
 import org.zkoss.zss.model.impl.SheetCtrl;
 import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
-import org.zkoss.zul.Messagebox;
 
 /**
  * Internal Use Only. Utility class for {@link Spreadsheet}.
@@ -62,17 +60,6 @@ import org.zkoss.zul.Messagebox;
  */
 public class Utils {
 	private static final Log log = Log.lookup(Utils.class);
-
-	public static void autoFilter(Worksheet sheet, Rect selection) {
-		int left = selection.getLeft();
-		int right = selection.getRight();
-		int top = selection.getTop();
-		int btm = selection.getBottom();
-		
-		Range rng = Utils.getRange(sheet, top, left, btm, right);
-				
-		rng.autoFilter();
-	}
 	
 	/**
 	 * Sort in selection range
@@ -172,15 +159,7 @@ public class Utils {
 	public static Range pasteSpecial(Worksheet srcSheet, Rect srcRect, Worksheet dstSheet, int tRow, int lCol, int bRow, int rCol, int pasteType, int pasteOp, boolean skipBlanks, boolean transpose) {
 		Range rng = Utils.getRange(srcSheet, srcRect.getTop(), srcRect.getLeft(), srcRect.getBottom(), srcRect.getRight());
 		Range dstRange = Utils.getRange(dstSheet, tRow, lCol, bRow, rCol);
-		Range pasteRange = rng.pasteSpecial(dstRange, pasteType, pasteOp, skipBlanks, transpose);
-		if (pasteRange == null) {
-			showProtectMessage();
-		}
-		return pasteRange;
-	}
-	
-	private static void showProtectMessage() {
-		Messagebox.show("The cell that you are trying to change is protected and locked.", "ZK Spreadsheet", Messagebox.OK, Messagebox.EXCLAMATION);
+		return rng.pasteSpecial(dstRange, pasteType, pasteOp, skipBlanks, transpose);
 	}
 
 	/**
@@ -243,12 +222,10 @@ public class Utils {
 					final Workbook book = sheet.getWorkbook();
 					Font srcFont = context.getFont();
 
-					Color fontColor = BookHelper.HTMLToColor(book, color);
-					Font newFont = context.getOrCreateFont(srcFont.getBoldweight(), fontColor, srcFont.getFontHeight(), srcFont.getFontName(), 
+					Font newFont = context.getOrCreateFont(srcFont.getBoldweight(), BookHelper.HTMLToColor(book, color), srcFont.getFontHeight(), srcFont.getFontName(), 
 							srcFont.getItalic(), srcFont.getStrikeout(), srcFont.getTypeOffset(), srcFont.getUnderline());
 					CellStyle newStyle = context.cloneCellStyle();
 					newStyle.setFont(newFont);
-					newStyle.setFontColorColor(fontColor);
 					context.getRange().setStyle(newStyle);
 				}
 			}});
@@ -456,26 +433,6 @@ public class Utils {
 	}
 	
 	/**
-	 * Sets cell locked
-	 * @param sheet
-	 * @param rect
-	 * @param locked
-	 */
-	public static void setLocked(Worksheet sheet, Rect rect, final boolean locked) {
-		visitCells(sheet, rect, new CellVisitor(){
-			@Override
-			public void handle(CellVisitorContext context) {
-				final boolean srcLocked = context.getLocked();
-
-				if (srcLocked != locked) {
-					CellStyle newStyle = context.cloneCellStyle();
-					newStyle.setLocked(locked);
-					context.getRange().setStyle(newStyle);
-				}
-			}});
-	}
-	
-	/**
 	 * Set format in selection range
 	 * @param sheet
 	 * @param rect
@@ -556,13 +513,6 @@ public class Utils {
 				}
 				CellStyle newCellStyle = book.createCellStyle();
 				newCellStyle.cloneStyleFrom(cs);
-				
-				//bug#ZSS-34: cell background color does not show in excel
-				//20110819, henrichen@zkoss.org: set color to a cell shall change its fillPattern to "solid" automatically
-				final short patternType = cs.getFillPattern();
-				if (patternType == CellStyle.NO_FILL) {
-					newCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
-				}
 				BookHelper.setFillForegroundColor(newCellStyle, bsColor);
 				Range rng = Utils.getRange(sheet, row, col);
 				rng.setStyle(newCellStyle);
@@ -600,7 +550,7 @@ public class Utils {
 		final String address = Utils.escapeCellText(hlink.getAddress(), true, false);
 		final String linkLabel = hlink.getLabel();
 		final String label = !"".equals(cellText) ? cellText :  
-				Utils.escapeCellText(linkLabel == null ? hlink.getAddress() : linkLabel, wrap, false);
+				Utils.escapeCellText(linkLabel == null ? hlink.getAddress() : linkLabel, wrap, wrap);
 		return BookHelper.formatHyperlink((Book)sheet.getWorkbook(), hlink.getType(), address, label);
 	}
 	/**
@@ -613,7 +563,7 @@ public class Utils {
 	public static String formatRichTextString(Worksheet sheet, RichTextString rstr, boolean wrap) {
 		final List<int[]> indexes = new ArrayList<int[]>(rstr.numFormattingRuns()+1);
 		String text = BookHelper.formatRichText((Book)sheet.getWorkbook(), rstr, indexes);
-		return Utils.escapeCellText(text, wrap, true, indexes);
+		return Utils.escapeCellText(text, wrap, wrap, indexes);
 	}
 
 	/**
@@ -633,7 +583,7 @@ public class Utils {
 			case '>': out.append("&gt;"); break;
 			case ' ': out.append(wrap?" ":"&nbsp;"); break;
 			case '\n':
-				if (wrap && multiline) {
+				if (multiline) {
 					out.append("<br/>");
 					break;
 				}
@@ -647,6 +597,7 @@ public class Utils {
 	//escape character that has special meaning in HTML such as &lt;, &amp;, etc..
 	//runs is a index pair to the text string that needs to be escaped
 	private static String escapeCellText(String text,boolean wrap,boolean multiline, List<int[]> runs){
+		
 		StringBuffer out = new StringBuffer();
 		if (text!=null){
 			int j = 0;
@@ -663,7 +614,7 @@ public class Utils {
 					case '>': out.append("&gt;"); break;
 					case ' ': out.append(wrap?" ":"&nbsp;"); break;
 					case '\n':
-						if (wrap && multiline) {
+						if (multiline) {
 							out.append("<br/>");
 							break;
 						}
@@ -735,10 +686,7 @@ public class Utils {
 	public static void copyCell(Worksheet srcSheet, int srcRow, int srcCol, Worksheet dstSheet, int dstRow, int dstCol) {
 		final Range srcRange = getRange(srcSheet, srcRow, srcCol);
 		final Range dstRange = getRange(dstSheet, dstRow, dstCol);
-		final Range pasteRange = srcRange.copy(dstRange);
-		if(pasteRange == null) {
-			showProtectMessage();
-		}
+		srcRange.copy(dstRange);
 	}
 	
 	public static void copyCell(Cell cell, Worksheet dstSheet, int dstRow, int dstCol) {
@@ -922,7 +870,7 @@ public class Utils {
 		final FormatText ft = (cell == null) ? null : Utils.getFormatText(cell);
 		
 		final RichTextString rstr = ft != null && ft.isRichTextString() ? ft.getRichTextString() : null; 
-		String text = rstr != null ? Utils.formatRichTextString(sheet, rstr, wrap) : ft != null ? Utils.escapeCellText(ft.getCellFormatResult().text, wrap, true) : "";
+		String text = rstr != null ? Utils.formatRichTextString(sheet, rstr, wrap) : ft != null ? Utils.escapeCellText(ft.getCellFormatResult().text, wrap, wrap) : "";
 		if (hlink != null) {
 			text = Utils.formatHyperlink(sheet, hlink, text, wrap);
 		}
@@ -1279,13 +1227,5 @@ public class Utils {
 		} else if (srclCol == dstlCol && srcrCol == dstrCol) { //fillRows
 			fillRows(sheet, srctRow, srclCol, srcbRow, srcrCol, dsttRow, dstbRow);
 		}
-	}
-
-	public static boolean setEditTextWithValidation(Spreadsheet ss, Worksheet sheet, int row, int col, String txt, EventListener callback) {
-		if (ss.validate(sheet, row, col, txt, callback)) {
-			setEditText(sheet, row, col, txt);
-			return true;
-		}
-		return false;
 	}
 }

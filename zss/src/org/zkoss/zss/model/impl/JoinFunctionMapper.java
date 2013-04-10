@@ -56,12 +56,13 @@ public class JoinFunctionMapper implements FunctionMapper {
 	}
 	
 	//--FunctionMapper--//
-	public Collection getClassNames() {
+	@Override
+	public Collection<String> getClassNames() {
 		return new ArrayList<String>(0);
 	}
 
-
-	public Class resolveClass(String name) throws XelException {
+	@Override
+	public Class<?> resolveClass(String arg0) throws XelException {
 		return null;
 	}
 

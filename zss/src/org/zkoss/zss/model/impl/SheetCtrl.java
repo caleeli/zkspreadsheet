@@ -12,7 +12,6 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model.impl;
 
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 
 /**
@@ -62,17 +61,4 @@ public interface SheetCtrl {
      * @param addr to be removed merged region
      */
 	public void deleteMerged(CellRangeAddress addr);
-	
-	/**
-	 * Return associated drawing manager.
-	 * @return drawing manager
-	 */
-	public DrawingManager getDrawingManager();
-	
-	/**
-	 * Callback when the name of a sheet in the associated book changes.
-	 * @param oldname old sheet name
-	 * @param newname new sheet name
-	 */
-	public void whenRenameSheet(String oldname, String newname);
 }

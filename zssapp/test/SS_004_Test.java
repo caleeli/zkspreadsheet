@@ -3,21 +3,19 @@ import org.zkoss.ztl.JQuery;
 
 public class SS_004_Test extends SSAbstractTestCase {
 
-	
     @Override
     protected void executeTest() {
         JQuery cell = getSpecifiedCell(5, 20);
         clickCell(cell);
         clickCell(cell);
 
-    	click("$fileMenu");
+    	click("jq('$fileMenu button.z-menu-btn')");
     	waitResponse();
-    	click("$openFile");
+    	click("jq('$openFile a.z-menu-item-cnt')");
     	waitResponse();
-    	// TODO how to verify if open upload dialog
-    	// click("jq('$uploadBtn input')");
-    	
+    	click("jq('$uploadBtn input')");
     	waitResponse();
+    	sleep(5000);
     	// TODO verify if cell is still selected
     }
 }

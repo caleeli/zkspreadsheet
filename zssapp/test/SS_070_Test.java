@@ -11,8 +11,16 @@ public class SS_070_Test extends SSAbstractTestCase {
         clickCell(cell_L_13);
         clickCell(cell_L_13);
         
-        focusOnCell(11, 12);
-        clickDropdownButtonMenu("$fastIconBtn $borderBtn", "Top border");
+        // Click Border icon
+        JQuery borderIcon = jq("$borderBtn");
+        mouseOver(borderIcon);
+        waitResponse();
+        clickAt(borderIcon, "30,0");
+        waitResponse();
+        
+        // Click top border
+        click(jq(".z-menu-item:eq(1)"));
+        waitResponse();
         
         // Verify
         verifyTrue(ColorVerifingHelper.isEqualColor("#000000", getSpecifiedCell(11, 11).parent().css("border-bottom-color")));

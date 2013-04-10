@@ -12,8 +12,6 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,10 +19,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTComment;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCommentList;
@@ -33,9 +31,8 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetView;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetViews;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorksheet;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.STPaneState;
-import org.zkoss.lang.Classes;
-import org.zkoss.lang.Library;
 import org.zkoss.poi.POIXMLDocumentPart;
+import org.zkoss.poi.hssf.record.formula.Ptg;
 import org.zkoss.poi.openxml4j.opc.PackagePart;
 import org.zkoss.poi.openxml4j.opc.PackageRelationship;
 import org.zkoss.poi.ss.SpreadsheetVersion;
@@ -43,12 +40,8 @@ import org.zkoss.poi.ss.formula.FormulaParser;
 import org.zkoss.poi.ss.formula.FormulaRenderer;
 import org.zkoss.poi.ss.formula.FormulaType;
 import org.zkoss.poi.ss.formula.PtgShifter;
-import org.zkoss.poi.ss.formula.ptg.Ptg;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.CellStyle;
-import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.usermodel.Row;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 import org.zkoss.poi.ss.util.CellReference;
@@ -63,8 +56,8 @@ import org.zkoss.poi.xssf.usermodel.XSSFRowHelper;
 import org.zkoss.poi.xssf.usermodel.XSSFSheet;
 import org.zkoss.poi.xssf.usermodel.XSSFWorkbook;
 import org.zkoss.zss.model.Book;
-import org.zkoss.zss.model.Range;
 import org.zkoss.zss.model.Worksheet;
+import org.zkoss.zss.model.Range;
 
 /**
  * Implementation of {@link Worksheet} based on XSSFSheet.
@@ -77,7 +70,7 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
         super();
     }
 
-	/**
+    /**
      * Creates an XSSFSheet representing the given package part and relationship.
      * Should only be called by XSSFWorkbook when reading in an exisiting file.
      *
@@ -106,23 +99,11 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
     	super.removeMergedRegion(index);
     }
 
-    //--Worksheet--//
+    //--Sheet--//
 	public Book getBook() {
 		return (Book) getWorkbook();
 	}
 
-	@Override
-	public List<Picture> getPictures() {
-		DrawingManager dm = getDrawingManager();
-		return new ArrayList<Picture>(dm.getPictures());
-	}
-	
-	@Override
-	public List<Chart> getCharts() {
-		DrawingManager dm = getDrawingManager();
-		return dm.getCharts();
-	}
-	
 	//20100914, henrichen@zkoss.org: Shift rows only, don't handle formula
     /**
      * Shifts rows between startRow and endRow n number of rows.
@@ -273,13 +254,10 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
             String formula = name.getRefersToFormula();
             int sheetIndex = name.getSheetIndex();
 
-            // 20120904 samchuang@zkoss.org: ZSS-153, user define formula name range doesn't need to adjust range
-            if (formula != null) {
-                Ptg[] ptgs = FormulaParser.parse(formula, fpb, FormulaType.NAMEDRANGE, sheetIndex);
-                if (shifter.adjustFormula(ptgs, sheetIndex)) {
-                    String shiftedFmla = FormulaRenderer.toFormulaString(fpb, ptgs);
-                    name.setRefersToFormula(shiftedFmla);
-                }	
+            Ptg[] ptgs = FormulaParser.parse(formula, fpb, FormulaType.NAMEDRANGE, sheetIndex);
+            if (shifter.adjustFormula(ptgs, sheetIndex)) {
+                String shiftedFmla = FormulaRenderer.toFormulaString(fpb, ptgs);
+                name.setRefersToFormula(shiftedFmla);
             }
         }
     }
@@ -1168,26 +1146,12 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
     }
     
     //--SheetCtrl--//
-    private volatile SheetCtrl _sheetCtrl;
+    private SheetCtrl _sheetCtrl;
     private SheetCtrl getSheetCtrl() {
-    	SheetCtrl ctrl = _sheetCtrl;
-    	if (ctrl == null) {
-    		synchronized(this) {
-    			ctrl = _sheetCtrl;
-    			if (ctrl == null) {
-    				String clsnm = Library.getProperty("org.zkoss.zss.model.impl.SheetCtrl.class");
-    				if (clsnm == null) {
-    					clsnm = "org.zkoss.zss.model.impl.SheetCtrlImpl";
-    				}
-    				try {
-						ctrl = _sheetCtrl = (SheetCtrl) Classes.newInstanceByThread(clsnm, new Class[] {Book.class, Worksheet.class}, new Object[] {getBook(), this});
-					} catch (Exception e) {
-						ctrl = _sheetCtrl = new SheetCtrlImpl(getBook(), this); 
-					}
-    			}
-    		}
+    	if (_sheetCtrl == null) {
+    		_sheetCtrl = new SheetCtrlImpl(getBook(), this);
     	}
-    	return ctrl;
+    	return _sheetCtrl;
     }
 	@Override
 	public void evalAll() {
@@ -1219,23 +1183,5 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
 	@Override
 	public void initMerged() {
 		getSheetCtrl().initMerged();
-	}
-	@Override
-	public DrawingManager getDrawingManager() {
-		return getSheetCtrl().getDrawingManager();
-	}
-	@Override
-	public void whenRenameSheet(String oldname, String newname) {
-		getSheetCtrl().whenRenameSheet(oldname, newname);
-		//handle formula reference
-		for(Row row : this) {
-			if (row != null) {
-				for (Cell cell : row) {
-					if (cell != null) {
-						((XSSFCell) cell).whenRenameSheet(oldname, newname);
-					}
-				}
-			}
-		}
 	}
 }	

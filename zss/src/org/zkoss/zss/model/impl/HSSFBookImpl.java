@@ -16,28 +16,23 @@ package org.zkoss.zss.model.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.zkoss.lang.Classes;
 import org.zkoss.lang.Library;
 import org.zkoss.poi.hssf.model.InternalSheet;
 import org.zkoss.poi.hssf.record.NameRecord;
+import org.zkoss.poi.hssf.record.formula.Ptg;
 import org.zkoss.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.zkoss.poi.hssf.usermodel.HSSFSheet;
 import org.zkoss.poi.hssf.usermodel.HSSFWorkbook;
 import org.zkoss.poi.hssf.usermodel.HSSFWorkbookHelper;
 import org.zkoss.poi.hssf.util.HSSFColor;
-import org.zkoss.poi.hssf.util.HSSFColorExt;
 import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.formula.WorkbookEvaluator;
-import org.zkoss.poi.ss.formula.ptg.Ptg;
 import org.zkoss.poi.ss.usermodel.Color;
 import org.zkoss.poi.ss.usermodel.Font;
 import org.zkoss.poi.ss.usermodel.FormulaEvaluator;
-import org.zkoss.poi.ss.usermodel.PictureData;
-import org.zkoss.poi.ss.usermodel.PivotCache;
-import org.zkoss.poi.ss.util.AreaReference;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 import org.zkoss.xel.FunctionMapper;
 import org.zkoss.xel.VariableResolver;
@@ -225,10 +220,6 @@ public class HSSFBookImpl extends HSSFWorkbook implements Book, BookCtrl {
         return -1;
     }
 
-	@Override
-	public void deletePictureData(PictureData img) {
-		super.deletePictureData(img);
-	}
 
 	//--Workbook--//
 	@Override
@@ -242,11 +233,11 @@ public class HSSFBookImpl extends HSSFWorkbook implements Book, BookCtrl {
 
 	@Override
 	public void setSheetName(int index, String name) {
-		final String oldsheetname = getSheetName(index);
-		super.setSheetName(index, name);
 		if (_refBook != null) {
+			final String oldsheetname = getSheetName(index);
 			_refBook.setSheetName(oldsheetname, name);
 		}
+		super.setSheetName(index, name);
 	}
 	
     @Override
@@ -263,9 +254,6 @@ public class HSSFBookImpl extends HSSFWorkbook implements Book, BookCtrl {
 	 * Finds a font that matches the one with the supplied attributes
 	 */
 	public Font findFont(short boldWeight, Color color, short fontHeight, String name, boolean italic, boolean strikeout, short typeOffset, byte underline) {
-		if (color instanceof HSSFColorExt) {
-			color = ((HSSFColorExt)color).getSimilarColor(getCustomPalette());
-		}
 		return findFont(boldWeight, ((HSSFColor)color).getIndex(), fontHeight, name, italic, strikeout, typeOffset, underline); 
 	}
 	
@@ -306,21 +294,6 @@ public class HSSFBookImpl extends HSSFWorkbook implements Book, BookCtrl {
 		getOrCreateRefBook().setShareScope(scope);
 	}
 
-	@Override
-	public Worksheet getWorksheetAt(int index) {
-		return (Worksheet) getSheetAt(index);
-	}
-
-	@Override
-	public Worksheet getWorksheet(String name) {
-		return (Worksheet) getSheet(name);
-	}
-	
-	@Override
-	public boolean isDate1904() {
-		return new HSSFWorkbookHelper(this).getInternalWorkbook().isUsing1904DateWindowing();
-	}
-
 	//--BookCtrl--//
 	@Override
 	public RefBook newRefBook(Book book) {
@@ -333,21 +306,13 @@ public class HSSFBookImpl extends HSSFWorkbook implements Book, BookCtrl {
 	}
 
 	@Override
-	public String nextFocusId() {
-		return (String) getBookCtrl().nextFocusId();
+	public Worksheet getWorksheetAt(int index) {
+		return (Worksheet) getSheetAt(index);
 	}
 
 	@Override
-	public void addFocus(Object focus) {
-		getBookCtrl().addFocus(focus);
+	public Worksheet getWorksheet(String name) {
+		return (Worksheet) getSheet(name);
 	}
-
-	@Override
-	public void removeFocus(Object focus) {
-		getBookCtrl().removeFocus(focus);	}
-
-	@Override
-	public boolean containsFocus(Object focus) {
-		return getBookCtrl().containsFocus(focus);
-	}
+	
 }
