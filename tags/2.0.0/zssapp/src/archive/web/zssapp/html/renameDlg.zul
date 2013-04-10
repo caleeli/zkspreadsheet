@@ -1,0 +1,10 @@
+<window id="tabRenameWin" title="Rename to" border="normal"
+mode="modal" closable="true" position="center" apply="org.zkoss.zss.app.ctrl.RenameSheetCtrl">
+	<hlayout>
+		Sheet name:
+		<textbox id="sheetNameTB" />
+	</hlayout>
+	<div height="25px" style="float:right;">
+		<button id="confirmRenameBtn" label="OK" mold="trendy"></button>
+	</div>
+</window>
