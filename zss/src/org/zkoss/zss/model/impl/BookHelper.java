@@ -64,7 +64,6 @@ import org.zkoss.poi.ss.formula.FormulaParser;
 import org.zkoss.poi.ss.formula.FormulaParsingWorkbook;
 import org.zkoss.poi.ss.formula.FormulaRenderer;
 import org.zkoss.poi.ss.formula.FormulaType;
-import org.zkoss.poi.ss.formula.LazyAreaEval;
 import org.zkoss.poi.ss.formula.PtgShifter;
 import org.zkoss.poi.ss.formula.eval.AreaEval;
 import org.zkoss.poi.ss.formula.eval.ArrayEval;
@@ -99,7 +98,6 @@ import org.zkoss.poi.ss.usermodel.Hyperlink;
 import org.zkoss.poi.ss.usermodel.Picture;
 import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.poi.ss.usermodel.Row;
-import org.zkoss.poi.ss.usermodel.Sheet;
 import org.zkoss.poi.ss.usermodel.Workbook;
 import org.zkoss.poi.ss.usermodel.ZssChartX;
 import org.zkoss.poi.ss.usermodel.ZssContext;
@@ -4905,13 +4903,6 @@ public final class BookHelper {
 		if (ve instanceof AreaEval) {
 			final AreaEval ae = (AreaEval) ve;
 			if (ae.isColumn() || ae.isRow()) {
-				Worksheet worksheet = null;
-				if (ae instanceof LazyAreaEval) {
-					worksheet = book.getWorksheet(((LazyAreaEval) ve).getSheetName());
-				} else {
-					worksheet = sheet;
-				}
-				
 				final int rows = ae.getHeight();
 				final int cols = ae.getWidth();
 				final int top = ae.getFirstRow();
@@ -4921,7 +4912,7 @@ public final class BookHelper {
 					int rowIndex = r + top; 
 					for (int c = 0; c < cols; ++c) {
 						int colIndex = c + left;
-						final Cell cell = BookHelper.getCell(worksheet, rowIndex, colIndex);
+						final Cell cell = BookHelper.getCell(sheet, rowIndex, colIndex);
 						xlist[j++] = BookHelper.getCellText(cell);
 					}
 				}

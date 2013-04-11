@@ -73,7 +73,7 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 		this.$supers(zss.CellBlockCtrl, 'bind_', arguments);
 		
 		var n = this.comp = this.$n();
-//		zk(n).disableSelection(); //disableSelection()
+		zk(n).disableSelection(); //disableSelection()
 	},
 	unbind_: function () {
 		this.$supers(zss.CellBlockCtrl, 'unbind_', arguments);
@@ -202,6 +202,8 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 	 * @param rCol
 	 */
 	create_: function (dir, tRow, lCol, bRow, rCol, data) {
+		//TODO: test left/top frozen 
+		//data = data || sheet._wgt._activeRange,
 		var sheet = this.sheet,
 			data = data || sheet._wgt._cacheCtrl.getSelectedSheet(),
 			block = this,
@@ -237,8 +239,6 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 				this.insertRow(j++, row, html, true);
 			}
 		}
-		//ZSS 125: wrap text processed on row.bind_, within appendRow / insertRow
-		delete sheet._wrapRange;
 		
 		var r = this.range,
 			width = rCol - lCol + 1;

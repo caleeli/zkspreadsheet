@@ -87,7 +87,10 @@ public class ExportToHtmlWindowCtrl extends GenericForwardComposer {
 		currSelection.setDisabled(selection == null);
 		
 		noHeader.setChecked(false);
-		_exportToHtmlDialog.setMode(Window.MODAL);
+		try {
+			_exportToHtmlDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	@Override

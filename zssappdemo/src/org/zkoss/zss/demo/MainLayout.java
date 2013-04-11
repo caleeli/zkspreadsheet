@@ -15,8 +15,6 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 package org.zkoss.zss.demo;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.Executions;
@@ -31,8 +29,6 @@ import org.zkoss.zul.Textbox;
  */
 public class MainLayout extends GenericForwardComposer {
 
-	Logger logger = LoggerFactory.getLogger(MainLayout.class);
-	
 	Tab app0; //ZSS Apreadsheet App
 	Tab app0Src;
 	Tab app2; //ZK Spreadsheet H1N1 Demo

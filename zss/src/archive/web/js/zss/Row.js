@@ -32,7 +32,8 @@ zss.Row = zk.$extends(zk.Widget, {
 		this.src = src;
 		this.r = row;
 		
-		this.zsh = src.getRowHeightId(row);
+		var data = src.getRow(row);
+		this.zsh = data.heightId;
 		this.cells = [];
 		this.wrapedCells = [];
 	},
@@ -75,7 +76,7 @@ zss.Row = zk.$extends(zk.Widget, {
 			r = this.r,
 			tRow = d.tRow,
 			bRow = d.bRow;
-		if (tRow != undefined && bRow != undefined && r >= tRow && r <= bRow) {
+		if (tRow && bRow && r >= tRow && r <= bRow) {
 			this._updateWrapRowHeight();
 		}
 	},
@@ -94,8 +95,9 @@ zss.Row = zk.$extends(zk.Widget, {
 			}
 		}
 		
-		if (jq(this.$n()).height() == hgh)
-			return;//correct row height, no need to set CSS row height
+//		if (jq(this.$n()).height() == hgh) {
+//			return;
+//		}
 		
 		var sheet = this.sheet,
 			wgt = sheet._wgt,
@@ -111,8 +113,8 @@ zss.Row = zk.$extends(zk.Widget, {
 		} else {
 			custRowHeight.setCustomizedSize(row, hgh, zsh, false, true);
 		}
-		
-		zcss.setRule(pf + " .zsh" + zsh, "height", hgh + "px", true, cssId);
+			
+		zcss.setRule(pf + " .zsh" + zsh, ["height"], [hgh + "px"], true, cssId);
 		zcss.setRule(pf + " .zshi" + zsh, "height", h2 + "px", true, cssId);
 		zcss.setRule(pf + " .zslh" + zsh, ["display", "height", "line-height"], ["", h2 + "px", h2 + "px"], true, cssId);
 		
@@ -144,7 +146,8 @@ zss.Row = zk.$extends(zk.Widget, {
 				}
 			}
 			
-			this._listenProcessWrap(!!wrapedCells.length);
+			var size = wrapedCells.length;
+			this._listenProcessWrap(size);
 			if (ignoreUpdateNow) //process wrap on sheet onContentChange
 				this.sheet.triggerWrap(this.r);
 		} 
@@ -189,7 +192,7 @@ zss.Row = zk.$extends(zk.Widget, {
 		out.push(this.getHtmlEpilogHalf());
 	},
 	getHtmlPrologHalf: function () {
-		return '<div id="' + this.uuid + '" class="' + this.getZclass() + '" zs.t="SRow">';
+		return '<div id="' + this.uuid + '" class="' + this.getZclass() + '">';
 	},
 	getHtmlEpilogHalf: function () {
 		return '</div>';

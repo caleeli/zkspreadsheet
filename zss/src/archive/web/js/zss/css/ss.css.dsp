@@ -62,11 +62,6 @@
 	position: relative;
 	overflow: visible;
 	background-color:#FFFFFF;
-	user-select: none;
-	-o-user-select:none;
-	-moz-user-select: none;
-	-khtml-user-select: none;
-	-webkit-user-select: none;
 }
 
 .zsrow {
@@ -705,10 +700,6 @@
 .zswidget-focus {
 	border: 1px solid #CFDDDE;
 	border-radius: 1px;
-}
-
-.zswidget-ifocus {
-	position: absolute;	
 }
 
 .zswidget-real, .zswidget-real a:hover{
@@ -1409,6 +1400,9 @@
 }
 
 .zstbtabpanel {
-	background: #EEEEEE;
 	padding: 0;
+}
+
+.zstoolbar {
+	height: 23px;
 }

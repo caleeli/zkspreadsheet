@@ -523,7 +523,10 @@ public class MainWindowCtrl extends GenericForwardComposer implements WorkbenchC
 	
 	public void openExportPdfDialog(Rect selection) {
 		if (!hasZssPdf()) {
-			Messagebox.show("Please download Zss Pdf from ZK");
+			try {
+				Messagebox.show("Please download Zss Pdf from ZK");
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		if (_exportToPdfDialog == null || _exportToPdfDialog.isInvalidated())
@@ -558,7 +561,10 @@ public class MainWindowCtrl extends GenericForwardComposer implements WorkbenchC
 	@Override
 	public void openExportHtmlDialog(Rect selection) {
 		if (!hasZssHtml()) {
-			Messagebox.show("Please download Zss Html from ZK");
+			try {
+				Messagebox.show("Please download Zss Html from ZK");
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		if (_exportToHtmlDialog == null || _exportToHtmlDialog.isInvalidated())
@@ -640,7 +646,10 @@ public class MainWindowCtrl extends GenericForwardComposer implements WorkbenchC
 		public void doPasteSpecial(Rect selection) {
 			Clipboard copyFrom = getClipboard();
 			if (copyFrom == null) {
-				Messagebox.show("Spreadsheet must has highlight area as paste source, please set spreadsheet's highlight area");
+				try {
+					Messagebox.show("Spreadsheet must has highlight area as paste source, please set spreadsheet's highlight area");
+				} catch (InterruptedException e) {
+				}
 				return;
 			}
 

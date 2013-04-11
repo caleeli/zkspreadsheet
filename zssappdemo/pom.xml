@@ -4,11 +4,11 @@
   <groupId>org.zkoss.zss</groupId>
   <artifactId>zssappdemo</artifactId>
   <properties>
-  	<zk.version>6.5.0</zk.version>
-  	<gmapsz.version>3.0.1</gmapsz.version>
+  	<zk.version>5.0.11</zk.version>
+  	<gmapsz.version>2.0.51</gmapsz.version>
   	<jfreechart.version>1.0.13</jfreechart.version>
   </properties>
-  <version>2.6.0</version>
+  <version>2.4.0</version>
   <packaging>war</packaging>
   <url>http://www.zkoss.org/zss</url>
   	<repositories>
@@ -26,22 +26,11 @@
 		</repository>
 	</repositories>
   <dependencies>
-  	<!-- log -->
-  	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-api</artifactId>
-		<version>1.7.2</version>
-	</dependency>
-	<dependency>
-		<groupId>ch.qos.logback</groupId>
-		<artifactId>logback-classic</artifactId>
-		<version>1.0.7</version>
-	</dependency>
-	<dependency>
-		<groupId>org.zkoss.poi</groupId>
-		<artifactId>zpoiex</artifactId>
-		<version>3.8.1</version>
-	</dependency>
+    <dependency>
+      <groupId>org.zkoss.zss</groupId>
+      <artifactId>zpoi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.zkoss.zss</groupId>
       <artifactId>zss</artifactId>
@@ -96,6 +85,11 @@
 	  <groupId>org.zkoss.zk</groupId>
 	  <artifactId>zkplus</artifactId>
 	  <version>${zk.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.zkoss.theme</groupId>
+		<artifactId>breeze</artifactId>
+		<version>${zk.version}</version>
 	</dependency>
 	<dependency>
 		<groupId>jfree</groupId>

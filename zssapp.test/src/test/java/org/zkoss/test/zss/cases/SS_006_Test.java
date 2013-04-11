@@ -37,7 +37,7 @@ public class SS_006_Test extends ZSSAppTest {
     	Assert.assertFalse("Formula bar shall be invisible", isVisible(".zsformulabar"));
     	
     	click("$viewMenu");
-    	click("$viewFormulaBar");
+    	click("$viewFormulaBar a.z-menu-item-cnt-unck");
     	Assert.assertTrue("Formula bar shall be visible", isVisible(".zsformulabar"));
 	}
 	

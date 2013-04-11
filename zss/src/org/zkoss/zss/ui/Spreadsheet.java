@@ -84,13 +84,12 @@ import org.zkoss.zk.ui.WebApp;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.EventQueues;
-import org.zkoss.zk.ui.ext.AfterCompose;
 import org.zkoss.zk.ui.ext.render.DynamicMedia;
 import org.zkoss.zk.ui.sys.ContentRenderer;
+import org.zkoss.zk.ui.sys.JavaScriptValue;
 import org.zkoss.zss.engine.Ref;
 import org.zkoss.zss.engine.event.EventDispatchListener;
 import org.zkoss.zss.engine.event.SSDataEvent;
-import org.zkoss.zss.json.JavaScriptValue;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Importer;
 import org.zkoss.zss.model.Range;
@@ -100,7 +99,24 @@ import org.zkoss.zss.model.impl.BookCtrl;
 import org.zkoss.zss.model.impl.BookHelper;
 import org.zkoss.zss.model.impl.ExcelImporter;
 import org.zkoss.zss.model.impl.SheetCtrl;
+import org.zkoss.zss.ui.au.in.ActionCommand;
+import org.zkoss.zss.ui.au.in.BlockSyncCommand;
+import org.zkoss.zss.ui.au.in.CellFetchCommand;
+import org.zkoss.zss.ui.au.in.CellFocusedCommand;
+import org.zkoss.zss.ui.au.in.CellMouseCommand;
+import org.zkoss.zss.ui.au.in.CellSelectionCommand;
 import org.zkoss.zss.ui.au.in.Command;
+import org.zkoss.zss.ui.au.in.EditboxEditingCommand;
+import org.zkoss.zss.ui.au.in.FetchActiveRangeCommand;
+import org.zkoss.zss.ui.au.in.FilterCommand;
+import org.zkoss.zss.ui.au.in.HeaderCommand;
+import org.zkoss.zss.ui.au.in.HeaderMouseCommand;
+import org.zkoss.zss.ui.au.in.MoveWidgetCommand;
+import org.zkoss.zss.ui.au.in.SelectSheetCommand;
+import org.zkoss.zss.ui.au.in.SelectionChangeCommand;
+import org.zkoss.zss.ui.au.in.StartEditingCommand;
+import org.zkoss.zss.ui.au.in.StopEditingCommand;
+import org.zkoss.zss.ui.au.in.WidgetCtrlKeyCommand;
 import org.zkoss.zss.ui.au.out.AuCellFocus;
 import org.zkoss.zss.ui.au.out.AuCellFocusTo;
 import org.zkoss.zss.ui.au.out.AuDataUpdate;
@@ -132,11 +148,11 @@ import org.zkoss.zss.ui.impl.MergedRect;
 import org.zkoss.zss.ui.impl.SequenceId;
 import org.zkoss.zss.ui.impl.StringAggregation;
 import org.zkoss.zss.ui.impl.Utils;
-import org.zkoss.zss.ui.sys.ActionHandler;
 import org.zkoss.zss.ui.sys.SpreadsheetCtrl;
 import org.zkoss.zss.ui.sys.SpreadsheetCtrl.CellAttribute;
 import org.zkoss.zss.ui.sys.SpreadsheetInCtrl;
 import org.zkoss.zss.ui.sys.SpreadsheetOutCtrl;
+import org.zkoss.zss.ui.sys.ActionHandler;
 import org.zkoss.zss.ui.sys.WidgetHandler;
 import org.zkoss.zss.ui.sys.WidgetLoader;
 import org.zkoss.zul.Messagebox;
@@ -176,7 +192,7 @@ import org.zkoss.zul.impl.XulElement;
  * @author dennischen
  */
 
-public class Spreadsheet extends XulElement implements Serializable, AfterCompose {
+public class Spreadsheet extends XulElement implements Serializable {
 	private static final Log log = Log.lookup(Spreadsheet.class);
 
 	private static final long serialVersionUID = 1L;
@@ -346,7 +362,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 				}
 			}
 		}
-		return new HashSet<Action>(_defToolbarActiobDisabled); 
+		return _defToolbarActiobDisabled; 
 	}
 	
 	/**
@@ -526,12 +542,6 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		 //Shall clean selected sheet before set new book (ZSS-75: set book null, cause NPE)
 		if (_selectedSheet != null) {
 			doSheetClean(_selectedSheet);
-		}
-		if (!Objects.equals(_book, book)) {
-			removeAttribute(MERGE_MATRIX_KEY);
-			clearHeaderSizeHelper(true, true);
-			_custColId = new SequenceId(-1, 2);
-			_custRowId = new SequenceId(-1, 2);
 		}
 		_selectedSheet = null;
 		_selectedSheetId = null;
@@ -1446,14 +1456,12 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		}
 		final Map validMap = new HashMap();
 		validMap.put("rangeList", addrmapary); //range list
+		validMap.put("showButton", dv.getSuppressDropDownArrow()); //whether show dropdown button
 		validMap.put("showPrompt", dv.getShowPromptBox()); //whether show prompt box
 		validMap.put("promptTitle", dv.getPromptBoxTitle()); //the prompt box title
 		validMap.put("promptText", dv.getPromptBoxText()); //the prompt box text
 		String[] validationList = BookHelper.getValidationList(getSelectedSheet(), dv);
 		if (validationList != null) {
-			//ZSS-197: the method is useful only list validation objects
-			validMap.put("showButton", dv.getSuppressDropDownArrow()); //whether show dropdown button
-			
 			JSONArray jsonAry = new JSONArray();
 			for (String v : validationList) {
 				jsonAry.add(v);
@@ -1526,6 +1534,8 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 				renderer.render("actionDisabled", convertActionDisabledToJSON(_actionDisabled));
 			}
 			renderer.render("showToolbar", _showToolbar);
+			
+			getActionHandler().bind(this);//init for toolbar's "upload picture" button
 		}
 			
 		renderer.render("showFormulabar", _showFormulabar);
@@ -1914,7 +1924,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 			if (page != null) {
 				final FunctionMapper mapper = page.getFunctionMapper();
 				if (mapper != null) {
-					return new ArrayList<String>(0);
+					return mapper.getClassNames();
 				}
 			}
 			return null;
@@ -1925,7 +1935,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 			if (page != null) {
 				final FunctionMapper mapper = page.getFunctionMapper();
 				if (mapper != null) {
-					return null;
+					return mapper.resolveClass(name);
 				}
 			}
 			return null;
@@ -2125,11 +2135,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		}
 		private void onFriendFocusMove(SSDataEvent event) {
 			final Ref rng = event.getRef();
-			Worksheet sheet = getSheet(rng);
-			if (sheet == null) {//ZSS-209: book may removed
-				return;
-			}
-			if (sheet.equals(_selectedSheet)) { //same sheet
+			if (getSheet(rng).equals(_selectedSheet)) { //same sheet
 				final Focus focus = (Focus) event.getPayload(); //other's spreadsheet's focus
 				final String id = focus.id;
 				if (!id.equals(_focus.id)) {
@@ -2140,11 +2146,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		}
 		private void onFriendFocusDelete(SSDataEvent event) {
 			final Ref rng = event.getRef();
-			Worksheet sheet = BookHelper.getSheet(_book, rng.getOwnerSheet());
-			if (sheet == null) {//ZSS-209: book may removed
-				return;
-			}
-			if (sheet.equals(_selectedSheet)) { //same sheet
+			if (BookHelper.getSheet(_book, rng.getOwnerSheet()).equals(_selectedSheet)) { //same sheet
 				final Focus focus = (Focus) event.getPayload(); //other's spreadsheet's focus
 				removeEditorFocus(focus.id);
 			}
@@ -2351,14 +2353,9 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 	}
 	
 	public MergeMatrixHelper getMergeMatrixHelper(Worksheet sheet) {
-		HelperContainer<MergeMatrixHelper> helpers = (HelperContainer) getAttribute(MERGE_MATRIX_KEY);
-		if (helpers == null) {
-			helpers = new HelperContainer<MergeMatrixHelper>();
-			setAttribute(MERGE_MATRIX_KEY, helpers);
-		}
-		
-		final String sheetId = ((SheetCtrl)sheet).getUuid();
-		MergeMatrixHelper mmhelper = helpers.getHelper(sheetId);
+		if (sheet != getSelectedSheet())
+			throw new UiException("not current selected sheet ");
+		MergeMatrixHelper mmhelper = (MergeMatrixHelper) getAttribute(MERGE_MATRIX_KEY);
 		int fzr = getRowfreeze();
 		int fzc = getColumnfreeze();
 		if (mmhelper == null) {
@@ -2368,7 +2365,8 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 				final CellRangeAddress addr = sheet.getMergedRegion(j);
 				mergeRanges.add(new int[] {addr.getFirstColumn(), addr.getFirstRow(), addr.getLastColumn(), addr.getLastRow()});
 			}
-			helpers.putHelper(sheetId, mmhelper = new MergeMatrixHelper(mergeRanges, fzr, fzc));
+			mmhelper = new MergeMatrixHelper(mergeRanges, fzr, fzc);
+			setAttribute(MERGE_MATRIX_KEY, mmhelper);
 		} else {
 			mmhelper.update(fzr, fzc);
 		}
@@ -2390,14 +2388,10 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		if (sheet == null) {
 			return null;
 		}
-		
-		HelperContainer<HeaderPositionHelper> helpers = (HelperContainer) getAttribute(ROW_SIZE_HELPER_KEY);
-		if (helpers == null) {
-			setAttribute(ROW_SIZE_HELPER_KEY, helpers = new HelperContainer<HeaderPositionHelper>());
-		}
-		final String sheetId = ((SheetCtrl)sheet).getUuid();
-		HeaderPositionHelper helper = helpers.getHelper(sheetId);
-				
+		if (sheet != getSelectedSheet())
+			throw new UiException("not current selected sheet: "+sheet.getSheetName());
+		HeaderPositionHelper helper = (HeaderPositionHelper) getAttribute(ROW_SIZE_HELPER_KEY);
+
 		int maxcol = 0;
 		if (helper == null) {
 			int defaultSize = this.getRowheight();
@@ -2416,7 +2410,9 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 				}
 			}
 			
-			helpers.putHelper(sheetId, helper = new HeaderPositionHelper(defaultSize, infos));
+			helper = new HeaderPositionHelper(defaultSize, infos);
+
+			setAttribute(ROW_SIZE_HELPER_KEY, helper);
 		}
 		return new HeaderPositionHelper[] {helper, myGetColumnPositionHelper(sheet, maxcol)};
 	}
@@ -2446,9 +2442,8 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 			return;// since it is invalidate, we don't need to do anymore
 
 		String sheetId = Utils.getSheetUuid(sheet);
-		if (!getActiveRangeHelper().containsSheet(sheet))
+		if (!sheetId.equals(this.getSelectedSheetId()))
 			return;
-		
 		left = left > 0 ? left - 1 : 0;// for border, when update a range, we
 		// should also update the left - 1, top - 1 part
 		top = top > 0 ? top - 1 : 0;
@@ -2551,13 +2546,10 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 	}
 	
 	private HeaderPositionHelper myGetColumnPositionHelper(Worksheet sheet, int maxcol) {
-		HelperContainer<HeaderPositionHelper> helpers = (HelperContainer) getAttribute(COLUMN_SIZE_HELPER_KEY);
-		if (helpers == null) {
-			setAttribute(COLUMN_SIZE_HELPER_KEY, helpers = new HelperContainer<HeaderPositionHelper>());
-		}
-		final String sheetId = ((SheetCtrl)sheet).getUuid();
-		HeaderPositionHelper helper = helpers.getHelper(sheetId);
-		
+		if (sheet != getSelectedSheet())
+			throw new UiException("not current selected sheet ");
+		HeaderPositionHelper helper = (HeaderPositionHelper) getAttribute(COLUMN_SIZE_HELPER_KEY);
+
 		if (helper == null) {
 			final int defaultColSize = sheet.getDefaultColumnWidth();
 			final int defaultColSize256 = defaultColSize * 256; 
@@ -2573,8 +2565,8 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 					infos.add(new HeaderPositionInfo(j, colwidth, _custColId.next(), hidden));
 				}
 			}
-
-			helpers.putHelper(sheetId, helper = new HeaderPositionHelper(defaultColSizeInPx, infos));
+			helper = new HeaderPositionHelper(defaultColSizeInPx, infos);
+			setAttribute(COLUMN_SIZE_HELPER_KEY, helper);
 		}
 		return helper;
 	}
@@ -2589,6 +2581,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 	 * Return a extra controller. only spreadsheet developer need to call this
 	 * method.
 	 */
+	@Override
 	protected Object newExtraCtrl() {
 		return new ExtraCtrl();
 	}
@@ -2955,6 +2948,8 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		 * <ul>
 		 * 	<li>r: row number</li>
 		 *  <li>c: column number</li>
+		 *  <li>w: width index</li>
+		 *  <li>h: height index</li>
 		 *  <li>t: cell html text</li>
 		 *  <li>et: cell edit text</li>
 		 *  <li>ft: format text</li>
@@ -2969,6 +2964,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		 *  <li>va: vertical alignment</>
 		 *  <li>mi: merge id index</li>
 		 *  <li>mc: merge CSS index</li>
+		 *  <li>rf: Cell Reference</li>
 		 *  <li>fs: font size</li>
 		 *  <li>ovf: overflow</li>
 		 * </ul>
@@ -3000,6 +2996,8 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 //				attrs.put("r", row);
 //				attrs.put("c", col);
 //			}
+			CellReference cr = new CellReference(row, col, false, false);
+			attrs.put("rf", cr.formatAsString());
 			
 			//merge
 			MergeIndex mergeIndex = mergeAggregation.add(row, col);
@@ -3010,6 +3008,12 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 			
 			//width, height id
 			if (updateSize) {
+				HeaderPositionHelper colHelper = Spreadsheet.this.getColumnPositionHelper(sheet);
+				HeaderPositionInfo info = colHelper.getInfo(col);
+				if (info != null && info.id >= 0) {
+					attrs.put("w", info.id);
+				}
+				
 				if (cell != null) {
 					//process overflow when cell type is string, halign is left, no wrap, no merge
 					CellStyle cellStyle = cell.getCellStyle();
@@ -3051,9 +3055,9 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 				
 				if (updateText) {
 					if (cellType != Cell.CELL_TYPE_BLANK) {
-						final String cellText = getCelltext(sheet, row, col);
-						final String editText = getEdittext(sheet, row, col);
-						final String formatText = getCellFormatText(sheet, row, col);
+						final String cellText = getCelltext(Spreadsheet.this, row, col);
+						final String editText = getEdittext(Spreadsheet.this, row, col);
+						final String formatText = getCellFormatText(Spreadsheet.this, row, col);
 						
 						if (Objects.equals(cellText, editText) && Objects.equals(editText, formatText)) {
 							attrs.put("meft", textAggregation.add(cellText));
@@ -3952,6 +3956,10 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		for (int i = 0; i < size; i++) {
 			((WidgetLoader) list.get(i)).onSheetClean(sheet);
 		}
+		removeAttribute(MERGE_MATRIX_KEY);
+		clearHeaderSizeHelper(true, true);
+		_custColId = new SequenceId(-1, 2);
+		_custRowId = new SequenceId(-1, 2);
 		
 //		_loadedRect.set(-1, -1, -1, -1);
 		_selectionRect.set(0, 0, 0, 0);
@@ -4165,9 +4173,6 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 	 * @param actionHandler
 	 */
 	public void setActionHandler(ActionHandler actionHandler) {
-		if (_actionHandler != null && _actionHandler != actionHandler) {
-			_actionHandler.unbind();
-		}
 		_actionHandler = actionHandler;
 		if (_actionHandler != null) {
 			_actionHandler.bind(this);
@@ -4303,11 +4308,15 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 	}
 	
 	private void showFormulaError(FormulaParseException ex) {
-		Messagebox.show(ex.getMessage(), "ZK Spreadsheet", Messagebox.OK, Messagebox.EXCLAMATION, new EventListener() {
-			public void onEvent(Event evt) {
-				Spreadsheet.this.focus();
-			}
-		});
+		try {
+			Messagebox.show(ex.getMessage(), "ZK Spreadsheet", Messagebox.OK, Messagebox.EXCLAMATION, new EventListener() {
+				public void onEvent(Event evt) {
+					Spreadsheet.this.focus();
+				}
+			});
+		} catch (InterruptedException e) {
+			// ignore
+		}
 	}
 
 	private void processStopEditing0(final String token, final Worksheet sheet, final int rowIdx, final int colIdx, final Object value, final String editingType) {
@@ -4700,67 +4709,71 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 					errText = "The value you entered is not valid.\n\nA user has restricted values that can be entered into this cell.";
 				}
 				final int errStyle = dv.getErrorStyle();
-				switch(errStyle) {
-					case ErrorStyle.STOP:
-					{
-						final int btn = Messagebox.show(
-							errText, errTitle, Messagebox.RETRY|Messagebox.CANCEL, 
-							Messagebox.ERROR, Messagebox.RETRY, new EventListener() {
-							@Override
-							public void onEvent(Event event) throws Exception {
-								final String evtname = event.getName();
-								if (Messagebox.ON_RETRY.equals(evtname)) {
-									retry(callback);
-								} else if (Messagebox.ON_CANCEL.equals(evtname)) {
-									cancel(callback);
+				try {
+					switch(errStyle) {
+						case ErrorStyle.STOP:
+						{
+							final int btn = Messagebox.show(
+								errText, errTitle, Messagebox.RETRY|Messagebox.CANCEL, 
+								Messagebox.ERROR, Messagebox.RETRY, new EventListener() {
+								@Override
+								public void onEvent(Event event) throws Exception {
+									final String evtname = event.getName();
+									if (Messagebox.ON_RETRY.equals(evtname)) {
+										retry(callback);
+									} else if (Messagebox.ON_CANCEL.equals(evtname)) {
+										cancel(callback);
+									}
 								}
-							}
-						});
-					}
-					break;
-					case ErrorStyle.WARNING:
-					{
-						errText += "\n\nContinue?";
-						final int btn = Messagebox.show(
-							errText, errTitle, Messagebox.YES|Messagebox.NO|Messagebox.CANCEL, 
-							Messagebox.EXCLAMATION, Messagebox.NO, new EventListener() {
-							@Override
-							public void onEvent(Event event) throws Exception {
-								final String evtname = event.getName();
-								if (Messagebox.ON_NO.equals(evtname)) {
-									retry(callback);
-								} else if (Messagebox.ON_CANCEL.equals(evtname)) {
-									cancel(callback);
-								} else if (Messagebox.ON_YES.equals(evtname)) {
-									ok(callback);
-								}
-							}
-						});
-						if (getDesktop().getWebApp().getConfiguration().isEventThreadEnabled() && btn == Messagebox.YES) {
-							return true;
+							});
 						}
-					}
-					break;
-					case ErrorStyle.INFO:
-					{
-						final int btn = Messagebox.show(
-							errText, errTitle, Messagebox.OK|Messagebox.CANCEL, 
-							Messagebox.INFORMATION, Messagebox.OK, new EventListener() {
-							@Override
-							public void onEvent(Event event) throws Exception {
-								final String evtname = event.getName();
-								if (Messagebox.ON_CANCEL.equals(evtname)) {
-									cancel(callback);
-								} else if (Messagebox.ON_OK.equals(evtname)) {
-									ok(callback);
+						break;
+						case ErrorStyle.WARNING:
+						{
+							errText += "\n\nContinue?";
+							final int btn = Messagebox.show(
+								errText, errTitle, Messagebox.YES|Messagebox.NO|Messagebox.CANCEL, 
+								Messagebox.EXCLAMATION, Messagebox.NO, new EventListener() {
+								@Override
+								public void onEvent(Event event) throws Exception {
+									final String evtname = event.getName();
+									if (Messagebox.ON_NO.equals(evtname)) {
+										retry(callback);
+									} else if (Messagebox.ON_CANCEL.equals(evtname)) {
+										cancel(callback);
+									} else if (Messagebox.ON_YES.equals(evtname)) {
+										ok(callback);
+									}
 								}
+							});
+							if (getDesktop().getWebApp().getConfiguration().isEventThreadEnabled() && btn == Messagebox.YES) {
+								return true;
 							}
-						});
-						if (getDesktop().getWebApp().getConfiguration().isEventThreadEnabled() && btn == Messagebox.OK) {
-							return true;
 						}
+						break;
+						case ErrorStyle.INFO:
+						{
+							final int btn = Messagebox.show(
+								errText, errTitle, Messagebox.OK|Messagebox.CANCEL, 
+								Messagebox.INFORMATION, Messagebox.OK, new EventListener() {
+								@Override
+								public void onEvent(Event event) throws Exception {
+									final String evtname = event.getName();
+									if (Messagebox.ON_CANCEL.equals(evtname)) {
+										cancel(callback);
+									} else if (Messagebox.ON_OK.equals(evtname)) {
+										ok(callback);
+									}
+								}
+							});
+							if (getDesktop().getWebApp().getConfiguration().isEventThreadEnabled() && btn == Messagebox.OK) {
+								return true;
+							}
+						}
+						break;
 					}
-					break;
+				} catch (InterruptedException e) {
+					//ignore
 				}
 			}
 			return false;
@@ -4840,28 +4853,6 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 
 		@Override
 		public void doInsertFunction(Rect selection) {
-		}
-	}
-
-	@Override
-	public void afterCompose() {
-		String ctrlKeys = getCtrlKeys();
-		//ZSS-127: bind event on afterCompose
-		if (_showToolbar 
-		|| (ctrlKeys != null && (ctrlKeys.toLowerCase().indexOf("^c") >= 0 || ctrlKeys.indexOf("^v") >= 0))) {
-			getActionHandler().bind(Spreadsheet.this);//init for toolbar's "upload picture" button & copy-paste by Ctrl key
-		}
-	}
-	
-	public class HelperContainer<T> {
-		HashMap<String, T> helpers = new HashMap<String, T>();
-		
-		public T getHelper(String sheetId) {
-			return helpers.get(sheetId);
-		}
-		
-		public void putHelper(String sheetId, T helper) {
-			helpers.put(sheetId, helper);
 		}
 	}
 }

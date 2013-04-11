@@ -15,7 +15,7 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
 }}IS_RIGHT
 */
 (function () {
-
+	
 	function newRect(tRow, lCol, bRow, rCol) {
 		return {
 			top: tRow,
@@ -188,6 +188,7 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
 					upSize = (upAll || type == ATTR_SIZE),
 					upMerge = (upAll || type == ATTR_MERGE),
 					cellType = v.ct;
+				this.ref = v.rf;
 				this.cellType = cellType != undefined ? cellType : 3;//default is BLANK_CELL
 				if (upText) {
 					var mergedTextId = v.meft;
@@ -223,6 +224,8 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
 						this.fontSize = fontSize;
 				}
 				if (upSize) {
+					this.widthId = v.w;
+					this.heightId = heightId;
 					this.overflow = !!v.ovf;
 					if (this.overflow) {
 						this.maxOverflowCol = v.moc;
@@ -240,10 +243,6 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
 						if (this.mergeId) {
 							this.merge = newRect(info.t, info.l, info.b, info.r);
 						}
-					} else if (this.mergeId) {//remove merge
-						delete this.mergeId;
-						delete this.mergeCls;
-						delete this.merge;
 					}
 				}
 			}
@@ -268,7 +267,11 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
 			r: v.r,
 			heightId: v.h,
 			cells: {},
-			//TODO: rm this
+			updateColumnWidthId: function (col, id) {
+				var cell = this.cells[col];
+				if (cell)
+					cell.widthId = id;
+			},
 			updateRowHeightId: function (id) {
 				this.heightId = id;
 				var cells = this.cells;
@@ -367,14 +370,14 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 			header = this.columnHeaders[col];
 		if (header)
 			header.p = id;
-
+		for (var r = tRow; r <= bRow; r++) {
+			var row = rows[r];
+			if (row)
+				row.updateColumnWidthId(col, id);
+		}
 		if (this.leftFrozen) {
 			this.leftFrozen.updateColumnWidthId(col, id);
 		}
-	},
-	getColumnWidthId: function (col) {
-		var c = this.columnHeaders[col];
-		return c ? c.p : null;
 	},
 	updateRowHeightId: function (row, id) {
 		var r = this.rows[row],
@@ -386,10 +389,6 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 		if (this.topFrozen) {
 			this.leftFrozen.updateRowHeightId(row, id);
 		}
-	},
-	getRowHeightId: function (row) {
-		var r = this.rowHeaders[row];
-		return r ? r.p : null; 
 	},
 	updateBoundary: function (dir, top, left, btm, right) {
 		var rect = this.rect;
@@ -514,41 +513,8 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 		return	tRow >= rect.top && lCol >= rect.left &&
 					bRow <= rect.bottom && rCol <= rect.right;
 	},
-	insertNewColumn: function (colIdx, size, headers) {
+	insertColumns: function (col, size, headers) {
 		updateHeaders(this.columnHeaders, headers);
-		var rows = this.rows;
-			rng = this.rect,
-			rCol = rng.right;
-		for (var r = rng.top; r <= rng.bottom; r++) {
-			var cs = rows[r].cells,
-				c = colIdx,
-				cb = colIdx + size,//column index boundary 
-				ccs = [],//clone cells
-				cfn = zss.ActiveRange.clone;
-			//clone cells for insert later (after shift)
-			for (; c < cb; c++) {
-				ccs.push(cfn(cs[c]));
-			}
-			
-			//shift cells right
-			cb = colIdx - 1;
-			c = rCol;
-			while (c != cb) {
-				var cell = cs[c--],
-					oIdx = cell.c,//old index
-					nIdx = oIdx + size;//new index
-				cell.c = nIdx;
-				cs[nIdx] = cell;
-				cs[oIdx] = null;
-			}
-			
-			//insert cells form clone
-			var cc;
-			c = colIdx;
-			while (cc = ccs.shift()) {
-				cs[c++] = cc; 
-			}
-		}
 		this.rect.right += size;
 	},
 	removeColumns: function (col, size, headers) {
@@ -566,42 +532,9 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 		}
 		this.rect.right -= size;
 	},
-	insertNewRow: function (rowIdx, size, headers) {
+	insertRows: function (row, size, headers) {
 		updateHeaders(this.rowHeaders, headers);
 		
-		var rows = this.rows;
-			rng = this.rect,
-			lCol = rng.left,
-			rCol = rng.right,
-			r = rowIdx,
-			rb = rowIdx + size,
-			crs = [], //clone rows
-			cfn = zss.ActiveRange.copyRow;
-
-		//cloned rows for insert later (after shift row)
-		for (;r < rb; r++) {
-			crs.push(cfn(lCol, rCol, rows[r]));
-		}
-		
-		//shift rows
-		rb = rowIdx - 1;
-		r = rng.bottom;
-		while (r != rb) {
-			var row = rows[r--],
-				oIdx = row.r,//old index
-				nIdx = oIdx + size;//new index
-			row.r = nIdx;
-			rows[nIdx] = row;
-			rows[oIdx] = null;
-		}
-		
-		//insert rows from clone
-		var ro;
-		r = rowIdx;
-		while (ro = crs.shift()) {
-			rows[r++] = ro;
-		}
-			
 		this.rect.bottom += size; 
 	},
 	removeRows: function (row, size, headers) {
@@ -645,7 +578,7 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 			this.update(v);
 		}
 	},
-	update: function (v, dir) {
+	update: function (v) {
 		var attrType = v.at,
 			top = v.t,
 			left = v.l,
@@ -659,42 +592,9 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 			colHeaderObj = v.chs,
 			i = top, 
 			s = 0,
-			dir = dir || v.dir,
-			oldRows = {},
+			dir = v.dir;
+		var oldRows = {},
 			oldRowHeaders = {};
-		
-		//left frozen
-		var lfd = v.leftFrozen,//left frozen data
-			tfd = v.topFrozen;//top frozen data
-		if (lfd) {
-			if (!this.leftFrozen) {//init left frozen, clone data from main block first
-				var sRect = this.rect,
-					st = sRect.top,
-					sb = sRect.bottom;
-				this.leftFrozen = new zss.ActiveRange(lfd);
-				this.leftFrozen.clone(st, 0, sb, lfd.r, this);
-				var lr = this.leftFrozen.rect;
-				lr.top = Math.min(st, lfd.t);
-				lr.bottom = Math.max(sb, lfd.b);
-			} else {
-				this.leftFrozen.update(lfd, dir);
-			}
-		}
-		if (tfd) {
-			if (!this.topFrozen) {
-				var sRect = this.rect,
-					sl = sRect.left,
-					sr = sRect.right;
-				this.topFrozen = new zss.ActiveRange(tfd);
-				this.topFrozen.clone(0, sl, tfd.b, sr, this);
-				var tr = this.topFrozen.rect;
-				tr.left = Math.min(sl, tfd.l);
-				tr.right = Math.max(sr, tfd.r);
-			} else {
-				this.topFrozen.update(tfd, dir);
-			}
-		}
-		
 		if ('jump' == dir) {
 			//row contains wrap cell may have height Id on client side
 			oldRows = this.oldRows = this.rows,
@@ -743,53 +643,6 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 	},
 	getRow: function (num) {
 		return this.rows[num];
-	},
-	clone: function (tRow, lCol, bRow, rCol, src) {
-		var rows = this.rows,
-			rhs = this.rowHeaders,
-			chs = this.columnHeaders,
-			srcRowHeaders = src.rowHeaders,
-			srcColHeaders = src.columnHeaders,
-			cpRowsFn = zss.ActiveRange.copyRow,
-			cfn = zss.ActiveRange.clone;
-		for (var r = tRow; r <= bRow; r++) {
-			var sRow = src.getRow(r);
-			rows[r] = cpRowsFn(lCol, rCol, sRow);
-			rhs[r] = cfn(srcRowHeaders[r]);//clone row headers
-		}
-		
-		for (var c = lCol; c <= rCol; c++) {
-			chs[c] = cfn(srcColHeaders[c]);
-		}
-	}
-}, {//static
-	copyRow: function (lCol, rCol, srcRow) {
-		var row = {
-			r: srcRow.r,
-			heightId: srcRow.heightId,
-			cells: {},
-			update: srcRow.update,
-			getCell: srcRow.getCell,
-			updateRowHeightId: srcRow.updateRowHeightId,
-			removeColumns: srcRow.removeColumns
-		};
-		zss.ActiveRange.copyCells(lCol, rCol, srcRow, row);
-		return row;
-	},
-	copyCells: function (lCol, rCol, srcRow, dstRow) {
-		var srcCells = srcRow.cells,
-			dstCells = dstRow.cells,
-			fn = zss.ActiveRange.clone;
-		for (var c = lCol; c <= rCol; c++) {
-			dstCells[c] = fn(srcCells[c]);
-		}
-	},
-	clone: function (src) {
-		var c = {};
-		for (var p in src) {
-			c[p] = src[p];
-		}
-		return c;
 	}
 });
 
@@ -936,9 +789,6 @@ zss.CacheCtrl = zk.$extends(zk.Object, {
 	},
 	setSelectedSheetBy: function (sheetId) {
 		this.selected = this.sheets[sheetId];
-	},
-	getSheetBy: function (shtId) {
-		return this.sheets[shtId];
 	},
 	setSelectedSheet: function (v) {
 		var sheetId = v.id,

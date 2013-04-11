@@ -18,6 +18,7 @@ package org.zkoss.test.zss.cases;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.zkoss.test.Color;
 import org.zkoss.test.JQuery;
@@ -137,10 +138,10 @@ public class SS_036_Test extends ZSSAppTest {
 		CellCacheAggeration from = getCellCacheAggerationBuilder(12, 5, 12, 9).build();
 		
 		mouseDirector.openRowContextMenu(12);
-		click(".z-menupopup:visible .zsmenuitem-cut");
+		click(".z-menu-popup:visible .zsmenuitem-cut");
 		
 		mouseDirector.openRowContextMenu(16);
-		click(".z-menupopup:visible .zsmenuitem-paste");
+		click(".z-menu-popup:visible .zsmenuitem-paste");
 		
 		verifyPasteAll(PasteSource.CUT, from, 16, 5, 16, 9);
 	}
@@ -150,10 +151,10 @@ public class SS_036_Test extends ZSSAppTest {
 		CellCacheAggeration from = getCellCacheAggerationBuilder(12, 5, 12, 9).build();
 		
 		mouseDirector.openRowContextMenu(12);
-		click(".z-menupopup:visible .zsmenuitem-copy");
+		click(".z-menu-popup:visible .zsmenuitem-copy");
 		
 		mouseDirector.openRowContextMenu(16);
-		click(".z-menupopup:visible .zsmenuitem-paste");
+		click(".z-menu-popup:visible .zsmenuitem-paste");
 		
 		verifyPasteAll(PasteSource.COPY, from, 16, 5, 16, 9);
 	}
@@ -162,10 +163,10 @@ public class SS_036_Test extends ZSSAppTest {
 	public void row_paste_special() {
 		CellCacheAggeration from = getCellCacheAggerationBuilder(12, 5, 12, 9).build();
 		mouseDirector.openRowContextMenu(12);
-		click(".z-menupopup:visible .zsmenuitem-copy");
+		click(".z-menu-popup:visible .zsmenuitem-copy");
 		
 		mouseDirector.openRowContextMenu(16);
-		click(".z-menupopup:visible .zsmenuitem-pasteSpecial");
+		click(".z-menu-popup:visible .zsmenuitem-pasteSpecial");
 		Assert.assertTrue(isVisible("$_pasteSpecialDialog"));
 		click("$_pasteSpecialDialog $okBtn");
 		
@@ -178,7 +179,7 @@ public class SS_036_Test extends ZSSAppTest {
 		CellCacheAggeration from = builder.build();
 		mouseDirector.openRowContextMenu(13);
 		
-		click(".z-menupopup:visible .zsmenuitem-insertSheetRow");
+		click(".z-menu-popup:visible .zsmenuitem-insertSheetRow");
 		
 		verifyInsert(Insert.CELL_DOWN, from, builder);
 	}
@@ -189,7 +190,7 @@ public class SS_036_Test extends ZSSAppTest {
 		CellCacheAggeration from = builder.down().build();
 		mouseDirector.openRowContextMenu(13);
 		
-		click(".z-menupopup:visible .zsmenuitem-deleteSheetRow");
+		click(".z-menu-popup:visible .zsmenuitem-deleteSheetRow");
 		
 		verifyDelete(Delete.CELL_UP, from, builder, null);
 	}
@@ -199,7 +200,7 @@ public class SS_036_Test extends ZSSAppTest {
 	public void row_clear_content() {
 		CellCacheAggeration cache = getCellCacheAggerationBuilder(12, 5, 12, 9).build();
 		mouseDirector.openRowContextMenu(12);
-		click(".z-menupopup:visible .zsmenuitem-clearContent");
+		click(".z-menu-popup:visible .zsmenuitem-clearContent");
 		verifyClearContent(cache);
 	}
 	
@@ -207,7 +208,7 @@ public class SS_036_Test extends ZSSAppTest {
 	public void row_format_number() {
 		
 		mouseDirector.openRowContextMenu(12);
-		click(".z-menupopup:visible .zsmenuitem-formatCell");
+		click(".z-menu-popup:visible .zsmenuitem-formatCell");
 		Assert.assertTrue(isVisible("$_formatNumberDialog"));
 		
 		click("@listcell[label=\"Accounting\"] div.z-overflow-hidden");
@@ -221,7 +222,7 @@ public class SS_036_Test extends ZSSAppTest {
 	public void row_height() {
 		mouseDirector.openRowContextMenu(12);
 		
-		click(".z-menupopup:visible .zsmenuitem-rowHeight");
+		click(".z-menu-popup:visible .zsmenuitem-rowHeight");
 		JQuery $input = jq("$headerSize");
 		WebElement input = $input.getWebElement();
 		input.clear();
@@ -243,11 +244,11 @@ public class SS_036_Test extends ZSSAppTest {
 	public void toggle_row_hide() {
 		mouseDirector.openRowContextMenu(12);
 		
-		click(".z-menupopup:visible .zsmenuitem-hideRow");
+		click(".z-menu-popup:visible .zsmenuitem-hideRow");
 		Assert.assertFalse(spreadsheet.getRowHeader(12).jq$n().isVisible());
 		
 		mouseDirector.openRowContextMenu(11, 13);
-		click(".z-menupopup:visible .zsmenuitem-unhideRow");
+		click(".z-menu-popup:visible .zsmenuitem-unhideRow");
 		Assert.assertTrue(spreadsheet.getRowHeader(12).jq$n().isVisible());
 	}
 	
@@ -271,7 +272,7 @@ public class SS_036_Test extends ZSSAppTest {
 	public void hide_row_by_menu_unhide_row_by_drag() {
 		final int ROW_6 = 5;
 		mouseDirector.openRowContextMenu(ROW_6);
-		click(".z-menupopup:visible .zsmenuitem-hideRow");
+		click(".z-menu-popup:visible .zsmenuitem-hideRow");
 		Assert.assertFalse(spreadsheet.getRowHeader(ROW_6).jq$n().isVisible());
 		
 		Header header = spreadsheet.getLeftPanel().getRowHeader(ROW_6);

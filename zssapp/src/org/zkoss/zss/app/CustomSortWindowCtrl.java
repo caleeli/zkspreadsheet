@@ -112,7 +112,10 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 		Rect selection = (Rect) event.getOrigin().getData();
 		ss.setSelection(selection);
 		init();
-		_customSortDialog.setMode(Window.MODAL);
+		try {
+			_customSortDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	public void doAfterCompose(Component comp) throws Exception {
@@ -202,13 +205,19 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 	
 	public void onClick$okBtn () {
 		if (hasEmptyArgs(sortLevelModel.getInnerList())) {
-			Messagebox.show(getLabel("sort.err.hasEmptyField"));
+			try {
+				Messagebox.show(getLabel("sort.err.hasEmptyField"));
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		
 		String dupTarget = checkDuplicateSortIndex(sortLevelModel.getInnerList());
 		if (dupTarget != null) {
-			Messagebox.show(dupTarget + " " + getLabel("sort.err.duplicateField"));
+			try {
+				Messagebox.show(dupTarget + " " + getLabel("sort.err.duplicateField"));
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		
@@ -310,12 +319,6 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 			cell.appendChild(sortMethod);
 			idxSel.setAttribute(SortAlgorithm.class.getCanonicalName(), sortMethod);
 			item.appendChild(cell);
-		}
-
-		@Override
-		public void render(Listitem item, Object data, int index)
-				throws Exception {
-			render(item, data);
 		}
 		
 	};

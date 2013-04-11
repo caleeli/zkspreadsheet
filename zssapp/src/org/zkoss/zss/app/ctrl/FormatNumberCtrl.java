@@ -59,7 +59,10 @@ public class FormatNumberCtrl extends GenericForwardComposer {
 	
 	public void onOpen$_formatNumberDialog(ForwardEvent evt) {
 		selection = (Rect) evt.getOrigin().getData();
-		_formatNumberDialog.setMode(Window.MODAL);
+		try {
+			_formatNumberDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	public void openFormatList(String listId) {
@@ -105,6 +108,9 @@ public class FormatNumberCtrl extends GenericForwardComposer {
 	}
 
 	private void showSelectFormatDialog() {
-		Messagebox.show("Please select a category");
+		try {
+			Messagebox.show("Please select a category");
+		} catch (InterruptedException e) {
+		}
 	}
 }

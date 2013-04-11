@@ -26,35 +26,52 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
  */
 zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 	loadstate: IDLE,
-	_loadVisibleOnResponse: false,
-	replaceWidget: function (newwgt) {
+	replaceWidget: function (newwgt, leftFrozen, topFrozen) {
 		this.$supers(zss.MainBlockCtrl, 'replaceWidget', [newwgt]); //create cells
 		
 		var r = newwgt.range;
-		newwgt.create_('jump', r.top, r.left, r.bottom, r.right, true);//wgt init won't create frozen area
+		newwgt.create_('jump', r.top, r.left, r.bottom, r.right, leftFrozen, topFrozen, true);//wgt init won't create frozen area
+	},
+	_createVer: function (dir, lCol, rCol, topFrozen) {
+		var tp = this.sheet.tp,
+			data = topFrozen ? topFrozen.data : null,
+			frozenRowStart = data ? data.t : -1,
+			frozenRowEnd = data ? data.b : -1;
+		tp.create_(dir, lCol, rCol, frozenRowStart, frozenRowEnd);
+	},
+	_createHor: function (dir, tRow, bRow, leftFrozen) {
+		var lp = this.sheet.lp,
+			data = leftFrozen ? leftFrozen.data : null,
+			frozenColStart = data ? data.l : -1,
+			frozenColEnd = data ? data.r : -1;
+		lp.create_(dir, tRow, bRow, frozenColStart, frozenColEnd);
 	},
 	/**
-	 * Create cells, frozen cells and associated headers
+	 * Create cells and associated headers
 	 */
-	create_: function (dir, tRow, lCol, bRow, rCol, createFrozenOnly) {
-		var sht = this.sheet;
+	create_: function (dir, tRow, lCol, bRow, rCol, leftFrozen, topFrozen, createFrozenOnly) {
+		var fixSize = false;
 		switch (dir) {
 		case 'east':
+			fixSize = true;
 		case 'west':
-			sht.tp.create_(dir, lCol, rCol, 0, sht._wgt.getRowFreeze());
+			this._createVer(dir, lCol, rCol, topFrozen);
 			break;
 		case 'north':
+			fixSize = true;
 		case 'south':
-			sht.lp.create_(dir, tRow, bRow, 0, sht._wgt.getColumnFreeze());
+			this._createHor(dir, tRow, bRow, leftFrozen);
 			break;
 		case 'jump':
-			sht.tp.create_(dir, lCol, rCol, 0, sht._wgt.getRowFreeze());
-			sht.lp.create_(dir, tRow, bRow, 0, sht._wgt.getColumnFreeze());
+			this._createVer(dir, lCol, rCol, topFrozen);
+			this._createHor(dir, tRow, bRow, leftFrozen);
 			break;
 		}
 		if (!createFrozenOnly)
 			this.$supers(zss.MainBlockCtrl, 'create_', [dir, tRow, lCol, bRow, rCol]); //create cells;
-		sht.dp._fixSize(this);
+		
+		if (fixSize)
+			this.sheet.dp._fixSize(this);
 	},
 	_recheckVisible: function () {
 		var self = this,
@@ -89,6 +106,10 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				this.create_(dir, tRow, lCol, bRow, rCol);
 				var size = this.range.size(),
 					prune = size > maxCellSize;
+				var fCol = sheet._wgt.getColumnFreeze();
+				if (fCol > -1) {
+					sheet.lp.create_(dir, tRow, bRow, 0, fCol, true);
+				}
 				//TODO: minimize prune size
 				if (prune && cr.top + vr.height < vr.top) {
 					this.pruneCell('north', vr, jump ? null : vr.top - (cr.top + vr.height));
@@ -108,6 +129,10 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				this.create_(dir, tRow, lCol, bRow, rCol);
 				var size = this.range.size(),
 					prune = size > maxCellSize;
+				var fCol = sheet._wgt.getColumnFreeze();
+				if (fCol > -1) {
+					sheet.lp.create_(dir, tRow, bRow, 0, fCol, true);
+				}
 				//TODO: minimize prune size
 				if (prune && (cr.bottom - vr.height > vr.bottom)) {
 					this.pruneCell('south', vr, jump ? null : cr.bottom - vr.height - vr.bottom);
@@ -127,6 +152,11 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				this.create_(dir, tRow, lCol, bRow, rCol);
 				var size = this.range.size(),
 					prune = size > maxCellSize;
+				var fRow = sheet._wgt.getRowFreeze();
+				if (fRow > -1) {
+					sheet.tp.create_(dir, lCol, rCol, 0, fRow, true);
+				}
+				
 				//TODO: "cr.right - vr.width > vr.right"
 				if (prune && (cr.right - vr.width > vr.right)) {
 					this.pruneCell('east', vr, jump ? null : cr.right - vr.width - vr.right);
@@ -145,6 +175,11 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				this.create_(dir, tRow, lCol, bRow, rCol);
 				var size = this.range.size(),
 					prune = size > maxCellSize;
+				var fRow = sheet._wgt.getRowFreeze();
+				if (fRow > -1) {
+					sheet.tp.create_(dir, lCol, rCol, 0, fRow, true);
+				}
+				
 				//TODO: minimize prune size
 				if (prune && (cr.left + vr.width < vr.left)) {
 					this.pruneCell('west', vr, jump ? null : (vr.left - (cr.left + vr.width)));
@@ -154,6 +189,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			break;
 		}
 		if (cache) {
+			//sheet.sendSyncblock();
 			this.sheet.dp._fixSize(this);
 			this._recheckVisible(); //will sendSyncblock 
 			return true; //use cache
@@ -250,27 +286,31 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			arLeftWidth = -1,
 			arRightWidth = -1;
 
-		if ('east' == direction || 'west' == direction) {
+		if (('east' == direction || 'west' == direction) && this.sheet._wgt._preloadRowSize > 0) {
 			var	topHgh = range.top - arRect.top + 1,
 				btmHgh = arRect.bottom - range.bottom + 1;
 			if (topHgh > 1)
 				arTopHgh = topHgh;
 			if (btmHgh > 1)
 				arBtmHgh = btmHgh;
-		} else if ('north' == direction || 'south' == direction) {
-			//TODO: if the amount of cell to load is small, shall load extra cells, not prune cached cells.
+		}
+		//TODO: if the amount of cell to load is small, shall load extra cells, not prune cached cells.
+		if ('north' == direction || 'south' == direction) {
 			var	ar = sheet._wgt._cacheCtrl.getSelectedSheet(),
 				leftWidth = range.left - arRect.left,
 				rightWidth = arRect.right - range.right;
 			
 			if (leftWidth > 0) {
+				//TODO: shall NOT prune left data
 				ar.pruneLeft(leftWidth);
 			}
 			if (rightWidth > 0) {
+				//TODO: shall NOT prune right data
 				ar.pruneRight(rightWidth);
 			}
 		}
 
+		//TODO: use spreadsheet.fetchActiveRange instead of onZSSCellFetch
 		wgt.fire('onZSSCellFetch', 
 		 {token: token, sheetId: sheet.serverSheetId, type: type, direction: direction,
 		 dpWidth: dp.width, dpHeight: dp.height, viewWidth: spcmp.clientWidth, viewHeight: spcmp.clientHeight,
@@ -678,13 +718,6 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 		var local = this,
 			sheet = this.sheet;
 		if (this.loadstate != zss.MainBlockCtrl.IDLE) { //waiting previous loading.
-			if (!this._loadVisibleOnResponse) {
-				this._loadVisibleOnResponse = true;
-				sheet._wgt._onResponseCallback.push(function () {
-					local.loadForVisible.apply(local);
-					local._loadVisibleOnResponse = false;
-				});
-			}
 			return true;
 		}
 		if (!vrange)
@@ -711,27 +744,16 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				fRow = sheet._wgt.getRowFreeze();
 			if (ar.containsRange(top, right + 1, bottom, rCol)) {
 				this.create_('east', top, right + 1, bottom, rCol);
+				if (fRow > -1) {
+					sheet.tp.create_('east', right + 1, rCol, 0, fRow, true);
+				}
 				createFromCache = true;
 			} else if (ar.rect.right > right + 1 && ar.rect.right < rCol && ar.containsRange(top, right + 1, bottom, ar.rect.right)) {
 				//create partial east from cache
 				this.create_('east', top, right + 1, bottom, ar.rect.right);
-				createFromCache = true;
-			}
-			if (createFromCache) { //after create cell from cache, range's value may changed
-				range = this.range;
-				top = range.top;
-				left = range.left;
-				right = range.right;
-				bottom = range.bottom;
-			}
-		}
-		
-		//create west from cache
-		if (left - 1 >= lCol) {
-			var createFromCache = false,
-				fRow = sheet._wgt.getRowFreeze();
-			if (ar.containsRange(top, lCol, bottom, left - 1)) {
-				this.create_('west', top, lCol, bottom, left - 1);
+				if (fRow > -1) {
+					sheet.tp.create_('east', right + 1, ar.rect.right, 0, fRow, true);
+				}
 				createFromCache = true;
 			}
 			if (createFromCache) { //after create cell from cache, range's value may changed
@@ -749,10 +771,16 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				fCol = sheet._wgt.getColumnFreeze();
 			if (ar.containsRange(bottom + 1, left, bRow, right)) {
 				this.create_('south', bottom + 1, left, bRow, right);
+				if (fCol > -1) {
+					sheet.lp.create_('south', bottom + 1, bRow, 0, fCol, true);
+				}
 				createFromCache = true;
 			} else if (ar.rect.bottom > bottom + 1 && ar.rect.bottom < bRow && ar.containsRange(bottom + 1, left, ar.rect.bottom, right)) {
 				//create partial south from cache
 				this.create_('south', bottom + 1, left, ar.rect.bottom, right);
+				if (fCol > -1) {
+					sheet.lp.create_('south', bottom + 1, ar.rect.bottom, 0, fCol, true);
+				}
 				createFromCache = true;
 			}
 			if (createFromCache) {
@@ -770,10 +798,16 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				fCol = sheet._wgt.getColumnFreeze();
 			if (ar.containsRange(tRow, left, top - 1, right)) {
 				this.create_('north', tRow, left, top - 1, right);
+				if (fCol > -1) {
+					sheet.lp.create_('north', tRow, top - 1, 0, fCol, true);
+				}
 				createFromCache = true;
 			} else if (ar.rect.top > tRow && ar.rect.top < top - 1 && ar.containsRange(ar.rect.top, left, top - 1, right)) {
 				//create partial north from cache
 				this.create_('north', ar.rect.top, left, top - 1, right);
+				if (fCol > -1) {
+					sheet.lp.create_('north', ar.rect.top, top - 1, 0, fCol, true);
+				}
 				createFromCache = true;
 			}
 			if (createFromCache) {
@@ -815,16 +849,12 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				//then this call bak will throw exception because this block is invalidate.
 				//TODO : so, in any call, i should check is it valid or not. 
 				if (local.invalid) return;
-				var b = sheet.activeBlock;
-				b.loadstate = zss.MainBlockCtrl.IDLE;
-				b.loadForVisible();;
-				sheet.dp._fixSize(local);
+				sheet.activeBlock.loadstate = zss.MainBlockCtrl.IDLE;
 			});
 			this.loadstate = zss.MainBlockCtrl.LOADING;
 			this._sendOnCellFetch(token, "visible", "", -1, -1, fetchWidth, fetchHeight, vrange);
 			return true;
 		}
-		sheet.dp._fixSize(this);
 
 		var deferLoader = sheet.deferLoader;
 		if (!deferLoader) {
