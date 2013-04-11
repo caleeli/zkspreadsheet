@@ -268,7 +268,11 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
 			r: v.r,
 			heightId: v.h,
 			cells: {},
-			//TODO: rm this
+			updateColumnWidthId: function (col, id) {
+				var cell = this.cells[col];
+				if (cell)
+					cell.widthId = id;
+			},
 			updateRowHeightId: function (id) {
 				this.heightId = id;
 				var cells = this.cells;
@@ -367,7 +371,11 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 			header = this.columnHeaders[col];
 		if (header)
 			header.p = id;
-
+		for (var r = tRow; r <= bRow; r++) {
+			var row = rows[r];
+			if (row)
+				row.updateColumnWidthId(col, id);
+		}
 		if (this.leftFrozen) {
 			this.leftFrozen.updateColumnWidthId(col, id);
 		}
@@ -770,6 +778,7 @@ zss.ActiveRange = zk.$extends(zk.Object, {
 			cells: {},
 			update: srcRow.update,
 			getCell: srcRow.getCell,
+			updateColumnWidthId: srcRow.updateColumnWidthId,
 			updateRowHeightId: srcRow.updateRowHeightId,
 			removeColumns: srcRow.removeColumns
 		};

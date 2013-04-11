@@ -346,7 +346,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 				}
 			}
 		}
-		return new HashSet<Action>(_defToolbarActiobDisabled); 
+		return _defToolbarActiobDisabled; 
 	}
 	
 	/**
@@ -1446,14 +1446,12 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		}
 		final Map validMap = new HashMap();
 		validMap.put("rangeList", addrmapary); //range list
+		validMap.put("showButton", dv.getSuppressDropDownArrow()); //whether show dropdown button
 		validMap.put("showPrompt", dv.getShowPromptBox()); //whether show prompt box
 		validMap.put("promptTitle", dv.getPromptBoxTitle()); //the prompt box title
 		validMap.put("promptText", dv.getPromptBoxText()); //the prompt box text
 		String[] validationList = BookHelper.getValidationList(getSelectedSheet(), dv);
 		if (validationList != null) {
-			//ZSS-197: the method is useful only list validation objects
-			validMap.put("showButton", dv.getSuppressDropDownArrow()); //whether show dropdown button
-			
 			JSONArray jsonAry = new JSONArray();
 			for (String v : validationList) {
 				jsonAry.add(v);
@@ -2125,11 +2123,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		}
 		private void onFriendFocusMove(SSDataEvent event) {
 			final Ref rng = event.getRef();
-			Worksheet sheet = getSheet(rng);
-			if (sheet == null) {//ZSS-209: book may removed
-				return;
-			}
-			if (sheet.equals(_selectedSheet)) { //same sheet
+			if (getSheet(rng).equals(_selectedSheet)) { //same sheet
 				final Focus focus = (Focus) event.getPayload(); //other's spreadsheet's focus
 				final String id = focus.id;
 				if (!id.equals(_focus.id)) {
@@ -2140,11 +2134,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		}
 		private void onFriendFocusDelete(SSDataEvent event) {
 			final Ref rng = event.getRef();
-			Worksheet sheet = BookHelper.getSheet(_book, rng.getOwnerSheet());
-			if (sheet == null) {//ZSS-209: book may removed
-				return;
-			}
-			if (sheet.equals(_selectedSheet)) { //same sheet
+			if (BookHelper.getSheet(_book, rng.getOwnerSheet()).equals(_selectedSheet)) { //same sheet
 				final Focus focus = (Focus) event.getPayload(); //other's spreadsheet's focus
 				removeEditorFocus(focus.id);
 			}
@@ -4845,11 +4835,9 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 
 	@Override
 	public void afterCompose() {
-		String ctrlKeys = getCtrlKeys();
 		//ZSS-127: bind event on afterCompose
-		if (_showToolbar 
-		|| (ctrlKeys != null && (ctrlKeys.toLowerCase().indexOf("^c") >= 0 || ctrlKeys.indexOf("^v") >= 0))) {
-			getActionHandler().bind(Spreadsheet.this);//init for toolbar's "upload picture" button & copy-paste by Ctrl key
+		if (_showToolbar) {
+			getActionHandler().bind(Spreadsheet.this);//init for toolbar's "upload picture" button
 		}
 	}
 	

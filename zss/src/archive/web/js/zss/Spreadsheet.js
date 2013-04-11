@@ -632,15 +632,9 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 			}
 		},
 		actionDisabled: function (v) {
-			var tb = this._toolbar
+			var tb = this._toolbar;
 			if (tb)
 				tb.setDisabled(v);
-			if (this.getShowContextMenu()) {
-				var shtCtrl = this.sheetCtrl;
-				if (shtCtrl) {
-					shtCtrl.setActionDisabled(v);
-				}
-			}
 		},
 		/**
 		 * Sets whether show formula bar or not
@@ -695,11 +689,6 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 		//flag that indicate server has done paste operation, no need to do paste at client,
 		//Note. this flag will clear by doKeyUp()
 		doPasteFromServer: null
-	},
-	clearCachedSize_: function () {
-		this.getTopPanel().clearCachedSize_();
-		this.cave.clearCachedSize_();
-		this.$supers(zss.Spreadsheet, 'clearCachedSize_', arguments);
 	},
 	getTopPanel: function () {
 		var tp = this._topPanel;

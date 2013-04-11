@@ -352,7 +352,7 @@ zss.Toolbarbutton = zk.$extends(zul.wgt.Toolbarbutton, {
 	bind_: function () {
 		this.$supers(zss.Toolbarbutton, 'bind_', arguments);
 		var cave = this.$n('cave');
-		if (cave && !this._calWidth) { //contains menupopup, expand button width
+		if (cave) { //contains menupopup, expand button width
 			var disd = this.isClickDisabled(),
 				seld = this._seldImage,
 				scls = this._getSclass(),
@@ -364,7 +364,6 @@ zss.Toolbarbutton = zk.$extends(zul.wgt.Toolbarbutton, {
 			if (w <= 32)//min size
 				w = 32;
 			this.setWidth(w + 'px');
-			this._calWidth = true;//ZSS-216
 			if (disd) {
 				jq(cnt).addClass(scls + '-clk-disd');
 			}
@@ -564,13 +563,7 @@ if (zk.feature.pe) {
 				
 				var thispt = zss.Colorbutton.prototype,
 					superpt = zkex.inp.Colorbox.prototype;
-				
-				if (!superpt.openPalette && superpt.$class.$copyf) {//ZSS-217
-					superpt.$class.$copyf();
-					superpt.$class.$copied = true;
-				}
-				
-				thispt._$openPopup = superpt.openPopup;
+				thispt.openPopup = superpt.openPopup;
 				thispt._$closePopup = superpt.closePopup;//need customize closePopup
 				thispt.openPalette = superpt.openPalette;
 				thispt.closePalette = superpt.closePalette;
@@ -622,12 +615,7 @@ if (zk.feature.pe) {
 						c.style.backgroundColor = hex;
 				}
 			},
-			openPopup: function () {
-				this._open = true;
-				this._$openPopup();
-			},
 			closePopup: function () {
-				this._open = false;
 				this._$closePopup();
 				jq(this.$n()).removeClass('z-toolbarbutton-over');
 			},
@@ -666,7 +654,7 @@ if (zk.feature.pe) {
 				this.$supers(zss.Colorbutton, 'unbind_', arguments);
 			},
 			onFloatUp: function (ctl) {
-				if (this._open) {
+				if (this._picker.isVisible() || this._palette.isVisible()) {
 					var wgt = ctl.origin;
 					for (var floatFound; wgt; wgt = wgt.parent) {
 						if (wgt == this) {
@@ -721,15 +709,10 @@ if (zk.feature.pe) {
 				var uid = this.uuid,
 					cnt = this.$supers(zss.Colorbutton, 'domContent_', arguments),
 					color = this.getColor();
-				cnt = cnt + '<div id="' + uid + '-color" class="zstbtn-color" style="background:' 
+				return cnt + '<div id="' + uid + '-color" class="zstbtn-color" style="background:' 
 					+ this.getColor() + ';"></div><div id="' + uid + '-pp" style="display:none;" class="z-colorbtn-pp">' +
 					'<div id="' + uid + '-palette-btn" class="z-colorbtn-palette-btn"></div><div id="' + 
-					uid + '-picker-btn" class="z-colorbtn-picker-btn"></div>';//Note. use Colorbox's "z-colorbtn-pp"
-				for (var w = this.firstChild; w; w = w.nextSibling) {
-					cnt += w.redrawHTML_();
-				}
-				cnt += '</div>';
-				return cnt;
+					uid + '-picker-btn" class="z-colorbtn-picker-btn"></div></div>';//Note. use Colorbox's "z-colorbtn-pp"
 			}
 		});
 	})
@@ -970,13 +953,12 @@ zss.Menupopup = zk.$extends(zul.menu.Menupopup, {
 				var sheet = wgt.sheetCtrl;
 				if (sheet) {
 					var s = sheet.getLastSelection(),
-						type = sheet.selType;
 						tRow = s.top,
 						lCol = s.left,
 						bRow = s.bottom,
 						rCol = s.right;
 					sheet.triggerSelection(tRow, lCol, bRow, rCol);
-					wgt.fireToolbarAction(action, {tRow: tRow, lCol: lCol, bRow: bRow, rCol: rCol, action: type});
+					wgt.fireToolbarAction(action, {tRow: tRow, lCol: lCol, bRow: bRow, rCol: rCol});
 				}
 			}
 		});
@@ -1028,16 +1010,6 @@ zss.StylePanel = zk.$extends(zul.wgt.Popup, {
 			tb.appendChild(b);
 		}
 		this.appendChild(tb);
-	},
-	setDisabled: function (actions) {
-		for (var n = this.firstChild; n; n = n.nextSibling) {//toolbars
-			for (var chd = n.firstChild;chd; chd = chd.nextSibling) {//buttons
-				if (!chd.setDisabled) {
-					continue;
-				}
-				chd.setDisabled(actions);
-			}
-		}
 	},
 	_closeStylePanel: function () {
 		this.close({sendOnOpen:true});

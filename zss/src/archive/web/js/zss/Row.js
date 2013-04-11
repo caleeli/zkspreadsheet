@@ -189,7 +189,7 @@ zss.Row = zk.$extends(zk.Widget, {
 		out.push(this.getHtmlEpilogHalf());
 	},
 	getHtmlPrologHalf: function () {
-		return '<div id="' + this.uuid + '" class="' + this.getZclass() + '" zs.t="SRow">';
+		return '<div id="' + this.uuid + '" class="' + this.getZclass() + '">';
 	},
 	getHtmlEpilogHalf: function () {
 		return '</div>';
