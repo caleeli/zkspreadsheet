@@ -15,7 +15,6 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 package org.zkoss.zss.app.ctrl;
 
 import org.zkoss.zk.ui.Component;
-import org.zkoss.zk.ui.event.ForwardEvent;
 import org.zkoss.zk.ui.event.SelectEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zss.app.zul.Dialog;
@@ -43,7 +42,6 @@ public class FormatNumberCtrl extends GenericForwardComposer {
 	private Button okBtn;
 	
 	private Spreadsheet spreadsheet;
-	private Rect selection;
 	
 	public void doAfterCompose(Component comp) throws Exception {
 		super.doAfterCompose(comp);
@@ -57,9 +55,11 @@ public class FormatNumberCtrl extends GenericForwardComposer {
 		openFormatList((String)mfn_category.getSelectedItem().getValue());
 	}
 	
-	public void onOpen$_formatNumberDialog(ForwardEvent evt) {
-		selection = (Rect) evt.getOrigin().getData();
-		_formatNumberDialog.setMode(Window.MODAL);
+	public void onOpen$_formatNumberDialog() {
+		try {
+			_formatNumberDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	public void openFormatList(String listId) {
@@ -92,11 +92,12 @@ public class FormatNumberCtrl extends GenericForwardComposer {
 
 		if (selectedItem != null) {
 			String formatCodes = selectedItem.getValue().toString();
-			if (selection.getBottom() >= spreadsheet.getMaxrows())
-				selection.setBottom(spreadsheet.getMaxrows() - 1);
-			if (selection.getRight() >= spreadsheet.getMaxcolumns())
-				selection.setRight(spreadsheet.getMaxcolumns() - 1);
-			Utils.setDataFormat(spreadsheet.getSelectedSheet(), selection, formatCodes);			
+			Rect sel = spreadsheet.getSelection();
+			if (sel.getBottom() >= spreadsheet.getMaxrows())
+				sel.setBottom(spreadsheet.getMaxrows() - 1);
+			if (sel.getRight() >= spreadsheet.getMaxcolumns())
+				sel.setRight(spreadsheet.getMaxcolumns() - 1);
+			Utils.setDataFormat(spreadsheet.getSelectedSheet(), sel, formatCodes);			
 		} else {
 			showSelectFormatDialog();
 			return;
@@ -105,6 +106,9 @@ public class FormatNumberCtrl extends GenericForwardComposer {
 	}
 
 	private void showSelectFormatDialog() {
-		Messagebox.show("Please select a category");
+		try {
+			Messagebox.show("Please select a category");
+		} catch (InterruptedException e) {
+		}
 	}
 }

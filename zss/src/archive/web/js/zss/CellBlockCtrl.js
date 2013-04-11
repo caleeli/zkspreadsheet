@@ -45,20 +45,10 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 			this.appendRow(row);
 		}
 	},
-	//override
-	setVisible: function (visible) {
-		if (this._visible != visible) {
-			this._visible = visible;
-			var n = this.$n();
-			if (n)
-				n.style.visibility = visible ? 'visible' : 'hidden';
-		}
-	},
 	redraw: function (out) {
+		out.push('<div id="', this.uuid, '" class="', this.getZclass(), '">');
 		var rows = this.rows,
-			vis = this.isVisible() ? 'visible' : 'hidden',
 			size = rows.length;
-		out.push('<div id="', this.uuid, '" class="', this.getZclass(), '" style="visibility:' + vis +';">');
 		for (var i = 0; i < size; i++) {
 			rows[i].redraw(out);
 		}
@@ -73,7 +63,7 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 		this.$supers(zss.CellBlockCtrl, 'bind_', arguments);
 		
 		var n = this.comp = this.$n();
-//		zk(n).disableSelection(); //disableSelection()
+		zk(n).disableSelection(); //disableSelection()
 	},
 	unbind_: function () {
 		this.$supers(zss.CellBlockCtrl, 'unbind_', arguments);
@@ -132,6 +122,7 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 					comp = cell.comp;
 					jq(comp).addClass(r == top ? "zsmergee" : "zsmergeeu");
 				}
+				jq(comp).attr({"z.merid": id, "z.merr": right, "z.merl": left, "z.mert": top, "z.merb": bottom});
 	
 				cell.merid = id;
 				cell.merr = right;
@@ -175,6 +166,7 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 					comp = cell.comp;
 					jq(comp).removeClass(r == mert ? "zsmergee" : "zsmergeeu");
 				}
+				jq(comp).removeAttr("z.merid").removeAttr("z.merr").removeAttr("z.merl").removeAttr("z.mert").removeAttr("z.merb");
 				cell.merid = cell.merr = cell.merl = cell.mert = cell.merb = ud;
 			}
 		}
@@ -202,11 +194,12 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 	 * @param rCol
 	 */
 	create_: function (dir, tRow, lCol, bRow, rCol, data) {
+		
 		var sheet = this.sheet,
-			data = data || sheet._wgt._cacheCtrl.getSelectedSheet(),
 			block = this,
 			cr = this.range,
 			rs = this.rows,
+			data = data || sheet._wgt._activeRange,
 			isNewRow = false,
 			isTop = 'north' == dir,
 			isBtm = 'south' == dir,
@@ -237,8 +230,6 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 				this.insertRow(j++, row, html, true);
 			}
 		}
-		//ZSS 125: wrap text processed on row.bind_, within appendRow / insertRow
-		delete sheet._wrapRange;
 		
 		var r = this.range,
 			width = rCol - lCol + 1;
@@ -300,15 +291,13 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 			rows = this.rows,
 			temprow = (index >= rows.length) ? rows[rows.length - 1] : rows[index],
 			sheet = this.sheet,
-			data = sheet._wgt._cacheCtrl.getSelectedSheet(),
+			data = sheet._wgt._activeRange,
 			block = this;
 		for (var i = 0; i < size; i++) {
 			var r = row + i,
 				html = '';
 			
 			ctrl = new zss.Row(sheet, block, r, data);
-			//ZSS-120: use default row height first, row's height will update by server if needed 
-			ctrl.zsh = null;
 			html += ctrl.getHtmlPrologHalf();
 			html += zss.Row.copyCells(temprow, ctrl);
 			this.insertRow(r, ctrl, html);

@@ -1,11 +1,14 @@
+breeze.jar
 zcommon.jar
-zel.jar
 zweb.jar
 zk.jar
 zkex.jar
 zul.jar
 zhtml.jar
 zkplus.jar
+ckez.jar
+gmapsz.jar
+zcommons-el.jar
 bsh.jar
 commons-fileupload.jar
 commons-io.jar
@@ -16,9 +19,8 @@ jasperreports.jar
 commons-collections.jar
 commons-logging.jar
 commons-digester.jar
-itext-2.1.7.jar
+iText-5.0.3.jar
 zpoi.jar
-zpoiex.jar
 zss.jar
 zssex.jar
 zsspdf.jar
@@ -29,4 +31,3 @@ ooxml-schemas-1.1.jar
 xmlbeans-2.3.0.jar
 dom4j-1.6.1.jar
 stax-api-1.0.1.jar
-commons-codec-1.4.jar

@@ -55,9 +55,11 @@ import org.zkoss.zk.ui.Desktop;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.WebApps;
+import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zss.app.cell.CellHelper;
+import org.zkoss.zss.app.cell.EditHelper;
 import org.zkoss.zss.app.file.FileHelper;
 import org.zkoss.zss.app.file.SpreadSheetMetaInfo;
 import org.zkoss.zss.app.sheet.SheetHelper;
@@ -111,6 +113,19 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 		CellHelper.clearStyle(spreadsheet, SheetHelper.getSpreadsheetMaxSelection(spreadsheet));
 	}
 
+	public void copySelection() {
+		EditHelper.doCopy(spreadsheet);
+	}
+
+
+	public void cutSelection() {
+		EditHelper.doCut(spreadsheet);
+	}
+	
+	public void pasteSelection() {
+		EditHelper.doPaste(spreadsheet);
+	}
+
 	public void insertColumnLeft() {
 		if (spreadsheet.getSelection() == null)
 			return;
@@ -146,15 +161,15 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 		Integer lastIdx = Integer.valueOf(spreadsheet.getBook().getSheetIndex(lastsheet));
 		
 		spreadsheet.setSelectedSheet(name);		
-		//TODO: handle the copy/cut highlight
-//		final Worksheet sheet = EditHelper.getSourceSheet(spreadsheet);
-//		if (sheet != null) {
-//			if (sheet.equals(spreadsheet.getSelectedSheet())) {
-//				spreadsheet.setHighlight(EditHelper.getSourceRange(spreadsheet));
-//			} else {
-//				spreadsheet.setHighlight(null);
-//			}
-//		}
+		//handle the copy/cut highlight
+		final Worksheet sheet = EditHelper.getSourceSheet(spreadsheet);
+		if (sheet != null) {
+			if (sheet.equals(spreadsheet.getSelectedSheet())) {
+				spreadsheet.setHighlight(EditHelper.getSourceRange(spreadsheet));
+			} else {
+				spreadsheet.setHighlight(null);
+			}
+		}
 		
 		lastSheetName = name;
 		spreadsheet.focus(); //move focus in to spreadsheet
@@ -196,7 +211,7 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 
 	public void insertSheet() {
 		int sheetCount = spreadsheet.getBook().getNumberOfSheets();
-		Ranges.range(spreadsheet.getSelectedSheet()).createSheet("Sheet " + (sheetCount + 1));
+		spreadsheet.getBook().createSheet("sheet " + (sheetCount + 1));
 	}
 
 	public void reGainFocus() {
@@ -204,7 +219,7 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 	}
 
 	public void renameSelectedSheet(String name) {
-		Ranges.range(spreadsheet.getSelectedSheet()).setSheetName(name);
+		SheetHelper.renameSheet(spreadsheet, name);
 	}
 
 	public void shiftCell(int direction) {
@@ -290,8 +305,6 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 		removeBookFromDesktopIfNeeded();
 		spreadsheet.setSrcName(null);
 		spreadsheet.setBook(null);
-		
-		spreadsheet.getActionHandler().toggleActionOnBookClosed();
 	}
 
 	public void addBookEventListener(EventListener listener) {
@@ -328,12 +341,8 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 	 */
 	private void unsubscribeBookListeners() {
 		Book book = spreadsheet.getBook();
-		if (book == null) {
-			for (EventListener listener : bookListeners.keySet()) {
-				bookListeners.put(listener, Boolean.FALSE);
-			}
+		if (book == null)
 			return;
-		}
 		for (EventListener listener : bookListeners.keySet()) {
 			boolean subscribed = bookListeners.get(listener);
 			if (subscribed) {
@@ -487,17 +496,16 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 		return FileHelper.isSupportedSpreadSheetExtention(spreadsheet.getSrc());
 	}
 
-	public void setColumnWidthInPx(int width, Rect selection) {
+	public void setColumnWidthInPx(int width) {
+		Rect rect = spreadsheet.getSelection();
 		final int char256 = Utils.pxToFileChar256(width, ((Book)spreadsheet.getSelectedSheet().getWorkbook()).getDefaultCharWidth());
-		Ranges.range(spreadsheet.getSelectedSheet(), 0, selection.getLeft(), 0, selection.getRight()).getColumns().setColumnWidth(char256);
+		Ranges.range(spreadsheet.getSelectedSheet(), 0, rect.getLeft(), 0, rect.getRight()).getColumns().setColumnWidth(char256);
 	}
 
-	public void setRowHeightInPx(int height, Rect selection) {
+	public void setRowHeightInPx(int height) {
+		Rect rect = spreadsheet.getSelection();
 		int point = Utils.pxToPoint(height);
-		Ranges
-		.range(spreadsheet.getSelectedSheet(), selection.getTop(), 0, selection.getBottom(), 0)
-		.getRows()
-		.setRowHeight(point);
+		Ranges.range(spreadsheet.getSelectedSheet(), rect.getTop(), 0, rect.getBottom(), 0).getRows().setRowHeight(point);
 	}
 
 	public int getDefaultCharWidth() {
@@ -577,9 +585,8 @@ public class SSWorkbookCtrl implements WorkbookCtrl {
 		return spreadsheet.getMaxrows();
 	}
 
-	//TODO: rm this
 	public void clearClipbook() {
-//		EditHelper.clearCutOrCopy(spreadsheet);
+		EditHelper.clearCutOrCopy(spreadsheet);
 	}
 
 	public void updateText(Cell cell, String text) {

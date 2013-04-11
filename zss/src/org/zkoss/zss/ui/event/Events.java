@@ -18,7 +18,10 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.ui.event;
 
-
+import org.zkoss.zss.ui.event.CellEvent;
+import org.zkoss.zss.ui.event.CellMouseEvent;
+import org.zkoss.zss.ui.event.HeaderMouseEvent;
+import org.zkoss.zss.ui.event.StopEditingEvent;
 
 
 /**
@@ -128,36 +131,14 @@ public class Events {
 	public static final String ON_HYPERLINK = "onHyperlink";
 	
 	/**
+	 * The onInsertFormula event (used with {@link org.zkoss.zk.ui.event.Event})
+	 * Sent when user click on the insert formula button 
+	 */
+	public static final String ON_INSERT_FORMULA = "onInsertFormula";
+	
+	/**
 	 * The onSheetDelete event.
 	 * Sent when sheet is deleted.
 	 */
 	public static final String ON_SHEET_DELETE = "onSheetDelete";
-
-	/**
-	 * The onSheetCreate event.
-	 * Sent when sheet is deleted.
-	 */
-	public static final String ON_SHEET_CREATE = "onSheetCreate";
-	
-	/**
-	 * The onSheetSelect event
-	 * Sent when sheet is selected.
-	 */
-	public static final String ON_SHEET_SELECT = "onSheetSelect";
-	
-	/**
-	 * The onSheetNameChange event.
-	 * Sent when sheet is deleted.
-	 */
-	public static final String ON_SHEET_NAME_CHANGE = "onSheetNameChange";
-	/**
-	 * The onSheetOrderChange event.
-	 * Sent when sheet is deleted.
-	 */
-	public static final String ON_SHEET_ORDER_CHANGE = "onSheetOrderChange";
-	
-	/**
-	 * The ON_CTRL_KEY event (used with {@link KeyEvent})
-	 */
-	public static final String ON_CTRL_KEY = org.zkoss.zk.ui.event.Events.ON_CTRL_KEY;
 }

@@ -101,7 +101,10 @@ public class InsertWidgetAtSpecificCellDialog extends Dialog implements AfterCom
 		int col = columns.getSelectedIndex();
 		int row = rows.getSelectedIndex();
 		if (col < 0 || row < 0) {
-			Messagebox.show("Please select row/column");
+			try {
+				Messagebox.show("Please select row/column");
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		HashMap data = new HashMap();

@@ -17,6 +17,7 @@ Copyright (C) 2011 Potix Corporation. All Rights Reserved.
 (function () {
 
 zss.Namebox = zk.$extends(zk.Widget, {
+	widgetName: 'Namebox',
    	//indicate whether redraw name items or not
    	_redrawNames: false,
    	$init: function (wgt) {
@@ -202,6 +203,7 @@ zss.Namebox = zk.$extends(zk.Widget, {
 });
 	
 zss.FormulabarButton = zk.$extends(zul.wgt.Toolbarbutton, {
+	widgetName: 'FormulabarButton',
 	setDomVisible_: function (n, visible, opts) {
 		this.$supers(zss.FormulabarButton, 'setDomVisible_', [n, visible, {visibility:1}]);
 	},
@@ -221,6 +223,7 @@ zss.FormulabarButton = zk.$extends(zul.wgt.Toolbarbutton, {
 });
 
 zss.FormulabarWestCave = zk.$extends(zk.Widget, {
+	widgetName: 'FormulabarWestCave',
 	$o: zk.$void, //owner, fellows relationship no needed
 	$init: function (wgt) {
 		this.$supers(zss.FormulabarWestCave, '$init', []);
@@ -232,7 +235,7 @@ zss.FormulabarWestCave = zk.$extends(zk.Widget, {
 		
 		var cancelBtn = this._cancelBtn = new zss.FormulabarButton({label: '✗', sclass: 'zsformulabar-cancelbtn', 'onClick': this.proxy(this._onClickCancelBtn)}),
 			okBtn = this._okBtn = new zss.FormulabarButton({label: '✓', sclass: 'zsformulabar-okbtn', 'onClick': this.proxy(this._onClickOKBtn)}),
-			formulaBtn = this._formulaBtn = new zss.FormulabarButton({label: 'f(x)', sclass: 'zsformulabar-insertbtn', 'onClick': this.proxy(this._onClickInsertFormulabar)});
+			formulaBtn = this._formulaBtn = new zss.FormulabarButton({label: 'f(x)', sclass: 'zsformulabar-formulabtn', 'onClick': this.proxy(this._onClickInsertFormulabar)});
 		cancelBtn.setVisible(false);
 		okBtn.setVisible(false);
 		this.appendChild(cancelBtn);
@@ -287,11 +290,9 @@ zss.FormulabarWestCave = zk.$extends(zk.Widget, {
 		}
 	},
 	_onClickInsertFormulabar: function () {
-		var wgt = this._wgt,
-			sheet = wgt.sheetCtrl;
+		var sheet = this.sheet;
 		if (sheet) {
-			var s = sheet.getLastSelection();
-			wgt.fireToolbarAction('insertFunction', {tRow: s.top, lCol: s.left, bRow: s.bottom, rCol: s.right});
+			this._wgt.fire('onInsertFormula');
 		}
 	},
 	getNamebox: function () {
@@ -316,6 +317,7 @@ zss.FormulabarWestCave = zk.$extends(zk.Widget, {
 });
 
 zss.FormulabarWest = zk.$extends(zul.layout.West, {
+	widgetName: 'FormulabarWest',
 	$o: zk.$void, //owner, fellows relationship no needed
    	$init: function (wgt) {
    		this.$supers(zss.FormulabarWest, '$init', []);
@@ -335,6 +337,7 @@ zss.FormulabarWest = zk.$extends(zul.layout.West, {
 });
     
 zss.ExpandFormulabarButton = zk.$extends(zss.FormulabarButton, {
+	widgetName: 'ExpandFormulabarButton',
    	_expanded: false,
    	bind_: function () {
    		this.$supers(zss.ExpandFormulabarButton, 'bind_', arguments);
@@ -356,13 +359,14 @@ zss.ExpandFormulabarButton = zk.$extends(zss.FormulabarButton, {
 });
 
 zss.FormulabarCenterCave = zk.$extends(zk.Widget, {
+	widgetName: 'FormulabarCenterCave',
 	$o: zk.$void, //owner, fellows relationship no needed
    	$init: function (wgt) {
    		this.$supers(zss.FormulabarCenterCave, '$init', []);
    		this._wgt = wgt;
    		
    		this.appendChild(this.editor = new zss.FormulabarEditor(wgt));
-   		this.appendChild(this.expandBtn = new zss.ExpandFormulabarButton());
+   		this.appendChild(this.expandBtn = new zss.ExpandFormulabarButton(wgt));
    	},
    	bind_: function () {
    		this.$supers(zss.FormulabarCenterCave, 'bind_', arguments);
@@ -392,6 +396,7 @@ zss.FormulabarCenterCave = zk.$extends(zk.Widget, {
 });
 
 zss.FormulabarCenter = zk.$extends(zul.layout.Center, {
+	widgetName: 'FormulabarCenter',
 	$o: zk.$void, //owner, fellows relationship no needed
    	$init: function (wgt) {
    		this.$supers(zss.FormulabarCenter, '$init', []);
@@ -412,12 +417,12 @@ zss.FormulabarCenter = zk.$extends(zul.layout.Center, {
 });
 
 zss.Formulabar = zk.$extends(zul.layout.North, {
+	widgetName: 'Formulabar',
 	$o: zk.$void, //owner, fellows relationship no needed
     //default expand formulabar size
    	_prevExpandedSize: 47,
-   	$init: function (wgt) {
-   		this.$supers(zss.Formulabar, '$init', []);
-   		this._wgt = wgt;
+   	$init: function () {
+   		this.$supers(zss.Formulabar, '$init', arguments);
    		this.setFlex(true);
    		this.setBorder(0);
    		this.setSize('27px');
@@ -426,7 +431,7 @@ zss.Formulabar = zk.$extends(zul.layout.North, {
    		this.setCollapsible(false);
    	},
    	afterParentChanged_: function () { 
-    	var wgt = this._wgt,
+    	var wgt = this._wgt = this.parent,
    			cave = new zul.layout.Borderlayout(),
    			west = new zss.FormulabarWest(wgt),
    			center = new zss.FormulabarCenter(wgt),

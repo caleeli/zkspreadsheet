@@ -12,10 +12,6 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model.impl;
 
-import java.util.List;
-
-import org.zkoss.poi.ss.usermodel.PivotCache;
-import org.zkoss.poi.ss.util.AreaReference;
 import org.zkoss.zss.engine.RefBook;
 import org.zkoss.zss.model.Book;
 

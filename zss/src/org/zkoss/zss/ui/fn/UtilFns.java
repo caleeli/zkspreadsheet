@@ -66,11 +66,12 @@ public class UtilFns {
 	/**
 	 * Gets Cell text by given row and column
 	 */
-	static public String getCelltext(Worksheet sheet, int row,int column){
+	static public String getCelltext(Spreadsheet ss,int row,int column){
 		/*List list = ss.getBook().getSheets();
 		if(list.size()<=ss.getSelectedIndex()){
 			throw new XelException("No such sheet :"+ss.getSelectedIndex());
 		}*/
+		Worksheet sheet = ss.getSelectedSheet();
 		final Cell cell = Utils.getCell(sheet, row, column);
 		String text = "";
 		if (cell != null) {
@@ -92,7 +93,8 @@ public class UtilFns {
 		return text;
 	}
 	
-	static public String getCellFormatText(Worksheet sheet, int row,int column) {
+	static public String getCellFormatText(Spreadsheet ss, int row,int column) {
+		Worksheet sheet = ss.getSelectedSheet();
 		final Cell cell = Utils.getCell(sheet, row, column);
 		String text = "";
 		if (cell != null) {
@@ -110,7 +112,8 @@ public class UtilFns {
 	}
 
 	//Gets Cell edit text by given row and column
-	static public String getEdittext(Worksheet sheet, int row,int column){
+	static public String getEdittext(Spreadsheet ss,int row,int column){
+		Worksheet sheet = ss.getSelectedSheet();
 		final Cell cell = Utils.getCell(sheet, row, column);
 		return cell != null ? Utils.getEditText(cell) : "";
 	}

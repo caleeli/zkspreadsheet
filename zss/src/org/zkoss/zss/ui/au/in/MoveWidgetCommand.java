@@ -22,7 +22,6 @@ import java.util.Map;
 import org.zkoss.lang.Objects;
 import org.zkoss.poi.ss.usermodel.Chart;
 import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.ZssChartX;
 import org.zkoss.poi.xssf.usermodel.XSSFClientAnchor;
 import org.zkoss.zk.au.AuRequest;
 import org.zkoss.zk.mesg.MZk;
@@ -39,6 +38,11 @@ import org.zkoss.zss.ui.Spreadsheet;
  *
  */
 public class MoveWidgetCommand implements Command {
+
+	@Override
+	public String getCommand() {
+		return "onZSSMoveWidget";
+	}
 
 	@Override
 	public void process(AuRequest request) {
@@ -68,17 +72,14 @@ public class MoveWidgetCommand implements Command {
 	private void processChartMove(Worksheet sheet, Map data) {
 		DrawingManager dm = ((SheetCtrl)sheet).getDrawingManager();
 		String widgetId = (String) data.get("id");
-		ZssChartX chartX = null;
-		List<ZssChartX> charts = dm.getChartXs();
-		for (ZssChartX c : charts) {
-			if (c != null) {
-				if (c.getChartId().equals(widgetId)) {
-					chartX = c;
-					break;
-				}	
+		Chart chart = null;
+		List<Chart> charts = dm.getCharts();
+		for (Chart c : charts) {
+			if (c.getChartId().equals(widgetId)) {
+				chart = c;
+				break;
 			}
 		}
-		Chart chart = chartX.getChart();
 		if (chart != null) {
 			int dx1 = (Integer) data.get("dx1");
 			int dy1 = (Integer) data.get("dy1");

@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.zkoss.lang.Strings;
 import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.usermodel.AutoFilter;
 import org.zkoss.poi.ss.usermodel.BorderStyle;
@@ -1908,33 +1907,6 @@ public class RangeImpl implements Range {
 		return allblank ? null : new int[] {minc, minr, maxc, maxr};
 	}
 	
-	//given row return the maximum range
-	private CellRangeAddress getRowCurrentRegion(Worksheet sheet, int topRow, int btmRow) {
-		int minc = 0;
-		int maxc = 0;
-		int minr = topRow;
-		int maxr = btmRow;
-		final Row roworg = sheet.getRow(topRow);
-		for (int c = minc; c <= roworg.getLastCellNum(); c++) {
-			boolean foundMax = false;
-			for (int r = minr + 1; r <= sheet.getLastRowNum(); r++) {
-				int[] cellMinMax = getCellMinMax(sheet, r, c);
-				if (cellMinMax == null && r >= btmRow) {
-					break;
-				}
-				if (cellMinMax != null) {
-					foundMax = true;
-					maxr = Math.max(maxr, cellMinMax[3]);
-				}
-			}
-			if (foundMax) {
-				maxc = c;
-			}
-		}
-
-		return new CellRangeAddress(minr, maxr, minc, maxc);
-	}
-	
 	//given a cell return the maximum range
 	private CellRangeAddress getCurrentRegion(Worksheet sheet, int row, int col) {
 		int minc = col;
@@ -2022,16 +1994,7 @@ public class RangeImpl implements Range {
 				//If it's a multi cell range, it's the range intersect with largest range of the sheet.
 				//If it's a single cell range, it has to be extend to a continuous range by looking up the near 8 cells of the single cell.
 				affectedArea = new CellRangeAddress(getRow(), getLastRow(), getColumn(), getLastColumn());
-				final Ref ref = getRefs().iterator().next();
-				//ZSS-199
-				if (ref.isWholeRow()) {
-					//extend to a continuous range from the top row
-					CellRangeAddress maxRange = getRowCurrentRegion(_sheet, ref.getTopRow(), ref.getBottomRow());
-					if (maxRange == null) {
-						throw new RuntimeException(ALL_BLANK_MSG);
-					}
-					affectedArea = maxRange;
-				} else if (BookHelper.isOneCell(_sheet, affectedArea)) { //only one cell selected(include merged one), try to look the max range surround by blank cells 
+				if (BookHelper.isOneCell(_sheet, affectedArea)) { //only one cell selected(include merged one), try to look the max range surround by blank cells 
 					CellRangeAddress maxRange = getCurrentRegion(_sheet, getRow(), getColumn());
 					if (maxRange == null) {
 						throw new RuntimeException(ALL_BLANK_MSG);
@@ -2342,60 +2305,6 @@ public class RangeImpl implements Range {
 			BookHelper.notifyDeleteFriendFocus(ref, token);
 		}
 	}
-	
-	@Override
-	public void createSheet(String name) {
-		synchronized (_sheet.getBook()) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final Book book = _sheet.getBook();
-				if (book != null) {
-					if (Strings.isBlank(name)) {
-						book.createSheet();
-					} else {
-						book.createSheet(name);
-					}
-					BookHelper.notifyCreateSheet(ref, name);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void setSheetName(String name) {
-		synchronized (_sheet.getBook()) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final Book book = _sheet.getBook();
-				if (book != null) {
-					if (!Strings.isBlank(name)) {
-						final int pos= book.getSheetIndex(_sheet);
-						if (pos >= 0) {
-							book.setSheetName(pos, name);
-							BookHelper.notifyChangeSheetName(ref, name);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	@Override
-	public void setSheetOrder(int pos) {
-		synchronized (_sheet.getBook()) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final Book book = _sheet.getBook();
-				if (book != null) {
-					final String name = _sheet.getSheetName();
-					if (!Strings.isBlank(name)) {
-						book.setSheetOrder(name, pos);
-						BookHelper.notifyChangeSheetOrder(ref, name);
-					}
-				}
-			}
-		}
-	}
 
 	@Override
 	public void deleteSheet() {
@@ -2408,7 +2317,10 @@ public class RangeImpl implements Range {
 					if (index != -1) {
 						final int sheetCount = book.getNumberOfSheets();
 						if (sheetCount == 1) {
-							Messagebox.show("A workbook must contain at least one visible worksheet");
+							try {
+								Messagebox.show("A workbook must contain at least one visible worksheet");
+							} catch (InterruptedException e) {
+							}
 						}
 						final String delSheetName = _sheet.getSheetName(); //must getName before remove
 						book.removeSheetAt(index);

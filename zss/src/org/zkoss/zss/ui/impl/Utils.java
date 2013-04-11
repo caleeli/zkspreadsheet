@@ -180,7 +180,11 @@ public class Utils {
 	}
 	
 	private static void showProtectMessage() {
-		Messagebox.show("The cell that you are trying to change is protected and locked.", "ZK Spreadsheet", Messagebox.OK, Messagebox.EXCLAMATION);
+		try {
+			Messagebox.show("The cell that you are trying to change is protected and locked.", "ZK Spreadsheet", Messagebox.OK, Messagebox.EXCLAMATION);
+		} catch (InterruptedException e) {
+			//ignore
+		}
 	}
 
 	/**

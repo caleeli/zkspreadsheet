@@ -250,7 +250,7 @@ zss.Header = zk.$extends(zk.Widget, {
 		this.sheet = sheet;
 		this.index = data.i; //header index
 		this._pId = data.p; //css position index
-		this.title = data.t || ''; //header title
+		this.title = data.t ? data.t : ''; //header title
 		this.type = type;
 		if (cousin) {
 			this.cousin = cousin;
@@ -323,9 +323,7 @@ zss.Header = zk.$extends(zk.Widget, {
 	},
 	doTooltipOver_: zk.$void,
 	doTooltipOut_: zk.$void,
-	doClick_: function (evt) {
-		this.sheet._doMouseleftclick(evt);
-	},
+	doClick_: zk.$void,
 	doMouseDown_: function (evt) {
 		this.sheet._doMousedown(evt);
 	},

@@ -14,8 +14,8 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.app.zul.ctrl;
 
+import org.zkoss.poi.ss.usermodel.charts.ChartType;
 import org.zkoss.zss.app.formula.FormulaMetaInfo;
-import org.zkoss.zss.ui.Rect;
 
 /**
  * @author Sam
@@ -23,14 +23,14 @@ import org.zkoss.zss.ui.Rect;
  */
 public interface WorkbenchCtrl {
 
-	public void openInsertFormulaDialog(Rect selection);
+	public void openInsertFormulaDialog();
 	
 	/**
 	 * Open export pdf dialog
 	 */
-	public void openExportPdfDialog(Rect selection);
+	public void openExportPdfDialog();
 	
-	public void openExportHtmlDialog(Rect selection);
+	public void openExportHtmlDialog();
 	
 	public void openOpenFileDialog();
 	
@@ -38,23 +38,25 @@ public interface WorkbenchCtrl {
 	
 	public void openPasteSpecialDialog();
 	
-	public void openCustomSortDialog(Rect selection);
+	public void openCustomSortDialog();
 	
-	public void openHyperlinkDialog(Rect selection);
+	public void openHyperlinkDialog();
 	
 	public boolean toggleFormulaBar();
 	
 	public void openComposeFormulaDialog(FormulaMetaInfo metainfo);
 	
-	public void openFormatNumberDialog(Rect selection);
+	public void openFormatNumberDialog();
 	
 	public void openSaveFileDialog();
+		
+	public void updateGridlinesCheckbox();
 
 	/**
 	 * 
 	 * @param headerType header type {@link WorkbookCtrl}
 	 */
-	public void openModifyHeaderSizeDialog(int headerType, Rect selection);
+	public void openModifyHeaderSizeDialog(int headerType);
 	
 	/**
 	 * Open rename sheet dialog

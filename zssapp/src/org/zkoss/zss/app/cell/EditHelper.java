@@ -14,8 +14,18 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.app.cell;
 
+import org.zkoss.poi.ss.usermodel.CellStyle;
+import org.zkoss.util.resource.Labels;
+import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.Executions;
+import org.zkoss.zss.app.Consts;
+import org.zkoss.zss.app.zul.Zssapps;
 import org.zkoss.zss.model.Range;
+import org.zkoss.zss.model.Ranges;
+import org.zkoss.zss.model.Worksheet;
+import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
+import org.zkoss.zss.ui.impl.Utils;
 
 /**
  * A spreadsheet editor helper for onCopy, onPaste, onCut event.
@@ -29,7 +39,6 @@ public final class EditHelper {
 	private final static String KEY_SRC_SHEET = "org.zkoss.zss.app.cell.editHelper.sourceSheet";
 	private final static String KEY_SRC_RANGE = "org.zkoss.zss.app.cell.editHelper.SourceRange";
 
-	/*
 	public static void doCut(Spreadsheet ss) {
 		if (ss.getSelection() == null)
 			return;
@@ -49,8 +58,6 @@ public final class EditHelper {
 	public static void clearCutOrCopy(Spreadsheet ss) {
 		clearSource(ss);
 	}
-	*/
-	
 	/**
 	 * Returns whether to cut source range or not
 	 * <p> Default: false
@@ -64,7 +71,6 @@ public final class EditHelper {
 	 * Sets source sheet, source range, highlight range
 	 * @param ss
 	 */
-	/*
 	private static void setSource(Spreadsheet ss) {
 		ss.setAttribute(KEY_SRC_SHEET, ss.getSelectedSheet());
 		ss.setAttribute(KEY_SRC_RANGE, ss.getSelection());
@@ -77,41 +83,51 @@ public final class EditHelper {
 		ss.setHighlight(sel);
 		ss.smartUpdate("copysrc", true);
 	}
-	*/
 	
 	/**
 	 * Clear source sheet, source range, highlight range
 	 * @param ss
 	 */
-	/*
 	private static void clearSource(Spreadsheet ss) {
 		ss.setAttribute(KEY_SRC_SHEET, null);
 		ss.setAttribute(KEY_SRC_RANGE, null);		
 		ss.setHighlight(null);
 		ss.smartUpdate("copysrc", false);
 	}
-	*/
 	
 	/**
 	 * Returns the source sheet to copy.
 	 * @param ss
 	 * @return sheet
 	 */
-	/*
 	public static Worksheet getSourceSheet(Spreadsheet ss) {
 		return (Worksheet)ss.getAttribute(KEY_SRC_SHEET);
 	}
-	*/
 	
 	/**
 	 * Returns the source range to copy.
 	 * @return rect
 	 */
-	/*
 	public static Rect getSourceRange(Spreadsheet ss) {
 		return (Rect)ss.getAttribute(KEY_SRC_RANGE);
 	}
-	*/
+	
+	
+	//TODO: test copy/cut behavior on excel for overlap cell 
+//	private boolean isOverlapMergedCell(Sheet sheet, int top, int left, int bottom, int right) {
+//		MergeMatrixHelper mmhelper = ss.getMergeMatrixHelper(sheet);
+//		for(final Iterator iter = mmhelper.getRanges().iterator(); iter.hasNext();) {
+//			final MergedRect block = (MergedRect) iter.next();
+//			int bl = block.getLeft();
+//			int br = block.getRight();
+//			int bt = block.getTop();
+//			int bb = block.getBottom();
+//			if (bt <= bottom && bl <= right 
+//				&& br >= left && bb >= top)
+//				return true;
+//		}
+//		return false;
+//	}
 	
 	/**
 	 * Execute paste function use default setting
@@ -121,11 +137,20 @@ public final class EditHelper {
 	 * @param skipBlanks
 	 * @param transpose
 	 */
-	/*
 	public static void doPaste(Spreadsheet ss) {
 		Worksheet srcSheet = getSourceSheet(ss);
 		Rect dstRange = ss.getSelection();
 		if (srcSheet != null) {
+			//TODO: **test overlap merge cell behavior on excel**
+//			if(isOverlapMergedCell(sheet, dstTop, dstLeft, dstBottom, dstRight)) { 
+//			try {
+//				Messagebox.show("cannot change part of merged cell in destination region");
+//				return;
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
 			final Range rng = Utils.pasteSpecial(getSourceSheet(ss),
 					getSourceRange(ss), 
 					ss.getSelectedSheet(), 
@@ -157,9 +182,7 @@ public final class EditHelper {
 		//TODO : test if needed
 		//remSheet.unmergeCells(srcLeft, srcTop, srcRight, srcBottom);
 	}
-	*/
 	
-	/*
 	private static void clearHighlightIfNeed(Spreadsheet ss) {
 		if (isCut(ss))
 			ss.setHighlight(null);
@@ -205,11 +228,12 @@ public final class EditHelper {
 		ss.setAttribute(KEY_SRC_RANGE, null);
 	}
 	
-	public static void onPasteSpecial(Spreadsheet ss, Worksheet srcSheet, Rect srcRect, int pasteType, int pasteOperation, boolean skipBlanks, boolean transpose){
+	public static void onPasteSpecial(Spreadsheet ss, int pasteType, int pasteOperation, boolean skipBlanks, boolean transpose){
+		Worksheet srcSheet = getSourceSheet(ss);
 		if (srcSheet != null) {
 			final Rect dst = ss.getSelection();
 			final Range rng = Utils.pasteSpecial(srcSheet, 
-					srcRect, 
+					getSourceRange(ss), 
 					ss.getSelectedSheet(), 
 					dst.getTop(),
 					dst.getLeft(),
@@ -229,7 +253,6 @@ public final class EditHelper {
 			ss.focus();
 		}
 	}
-	*/
 	
 	/**
 	 * Execute paste function base on event's parameter
@@ -238,7 +261,6 @@ public final class EditHelper {
 	 * <p> If parameter can't find a match, will use default value. 
 	 * @param event
 	 */
-	/*
 	public static void onPasteEventHandler(Spreadsheet spreadsheet, String operation) {
 		if (spreadsheet == null || getSourceRange(spreadsheet) == null || operation == null) {
 //			try {
@@ -250,7 +272,6 @@ public final class EditHelper {
 
 		onPasteSpecial(spreadsheet, getPasteType(operation), getPasteOperation(operation), false, isTranspose(operation));
 	}
-	*/
 	
 	public static int getDefaultPasteType() {
 		return Range.PASTE_ALL;
@@ -261,7 +282,6 @@ public final class EditHelper {
 	 * <p> Default: returns {@link #Range.PASTE_ALL}, if no match
 	 * @return
 	 */
-	/*
 	public static int getPasteType(String type) {
 		if (type == null 
 				|| "paste".equals(type)
@@ -295,7 +315,6 @@ public final class EditHelper {
 	public static int getDefaultPasteOperation() {
 		return Range.PASTEOP_NONE;
 	}
-	*/
 	
 	/**
 	 * Returns the paste operation base on i3-label, if no match
@@ -303,7 +322,6 @@ public final class EditHelper {
 	 * @param operation
 	 * @return
 	 */
-	/*
 	public static int getPasteOperation(String operation) {
 		if (operation == null || "none".equals(operation) )
 			return Range.PASTEOP_NONE;
@@ -318,7 +336,6 @@ public final class EditHelper {
 		}
 		return Range.PASTEOP_NONE;
 	}
-	*/
 	
 	/**
 	 * Returns whether transpose or not
@@ -326,20 +343,16 @@ public final class EditHelper {
 	 * @param trans
 	 * @return 
 	 */
-	/*
 	public static boolean isTranspose(String trans) {
 		if (trans == null || !"transpose".equals(trans))
 			return false;
 		return true;
 	}
-	*/
 	
-	/*
 	public static void createpPasteSpecialDialog(Spreadsheet spreadsheet, Component parent) {
 		Executions.createComponents(
 				Consts._PasteSpecialDialog_zul, 
 				parent, 
 				Zssapps.newSpreadsheetArg(spreadsheet));
 	}
-	*/
 }

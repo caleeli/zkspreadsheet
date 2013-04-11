@@ -10,18 +10,14 @@
 
 Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 -->
-<package name="zss" language="xul/html" depends="zul,zul.layout, zul.inp, zul.tab, zul.menu, zul.box">
+<package name="zss" language="xul/html" depends="zul,zul.layout, zul.inp">
 	<widget name="Spreadsheet"/>
-	<widget name="Upload"/>
 	<script src="AreaCtrl.js"/>
 	<script src="AutoScrollCtrl.js"/>
-	<script src="Button.js"/>
-	<script src="CacheCtrl.js"/>
 	<script src="CellBlockCtrl.js"/>
 	<script src="Cell.js"/>
 	<script src="Configuration.js"/>
 	<script src="DataPanel.js"/>
-	<script src="Defer.js"/>
 	<script src="DragHandler.js"/>
 	<script src="Editbox.js"/>
 	<script src="FocusMarkCtrl.js"/>
@@ -30,12 +26,10 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 	<script src="Highlight.js"/>
 	<script src="Id.js" />
 	<script src="Info.js" />
-	<script src="Labels.js" />
 	<script src="MainBlockCtrl.js" />
 	<script src="MergeMatrix.js"/>
 	<script src="CornerPanel.js"/>
 	<script src="LeftPanel.js" />
-	<script src="Toolbar.js" />
 	<script src="TopPanel.js" />
 	<script src="Pos.js" />
 	<script src="PositionHelper.js" />
@@ -43,7 +37,6 @@ Copyright (C) 2009 Potix Corporation. All Rights Reserved.
 	<script src="Row.js" />
 	<script src="ScrollInfo.js" />
 	<script src="ScrollPanel.js"/>
-	<script src="Sheetbar.js"/>
 	<script src="SSheetCtrl.js"/>
 	<script src="ss.js"/>
 	<script src="Util.js"/>

@@ -21,6 +21,13 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
  * 
  * Row represent a row of the spreadsheet, it also be container that contains cells of the row
  */
+
+/**
+ * Row event
+ * <ul>
+ * 	<li>onRowAdded: when Row attach to DOM</li>
+ * </ul>
+ */
 zss.Row = zk.$extends(zk.Widget, {
 	widgetName: 'Row',
 	$o: zk.$void, //owner, fellows relationship no needed
@@ -32,25 +39,15 @@ zss.Row = zk.$extends(zk.Widget, {
 		this.src = src;
 		this.r = row;
 		
-		this.zsh = src.getRowHeightId(row);
+		var data = src.getRow(row);
+		this.zsh = data.heightId;
 		this.cells = [];
 		this.wrapedCells = [];
 	},
 	bind_: function (desktop, skipper, after) {
-		this.$supers(zss.Row, 'bind_', arguments);//after bind cells, may need to process wrap height
-		var sf = this,
-			sheet = this.sheet,
-			wgt = sheet._wgt,
-			wrapCells = this.wrapedCells;
-		if (wrapCells.length) {
-			if (wgt.isSheetCSSReady())
-				this._updateWrapRowHeight();
-			else
-				sheet.addSSInitLater(function () {
-					sf._updateWrapRowHeight();
-				});
-			this._listenProcessWrap(true);
-		}
+		this.$supers(zss.Row, 'bind_', arguments);
+		this.comp = this.$n();
+		this.fire('onRowAdded');
 		if (zk.ie6_) {
 			this.sheet.listen({onRowHeightChanged: this.proxy(this._onRowHeightChanged)});
 		}
@@ -60,24 +57,8 @@ zss.Row = zk.$extends(zk.Widget, {
 			this.sheet.unlisten({onRowHeightChanged: this.proxy(this._onRowHeightChanged)});
 		}
 		delete this.cells;
-		this.r = this.zsh = null;
+		this.comp = this.r = this.zsh = null;
 		this.$supers(zss.Row, 'unbind_', arguments);
-	},
-	_listenProcessWrap: function (b) {
-		var curr = !!this._processWrap;
-		if (curr != b) {
-			this.sheet[b ? 'listen' : 'unlisten']({onProcessWrap: this.proxy(this._onProcessWrap)});
-			this._processWrap = b;
-		}
-	},
-	_onProcessWrap: function (evt) {
-		var d = evt.data,
-			r = this.r,
-			tRow = d.tRow,
-			bRow = d.bRow;
-		if (tRow != undefined && bRow != undefined && r >= tRow && r <= bRow) {
-			this._updateWrapRowHeight();
-		}
 	},
 	_updateWrapRowHeight: function () {
 		var row = this.r,
@@ -94,59 +75,49 @@ zss.Row = zk.$extends(zk.Widget, {
 			}
 		}
 		
-		if (jq(this.$n()).height() == hgh)
-			return;//correct row height, no need to set CSS row height
+//		if (jq(this.$n()).height() == hgh) {
+//			return;
+//		}
 		
 		var sheet = this.sheet,
-			wgt = sheet._wgt,
+			shtId = sheet.sheetid,
 			zsh = this.zsh,
-			cssId = wgt.getSheetCSSId(),
-			pf = wgt.getSelectorPrefix(),
-			h2 = (hgh > 0) ? hgh - 1 : 0;
+			cssId = shtId + "-sheet",
+			cssPrefix = '#' + shtId;
 		if (!zsh) {
 			zsh = meta ? meta[2] : custRowHeight.ids.next();
 			custRowHeight.setCustomizedSize(row, hgh, zsh, false, true);
 			sheet._appendZSH(row, zsh); //this doesn't work correctly ?? seems works, TEST it
-			sheet._wgt._cacheCtrl.getSelectedSheet().updateRowHeightId(row, zsh);
+			sheet._wgt._activeRange.updateRowHeightId(row, zsh);
 		} else {
 			custRowHeight.setCustomizedSize(row, hgh, zsh, false, true);
 		}
-		
-		zcss.setRule(pf + " .zsh" + zsh, "height", hgh + "px", true, cssId);
-		zcss.setRule(pf + " .zshi" + zsh, "height", h2 + "px", true, cssId);
-		zcss.setRule(pf + " .zslh" + zsh, ["display", "height", "line-height"], ["", h2 + "px", h2 + "px"], true, cssId);
+			
+		zcss.setRule(cssPrefix + " .zsh" + zsh, ["height"], [hgh + "px"], true, cssId);
+		zcss.setRule(cssPrefix + " .zshi" + zsh, "height", hgh + "px", true, cssId);
+		var h2 = (hgh > 0) ? hgh - 1 : 0;
+		zcss.setRule(cssPrefix + " .zslh" + zsh, ["display", "height", "line-height"], ["", h2 + "px", h2 + "px"], true, cssId);
 		
 		//TODO: update focus shall handle by FocusMarkCtrl by listen onRowHeightChanged evt
 		var fPos = sheet.getLastFocus(),
 			sPos = sheet.getLastSelection();
-		if (fPos && sPos) {
-			sheet.moveCellFocus(fPos.row, fPos.column, true);
-			sheet.moveCellSelection(sPos.left, sPos.top, sPos.right, sPos.bottom, false, true);	
-		}
+		sheet.moveCellFocus(fPos.row, fPos.column, true);
+		sheet.moveCellSelection(sPos.left, sPos.top, sPos.right, sPos.bottom, false, true);
 		sheet.fire('onRowHeightChanged', {row: row});
 	},
-	processWrapCell: function (cell, ignoreUpdateNow) {
+	processWrapCell: function (cell) {
 		if (this.sheet.custRowHeight.isDefaultSize(cell.r)) {
 			var wrapedCells = this.wrapedCells;
 			if (cell.wrap) {
 				if (!wrapedCells.$contains(cell)) {
 					wrapedCells.push(cell);
 				}
-				if (!ignoreUpdateNow)
-					this._updateWrapRowHeight();
+				this._updateWrapRowHeight();
 			} else {
 				if (wrapedCells.$remove(cell)) {
-					//if there's no wrap cell to process, shall restore row height by invoke updateWrapRowHeight
-					if (!ignoreUpdateNow ||
-						!wrapedCells.length) {
-						this._updateWrapRowHeight();
-					}
+					this._updateWrapRowHeight();
 				}
 			}
-			
-			this._listenProcessWrap(!!wrapedCells.length);
-			if (ignoreUpdateNow) //process wrap on sheet onContentChange
-				this.sheet.triggerWrap(this.r);
 		} 
 	},
 	//IE6 only
@@ -189,7 +160,7 @@ zss.Row = zk.$extends(zk.Widget, {
 		out.push(this.getHtmlEpilogHalf());
 	},
 	getHtmlPrologHalf: function () {
-		return '<div id="' + this.uuid + '" class="' + this.getZclass() + '" zs.t="SRow">';
+		return '<div id="' + this.uuid + '" class="' + this.getZclass() + '">';
 	},
 	getHtmlEpilogHalf: function () {
 		return '</div>';
@@ -262,7 +233,7 @@ zss.Row = zk.$extends(zk.Widget, {
 	appendZSH: function (zsh) {
 		if (zsh) {
 			this.zsh = zsh;
-			jq(this.$n()).addClass("zsh" + zsh);
+			jq(this.comp).addClass("zsh" + zsh);
 			var size = this.cells.length;
 			for (var i = 0; i < size; i++)
 				this.cells[i].appendZSH(zsh);	

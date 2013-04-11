@@ -17,6 +17,11 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 }}IS_RIGHT
 */
 (function () {
+	//condition: cell type is string, halign is left, no wrap, no merge
+	function evalOverflow(ctrl) {
+		return ctrl.cellType == STR_CELL && !ctrl.wrap && !ctrl.merid 
+				&& ctrl.halign == 'l'; //&& ctrl.sheet.config.textOverflow
+	}
 
 var NUM_CELL = 0,
 	STR_CELL = 1,
@@ -27,14 +32,6 @@ var NUM_CELL = 0,
 	Cell = 
 zss.Cell = zk.$extends(zk.Widget, {
 	widgetName: 'Cell',
-	/**
-	 * Row index number
-	 */
-	//r
-	/**
-	 * Column index number
-	 */
-	//c
 	/**
 	 * Cell reference address
 	 */
@@ -54,12 +51,23 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 */
 	lock: true,
 	/**
-	 * Indicate whether should invoke process overflow on cell or not.
-	 * Process overflow when cell type is string, halign is left, no wrap, no merge
+	 * Indicate whether should invoke process overflow on cell or not
 	 * 
 	 * Currently, supports left aligned cell only
 	 */
 	overflow: false,
+	/**
+	 * Re-process overflow
+	 */
+	redoOverflow: false,
+	/**
+	 * Indicate current cell's width is insufficient, overflow cell content to neighbor cells
+	 */
+	//overflowed,
+	/**
+	 * Indicate current cell is overlap by a overflowed cell
+	 */
+	//overlapBy: null,
 	/**
 	 * Cell type
 	 * 
@@ -96,30 +104,15 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 * 	<li>b: align bottom</li>
 	 * </ul>
 	 * 
-	 * Default: align bottom
+	 * Default: align top
 	 */
-	valign: 'b',
+	valign: 't',
 	/**
 	 * Whether the text should be wrapped
 	 * 
 	 * Default: false
 	 */
 	wrap: false,
-	/**
-	 * Whether cell is shall overflow or not
-	 */
-	overflow: false,
-	/**
-	 * The font size in point
-	 */
-	fontSize: 11,
-	/**
-	 * Max overflow-able cell index
-	 * 
-	 * Default: null
-	 * If index = -1, means unlimited overflow width
-	 */
-	//maxOverflowCol: null
 	/**
 	 * Whether listen onRowHeightChanged event or not 
 	 * Currently, use only on IE6/IE7 for vertical align
@@ -128,11 +121,11 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 */
 	//_listenRowHeightChanged: false,
 	/**
-	 * Whether listen sheet's onProcessOverflow event or not
+	 * Whether listen sheet onRowAdded event or not 
 	 * 
 	 * Default: false
 	 */
-	//_listenProcessOverflow: false,
+	//_listenRowAdded: false
 	$init: function (sheet, block, row, col, src) {
 		this.$supers(zss.Cell, '$init', []);
 		
@@ -142,17 +135,13 @@ zss.Cell = zk.$extends(zk.Widget, {
 		this.c = col;
 		this.src = src;
 		
-		var	data = src.getRow(row).getCell(col),
-			colHeader = src.columnHeaders[col],
-			rowHeader = src.rowHeaders[row];
+		var	data = src.getRow(row).getCell(col);
 		this.text = data.text || '';
-		if (colHeader && rowHeader) {
-			this.ref = colHeader.t + rowHeader.t;
-		}
+		this.ref = data.ref;
 		this.edit = data.editText ? data.editText : '';
 		this.hastxt = !!this.text;
-		this.zsw = src.getColumnWidthId(col);
-		this.zsh = src.getRowHeightId(row);
+		this.zsw = data.widthId;
+		this.zsh = data.heightId;
 		this.lock = data.lock;
 		this.cellType = data.cellType;
 		
@@ -164,6 +153,8 @@ zss.Cell = zk.$extends(zk.Widget, {
 		if (mId) {
 			var r = data.merge;
 			this.merid = mId;
+			this.mergeId = mId;
+			
 			this.merl = r.left;
 			this.merr = r.right;
 			this.mert = r.top;
@@ -171,57 +162,11 @@ zss.Cell = zk.$extends(zk.Widget, {
 			this.mergeCls = data.mergeCls;
 		}
 		this.wrap = data.wrap;
-		this.overflow = data.overflow;
-		this.maxOverflowCol = data.maxOverflowCol;
+		this.heightId = data.heightId;
+		this.widthId = data.widthId;
 		
 		this.style = data.style;
 		this.innerStyle = data.innerStyle;
-	},
-	getVerticalAlign: function () {
-		switch (this.valign) {
-		case 'b':
-			return 'verticalAlignBottom';
-		case 'c':
-			return 'verticalAlignMiddle';
-		case 't':
-			return 'verticalAlignTop';
-		}
-	},
-	getHorizontalAlign: function () {
-		switch (this.halign) {
-		case 'l':
-			return 'horizontalAlignLeft';
-		case 'c':
-			return 'horizontalAlignCenter';
-		case 'r':
-			return 'horizontalAlignRight';
-		}
-	},
-	getFontName: function () {
-		return jq(this.getTextNode()).css('font-family');
-	},
-	/**
-	 * Return cell font size in point
-	 * 
-	 * @return int font size
-	 */
-	getFontSize: function () {
-		return this.fontSize;
-	},
-	isFontBold: function () {
-		var b = jq(this.getTextNode()).css('font-weight');
-		return b && (b == '700' || b == 'bold');
-	},
-	isFontItalic: function () {
-		return jq(this.getTextNode()).css('font-style') == 'italic';
-	},
-	isFontUnderline: function () {
-		var s = jq(this.$n('cave')).css('text-decoration');
-		return s && s.indexOf('underline') >= 0;
-	},
-	isFontStrikeout: function () {
-		var s = jq(this.$n('cave')).css('text-decoration');
-		return s && s.indexOf('line-through') >= 0;
 	},
 	doClick_: function (evt) {
 		//do nothing. eat the event.
@@ -251,66 +196,37 @@ zss.Cell = zk.$extends(zk.Widget, {
 	update_: function () {
 		var r = this.r,
 			c = this.c,
-			data = this.src.getRow(r).getCell(c),
+			data = this.src.getRow(r).getCell(c) || this.sheet._wgt._activeRange.getRow(r).getCell(c),
 			format = data.formatText,
 			st = this.style = data.style,
 			ist = this.innerStyle = data.innerStyle,
 			n = this.comp,
-			overflow = data.overflow,
-			maxOverflowCol = data.maxOverflowCol,
-			cellType = data.cellType,
-			txt = data.text,
-			txtChd = txt != this.text,
+			overflowEvt = this.cellType != BLANK_CELL && data.cellType == BLANK_CELL,
+			txtChd = data.text != this.text,
 			wrapChd = this.wrap != data.wrap,
 			processWrap = data.wrap || wrapChd || (this.wrap && this.getText() != data.text),
-			cave = this.$n('cave'),
-			prevWidth = cave.style.width,
-			fontSize = data.fontSize;
-		if (fontSize) {
-			this.fontSize = fontSize;
+			txtNode = this.txtcomp;
+		if (n.style.cssText != st || txtNode.style.cssText != ist) {
+			n.style.cssText = st;
+			txtNode.style.cssText = ist;
 		}
-		this.$n().style.cssText = st;
-		cave.style.cssText = ist;
-		if (prevWidth && (zk.ie6_ || zk.ie7_)) {//IE6/IE7 set overflow width at cave
-			cave.style.width = prevWidth;
-		}
-		
+		this.cellType = data.cellType;
 		this.lock = data.lock;
 		this.wrap = data.wrap;
 		this.halign = data.halign;
 		this.valign = data.valign;
 		this.rborder = data.rightBorder;
 		this.edit = data.editText;
-		
-		this._updateListenOverflow(overflow);
-		this.setText(txt, false, wrapChd); //when wrap changed, shall re-process overflow
-		if (this.overflow != overflow 
-			|| this.maxOverflowCol != maxOverflowCol
-			|| this.overflow && txtChd) {
-			var processedOverflow = false;
-			if (this.overflow && !overflow || (this.overflow && maxOverflowCol == undefined)) {
-				this._clearOverflow();
-				processedOverflow = true;
-			}
-			this.overflow = overflow;
-			this.maxOverflowCol = maxOverflowCol;
-			if (!processedOverflow)
-				this._processOverflow();	
-		}
-		
-		//trigger process overflow event when empty cell <-> string cell
-		//overflow cells before this cell need to re-evaluate overflow
-		if (this.cellType != cellType
-			&& (this.cellType == STR_CELL || this.cellType == BLANK_CELL)) {//when cell type become empty, cells that before this cell have to re-process overflow
+		this.redoOverflow = this._updateListenOverflow(evalOverflow(this));
+		this.setText(data.text, false, wrapChd); //when wrap changed, shall re-process overflow
+		if (overflowEvt) {//when cell type become empty, cells that before this cell have to re-process overflow
 			this.sheet.triggerOverflowColumn_(this.r, this.c);
 		}
-		this.cellType = cellType;
-		
-		if (txtChd && processWrap)
-			this._txtHgh = jq(this.getTextNode()).height();//cache txt height
-		//merged cell won't change row height automatically
-		if (this.cellType == STR_CELL && !this.merid && processWrap) {//must process wrap after set text
-			this.parent.processWrapCell(this, true);
+		if (this.cellType == STR_CELL && processWrap) { //must process wrap after set text
+			if (txtChd) {
+				this._calcuateTextHeight();
+			}
+			this.parent.processWrapCell(this);
 		}
 	},
 	/**
@@ -319,19 +235,17 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 * @return boolean whether reset overflow attribute or not
 	 */
 	_updateListenOverflow: function (b) {
-		var curr = !!this._listenProcessOverflow;
+		var curr = !!this.overflow;
 		if (curr != b) {
 			this.sheet[curr ? 'unlisten' : 'listen']({onProcessOverflow: this.proxy(this._onProcessOverflow)});
-			this._listenProcessOverflow = b;
+			this.overflow = b;
 			return true;
 		}
 		return false;
 	},
 	_updateHasTxt: function (bool) {
 		this.hastxt = bool;
-		
-		var zIdx = this.getZIndex();
-		jq(this.comp).css('z-index', bool ? "" : zIdx);
+		jq(this.comp).css('z-index', bool ? "" : 1);
 	},
 	/**
 	 * Sets the text of the cell
@@ -347,41 +261,68 @@ zss.Cell = zk.$extends(zk.Widget, {
 			difTxt = txt != oldTxt;
 		this._updateHasTxt(txt != "");
 		this._setText(txt);
+
+		if (this.overflow || forcedOverflow) {
+			if (difTxt || this.redoOverflow) {
+				Cell._processOverflow(this);
+				if (!noTriggerOverflowEvt)
+					this.sheet.triggerOverflowColumn_(this.r, this.c);
+				this.redoOverflow = false;
+			}
+		}
+	},
+	_calcuateTextHeight: function () {
+		var sht = this.sheet,
+			$n = jq(this.getTextNode()),
+			lineHgh = $n.css('line-height'),
+			fontSize = $n.css('font-size'),
+			colWidth = sht.custColWidth.getSize(this.c),
+			$temp = jq('<div style="width:' + colWidth + 'px;visibility:hidden;position:absolute;left:-10px;">' + this.getText() + '</div>');
+		if (lineHgh)
+			$temp.css('line-height', lineHgh);
+		if (fontSize)
+			$temp.css('font-size', fontSize);
+		$temp.appendTo(sht.dp.comp);
+		var h = this._textHeight = $temp.height();
+		$temp.remove();
+		return h;
 	},
 	/**
-	 * Returns the text node height. Shall invoke this method after CSS ready
+	 * Returns the text node height
 	 * 
 	 * @return int height
 	 */
 	getTextHeight: function () {
-		var h = this._txtHgh;
-		return h != undefined ? h : this._txtHgh = jq(this.getTextNode()).height();
+		var h = this._textHeight;
+		if (h)
+			return h;
+		return this._calcuateTextHeight();;
 	},
 	_updateVerticalAlign: zk.ie6_ || zk.ie7_ ? function () {
 		var	v = this.valign,
 			text = this.text,
-			cv = this.$n('cave');
-		if (cv.style.display == 'none' || !text)
+			txtcomp = this.txtcomp;
+		if (txtcomp.style.display == 'none' || !text)
 			return;
-		var	$n = jq(cv),
-			$t = jq(this.getTextNode());
+		var	$n = jq(txtcomp),
+			$txtInner = jq($n[0].firstChild);
 		
 		switch (v) {
 		case 't':
-			$t.css({'top': "0px", 'bottom': ''});
+			$txtInner.css({'top': "0px", 'bottom': ''});
 			break;
 		case 'c':
 			var ch = $n.height(),
-				ich = $t.height();
+				ich = $txtInner.height();
 			if (!ch || !ich)
 				return;
 			var	ah = (ch - ich) / 2,
 				p = Math.ceil(ah * 100 / ch);
 			if (p)
-				$t.css({'top': p + "%", 'bottom': ''});
+				$txtInner.css({'top': p + "%", 'bottom': ''});
 			break;
 		case 'b':
-			$t.css({'bottom': "0px", 'top': ''});	
+			$txtInner.css({'bottom': "0px", 'top': ''});	
 			break;
 		}
 	} : zk.$void(),
@@ -397,7 +338,8 @@ zss.Cell = zk.$extends(zk.Widget, {
 		}
 	},
 	getText: function () {
-		return this.getTextNode().innerHTML;
+		var n = this.getTextNode();
+		return n.innerHTML;
 	},
 	getPureText: function () { //feature #26: Support copy/paste value to local Excel\
 		var n = this.getTextNode();
@@ -406,7 +348,8 @@ zss.Cell = zk.$extends(zk.Widget, {
 	_setText: function (txt) {
 		if (!txt)
 			txt = "";
-		this.text = this.getTextNode().innerHTML = txt;
+		var n = this.txtcomp;
+		this.text = zk.ie6_ || zk.ie7_ ? n.firstChild.innerHTML = txt : n.innerHTML = txt;
 		
 		if (zk.ie6_ || zk.ie7_) {
 			if (txt) {
@@ -421,99 +364,34 @@ zss.Cell = zk.$extends(zk.Widget, {
 	getHtml: function () {
 		var	uid = this.uuid,
 			text = this.text,
-			style = this.domStyle_(),
+			style = this.style,
 			innerStyle = this.innerStyle;
-		
-		//IE6/IE7: vertical align need position:absolute;
 		return '<div id="' + uid + '" class="' + this.getZclass() + '" zs.t="SCell" '
-			+ (style ? 'style="' +  style + '"' : '') + '><div id="' + uid + '-cave" class="' +
-			this._getInnerClass() + '" ' + (innerStyle ? 'style="' + innerStyle + '"' : '') + 
-			'>' + '<div id="' + uid + '-real" class="zscelltxt-real">' + text + '</div>' + '</div></div>';
+				+ (style ? 'style="' +  style + '"' : '') + '><div id="' + uid + '-real" class="' +
+				this._getInnerClass() + '" ' + (innerStyle ? 'style="' + innerStyle + '"' : '') + 
+				'>' + (zk.ie6_ || zk.ie7_ ? '<div style="left:0px;position:absolute;width:100%;">' + text + '</div>' : text) + '</div></div>';
 	},
-	getZIndex: function () {
-		if (zk.ie6_ || zk.ie7_)
-			return this.cellType == BLANK_CELL ? -1 : 1;
-		return this.text ? null : 1;
-	},
-	domStyle_: function () {
-		var st = this.style;
-		if (st) {
-			return st;
-		} else {
-			var zIdx = this.getZIndex();
-			if (zIdx){
-				return 'z-index:' + zIdx + ';';
+	_onRowAdded: function () {
+		if (this.overflow) {
+			Cell._processOverflow(this);
+		}
+		if (this.hastxt && (zk.ie6_ || zk.ie7_) && this.valign != 't') {
+			this._updateVerticalAlign();
+		}
+		if (this.cellType == STR_CELL && this.wrap) {
+			var sht = this.sheet;
+			if (!sht._initiated) {//not load CSS yet
+				var sf = this;
+				sht.addSSInitLater(function () {
+					sf.parent.processWrapCell(sf);
+				});
+			} else { //need to process wrap after loaded CSS rules
+				this.parent.processWrapCell(this);	
 			}
 		}
 	},
 	getTextNode: function () {
-		return this.$n('real');
-	},
-	_clearOverflow: function () {
-		jq(this.getTextNode()).css('width', '');//clear overflow
-		jq(this.$n()).removeClass("zscell-over").removeClass("zscell-over-b");
-	},
-	_processOverflow: function (fromEvt) {
-		var col = this.c,
-			max = this.maxOverflowCol;
-		if (col == max) {//no available width for overflow
-			if (fromEvt) {
-				this._clearOverflow();
-			}
-			return;
-		}
-		var	rBorder = this.rborder,
-			n = this.$n(),
-			$n = jq(this.$n());
-		if ($n.width() >= jq(this.getTextNode()).width()) {//text node width is smaller then cell width, no need to overflow 
-			return;
-		}
-		if (max == -1) {//unlimited overflow width
-			$n
-			.removeClass(rBorder ? "zscell-over" : "zscell-over-b")
-			.addClass(rBorder ? "zscell-over-b" : "zscell-over");
-			return;
-		}
-		
-		//Note. For IE6/IE7 need to set cave's width (set text node width won't work)
-		var cave = this.$n('cave'),
-			$cave = jq(cave),
-			tn = this.getTextNode(),
-			prevWidth = null,
-			$tn = jq(tn);
-		if (zk.ie6_ || zk.ie7_) {
-			prevWidth = cave.style.width;
-			$cave.css('width', '');
-		} else {
-			prevWidth = tn.style.width;
-			$tn.css('width', '');
-		}
-		var sheet = this.sheet,
-			custColWidth = sheet.custColWidth,
-			wd = custColWidth.getSize(col);
-			sw = tn.scrollWidth,
-			cellPad = sheet.cellPad;
-		if(sw > (n.clientWidth - 2 * cellPad)) {//process overflow
-			for (var i = col + 1; i <= max; i++) {
-				if (wd > sw) {
-					break;
-				}
-				wd += custColWidth.getSize(i);
-			}
-			wd -= cellPad;
-			$n
-			.removeClass(rBorder ? "zscell-over" : "zscell-over-b")
-			.addClass(rBorder ? "zscell-over-b" : "zscell-over")
-			if (zk.ie6_ || zk.ie7_) {
-				$cave.css('width', jq.px0(wd));
-			} else
-				$tn.css('width', jq.px0(wd));
-		} else { //cell string width not cross cell width, no need to process overflow
-			if (zk.ie6_ || zk.ie7_) {
-				$cave.css('width', prevWidth);
-			} else 
-				$tn.css('width', prevWidth);
-		}
+		return zk.ie6_ || zk.ie7_ ? this.txtcomp.firstChild : this.txtcomp;
 	},
 	bind_: function (desktop, skipper, after) {
 		this.$supers(zss.Cell, 'bind_', arguments);
@@ -521,31 +399,35 @@ zss.Cell = zk.$extends(zk.Widget, {
 		var n = this.comp = this.$n(),
 			sheet = this.sheet;
 		n.ctrl = this;
-		this.cave = n.firstChild;
-		if (this.cellType == BLANK_CELL) {//no need to process overflow and wrap
-			return;
-		}
-		this._updateListenOverflow(this.overflow);
+		this.txtcomp = n.firstChild;
 		
-		if (!!this.text && (zk.ie6_ || zk.ie7_) && this.valign != 't') { // IE6 / IE7 doesn't support CSS vertical align
+		this._updateListenOverflow(evalOverflow(this));
+		var hasText = !!this.text,
+			processValign = false;
+		this._updateHasTxt(hasText);
+		if (hasText && (zk.ie6_ || zk.ie7_) && this.valign != 't') { // IE6 / IE7 doesn't support CSS vertical align
+			processValign = true;
 			this._updateListenRowHeightChanged(true);
-			this._updateVerticalAlign();
 		}
-		var max = this.maxOverflowCol;
-		if (this.overflow && max && max != this.c) {
-			this._processOverflow();
-		}
-		//merged cell won't change row height automatically
-		if (this.cellType == STR_CELL && !this.merid && this.wrap) {
-			//true indicate delay calcuate wrap height after CSS ready	
-			this.parent.processWrapCell(this, true);
+		if (this.overflow || processValign || (this.cellType == STR_CELL && this.wrap)) {
+			this._listenRowAdded = true;
+			this.parent.listen({onRowAdded: this.proxy(this._onRowAdded)});
 		}
 	},
 	unbind_: function () {
+		if (this._listenRowAdded)
+			this.parent.unlisten({onRowAdded: this.proxy(this._onRowAdded)});
+
 		this._updateListenOverflow(false);
 		this._updateListenRowHeightChanged(false);
 		
-		this.comp = this.comp.ctrl = this.cave = this.sheet = this.overlapBy = this._listenRowHeightChanged =
+		this._updateHasTxt(false);
+		if (this.overflowed) {
+			//remove the overlap relation , because the cell that is overlaped maybe not be destroied.
+			Cell._clearOverlapRelation(this);
+		}
+		
+		this.comp = this.comp.ctrl = this.txtcomp = this.sheet = this.overlapBy = this._listenRowHeightChanged =
 		this.block = this.lock = null;
 		
 		this.$supers(zss.Cell, 'unbind_', arguments);
@@ -556,62 +438,42 @@ zss.Cell = zk.$extends(zk.Widget, {
 	doMouseUp_: function (evt) {
 		this.sheet._doMouseup(evt);
 	},
-	_searchMaxOverflowCol: function () {
-		var row = this.parent,
-			cells = row.cells,
-			found = false;
-			i = this.c;
-		for (var j = 0, len = cells.length; j < len; j++) {
-			var cell = cells[j];
-			if (cell.c > i) {
-				i = cell.c;
-				if (cell.cellType != BLANK_CELL) {
-					found = true;
-					break;
-				}
-			}
-		}
-		this.maxOverflowCol = found ? i - 1: this.c;
-	},
-	/**
-	 * When cells after this cell changed, may effect this cell's overflow
-	 */
 	_onProcessOverflow: function (evt) {
 		if (this.overflow) {
 			var row = this.r,
 				data = evt.data;
-			if (data) {
-				var rCol = data.col,
-					tRow = data.tRow,
+			if (data) {// for onProcessOverflow event
+				var tRow = data.tRow,
 					bRow = data.bRow;
 				if (this.c < data.col) {
 					if ((tRow == undefined && bRow == undefined) || 
 						(tRow && bRow && row >= tRow && row <= bRow)) {
-						this._searchMaxOverflowCol();
-						this._processOverflow(true);
+						Cell._processOverflow(this);
 					}
 				}
-			}
+			} else // onRowAdded event won't have row, col data
+				Cell._processOverflow(this);
 		}
 	},
 	//super//
 	getZclass: function () {
 		var cls = 'zscell',
-			hId = this.zsh,
-			wId = this.zsw,
+			hId = this.heightId,
+			wId = this.widthId,
+			mId = this.mergeId,
 			mCls = this.mergeCls;
 		if (hId)
 			cls += (' zshi' + hId);
 		if (wId)
 			cls += (' zsw' + wId);
 		if (mCls)
-			cls += (' ' + mCls);
+			cls += mCls;
 		return cls;
 	},
 	_getInnerClass: function () {
 		var cls = 'zscelltxt',
-			hId = this.zsh,
-			wId = this.zsw;
+			hId = this.heightId,
+			wId = this.widthId;
 		if (hId)
 			cls += (' zshi' + hId);
 		if (wId)
@@ -626,7 +488,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 		if (zsw) {
 			this.zsw = zsw;
 			jq(this.comp).addClass("zsw" + zsw);
-			jq(this.cave).addClass("zswi" + zsw);
+			jq(this.txtcomp).addClass("zswi" + zsw);
 		}
 	},
 	/**
@@ -637,7 +499,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 		if (zsh) {
 			this.zsh = zsh;
 			jq(this.comp).addClass("zshi" + zsh);
-			jq(this.cave).addClass("zshi" + zsh);	
+			jq(this.txtcomp).addClass("zshi" + zsh);	
 		}
 	},
 	/**
@@ -645,8 +507,6 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 * @param int column index
 	 */
 	resetColumnIndex: function (newcol) {
-		var	src = this.src;
-		this.ref = src.columnHeaders[newcol].t + src.rowHeaders[this.r].t;
 		this.c = newcol;
 	},
 	/**
@@ -654,9 +514,119 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 * @param int row index
 	 */
 	resetRowIndex: function (newrow) {
-		var	src = this.src;
-		this.ref = src.columnHeaders[this.c].t + src.rowHeaders[newrow].t;
 		this.r = newrow;
+	}
+}, {
+	_clearOverlapRelation: function (ctrl) {
+		var cmp = ctrl.comp,
+			sheet = ctrl.sheet;
+		if (this.overflowed && !sheet.invalid) {
+			var next = cmp.nextSibling,
+				nCtrl;
+			while (next) {
+				nCtrl = next.ctrl;
+				if (nCtrl && nCtrl.overlapBy == ctrl) {
+					nCtrl.overlapBy = null;
+					next = next.nextSibling;
+					continue;	
+				}
+				break;
+			}
+		}
+	},
+	/**
+	 * Invoke after CSS ready, set alignment
+	 */
+	_processVerticalAlign: function (ctrl) {
+		if (ctrl.invalid)
+			return;
+		
+		ctrl._updateVerticalAlign();
+	},
+	_processOverflow: function (ctrl) {		
+		var sheet = ctrl.sheet;
+		if (ctrl.invalid || !sheet.config.textOverflow) {
+			//a cell might load on demand, it will cause a initial later to process text overflow(see also,CellBlock._createCell)
+			//but it some time, it will be prune after load ,
+			//so we must ignore this when ctrl.invliad
+			return;
+		}
+		var cmp = ctrl.comp,
+			txtcmp = ctrl.txtcomp,
+			prevPos;
+		if (zk.ie6_ || zk.ie7_) {
+			txtcmp = txtcmp.firstChild;
+			prevPos = txtcmp.style.position;
+		}
+		jq(txtcmp).css({'width': '', 'position': ''});//remove old value.
+		var sw = txtcmp.scrollWidth,
+			cellPad = sheet.cellPad,
+			oldOverlapBy = ctrl.overlapBy,
+			overflow = ctrl.overflow && sw > (cmp.clientWidth - 2 * cellPad);
+		if (overflow) {
+			ctrl.overflowed = true;
+			if (zk.ie6_) {
+				ctrl.$n('real').style.position = 'absolute';
+			}
+			var w = cmp.clientWidth,
+				prev = cmp,
+				next = cmp.nextSibling;
+			while (next) {
+				var nCtrl = next.ctrl,
+					rBorder = prev.ctrl.rborder;
+
+				nCtrl.overlapBy = null;
+				if (nCtrl.hastxt) {
+					jq(prev).removeClass(rBorder ? "zscell-over-b" : "zscell-over");
+					break;
+				}
+				
+				jq(prev).removeClass(rBorder ? "zscell-over" : "zscell-over-b")
+						.addClass(rBorder ? "zscell-over-b" : "zscell-over");
+				
+				var ow = next.offsetWidth;
+				w = w + ow;
+				if (w > sw) {
+					jq(next).removeClass(next.ctrl.rborder ? "zscell-over-b" : "zscell-over");
+					
+					//keep remove next overflow if it is over by this cell
+					next = next.nextSibling;
+					while (next) {
+						if (ctrl != next.ctrl.overlapBy)
+							break;
+						jq(next).removeClass(next.ctrl.rborder ? "zscell-over-b" : "zscell-over");
+
+						next.ctrl.overlapBy = null;
+						next = next.nextSibling;
+					}
+					break;
+				}
+				prev = next;
+				next = next.nextSibling;//jq(next).next('DIV')[0];
+			}
+			w =  w - cellPad;
+			jq(zk.ie6_ || zk.ie7_ ? txtcmp.parentNode : txtcmp).css('width', jq.px0(w));//when some column or row is invisible, the w might be samlle then zero
+		} else {
+			ctrl.overflowed = false;
+			jq(cmp).removeClass(cmp.ctrl.rborder ? "zscell-over-b" : "zscell-over");
+			
+			var next = cmp.nextSibling;
+			while (next) {
+				//next no initial yet skip to check
+				if(!next.ctrl || 
+					ctrl != next.ctrl.overlapBy && (oldOverlapBy ? oldOverlapBy != next.ctrl.overlapBy : true))
+					break;
+				jq(next).removeClass(next.ctrl.rborder ? "zscell-over-b" : "zscell-over");
+
+				next.ctrl.overlapBy = null;
+				next = next.nextSibling;
+			}
+		}
+		if ((zk.ie6_ || zk.ie7_) && prevPos) {
+			txtcmp.style.position = prevPos;
+		}
+		if (oldOverlapBy)
+			Cell._processOverflow(oldOverlapBy);
 	}
 });
 })();

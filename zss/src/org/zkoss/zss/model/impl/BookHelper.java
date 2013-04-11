@@ -64,7 +64,6 @@ import org.zkoss.poi.ss.formula.FormulaParser;
 import org.zkoss.poi.ss.formula.FormulaParsingWorkbook;
 import org.zkoss.poi.ss.formula.FormulaRenderer;
 import org.zkoss.poi.ss.formula.FormulaType;
-import org.zkoss.poi.ss.formula.LazyAreaEval;
 import org.zkoss.poi.ss.formula.PtgShifter;
 import org.zkoss.poi.ss.formula.eval.AreaEval;
 import org.zkoss.poi.ss.formula.eval.ArrayEval;
@@ -99,7 +98,6 @@ import org.zkoss.poi.ss.usermodel.Hyperlink;
 import org.zkoss.poi.ss.usermodel.Picture;
 import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.poi.ss.usermodel.Row;
-import org.zkoss.poi.ss.usermodel.Sheet;
 import org.zkoss.poi.ss.usermodel.Workbook;
 import org.zkoss.poi.ss.usermodel.ZssChartX;
 import org.zkoss.poi.ss.usermodel.ZssContext;
@@ -425,28 +423,10 @@ public final class BookHelper {
 		refBook.publish(new SSDataEvent(SSDataEvent.ON_FRIEND_FOCUS_DELETE, ref, obj));
 	}
 	
-	/*package*/ static void notifyDeleteSheet(Ref ref, Object[] namePairs) {
+	/*package*/ static void notifyDeleteSheet(Ref ref, Object newIndex) {
 		final RefSheet refSheet = ref.getOwnerSheet();
 		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_DELETE, ref, namePairs));
-	}
-	
-	/*package*/ static void notifyCreateSheet(Ref ref, String sheetName) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_CREATE, ref, sheetName));
-	}
-
-	/*package*/ static void notifyChangeSheetName(Ref ref, String sheetName) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_NAME_CHANGE, ref, sheetName));
-	}
-	
-	/*package*/ static void notifyChangeSheetOrder(Ref ref, String sheetName) {
-		final RefSheet refSheet = ref.getOwnerSheet();
-		final RefBook refBook = refSheet.getOwnerBook();
-		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_ORDER_CHANGE, ref, sheetName));
+		refBook.publish(new SSDataEvent(SSDataEvent.ON_SHEET_DELETE, ref, newIndex));
 	}
 	
 	public static void reevaluateAndNotify(Book book, Set<Ref> last, Set<Ref> all) {
@@ -1471,28 +1451,25 @@ public final class BookHelper {
 			return style;
 		}
 		if ((pasteType & BookHelper.INNERPASTE_BORDERS) == 0) { //no border
-			final CellStyle newStyle = dstCell.getSheet().getWorkbook().createCellStyle();
-			final CellStyle dstStyle = dstCell.getCellStyle();
-			
-			final short borderLeft = dstStyle.getBorderLeft();
-			final short borderTop = dstStyle.getBorderTop();
-			final short borderRight = dstStyle.getBorderRight();
-			final short borderBottom = dstStyle.getBorderBottom();
-			final short borderLeftColor = dstStyle.getLeftBorderColor();
-			final short borderTopColor = dstStyle.getTopBorderColor();
-			final short borderRightColor = dstStyle.getRightBorderColor();
-			final short borderBottomColor = dstStyle.getBottomBorderColor();
-			
-			newStyle.cloneStyleFrom(srcStyle);
-			newStyle.setBorderLeft(borderLeft );
-			newStyle.setBorderTop(borderTop);
-			newStyle.setBorderRight(borderRight);
-			newStyle.setBorderBottom(borderBottom);
-			newStyle.setLeftBorderColor(borderLeftColor);
-			newStyle.setTopBorderColor(borderTopColor);
-			newStyle.setRightBorderColor(borderRightColor);
-			newStyle.setBottomBorderColor(borderBottomColor);
-			return newStyle;
+			final CellStyle style = dstCell.getSheet().getWorkbook().createCellStyle();
+			final short borderLeft = style.getBorderLeft();
+			final short borderTop = style.getBorderTop();
+			final short borderRight = style.getBorderRight();
+			final short borderBottom = style.getBorderBottom();
+			final short borderLeftColor = style.getLeftBorderColor();
+			final short borderTopColor = style.getTopBorderColor();
+			final short borderRightColor = style.getRightBorderColor();
+			final short borderBottomColor = style.getBottomBorderColor();
+			style.cloneStyleFrom(srcStyle);
+			style.setBorderLeft(borderLeft );
+			style.setBorderTop(borderTop);
+			style.setBorderRight(borderRight);
+			style.setBorderBottom(borderBottom);
+			style.setLeftBorderColor(borderLeftColor);
+			style.setTopBorderColor(borderTopColor);
+			style.setRightBorderColor(borderRightColor);
+			style.setBottomBorderColor(borderBottomColor);
+			return style;
 		}
 		return srcStyle;
 	}
@@ -4905,13 +4882,6 @@ public final class BookHelper {
 		if (ve instanceof AreaEval) {
 			final AreaEval ae = (AreaEval) ve;
 			if (ae.isColumn() || ae.isRow()) {
-				Worksheet worksheet = null;
-				if (ae instanceof LazyAreaEval) {
-					worksheet = book.getWorksheet(((LazyAreaEval) ve).getSheetName());
-				} else {
-					worksheet = sheet;
-				}
-				
 				final int rows = ae.getHeight();
 				final int cols = ae.getWidth();
 				final int top = ae.getFirstRow();
@@ -4921,7 +4891,7 @@ public final class BookHelper {
 					int rowIndex = r + top; 
 					for (int c = 0; c < cols; ++c) {
 						int colIndex = c + left;
-						final Cell cell = BookHelper.getCell(worksheet, rowIndex, colIndex);
+						final Cell cell = BookHelper.getCell(sheet, rowIndex, colIndex);
 						xlist[j++] = BookHelper.getCellText(cell);
 					}
 				}

@@ -86,21 +86,18 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 			tp = type || 'inlineEditing',
 			start = p[0],
 			end = p[1],
-			v = n.value,
-			firstChar = v.charAt(0);
-		if (firstChar && firstChar == '=') {
-			if (start != end) { //text has selection, need to replace cell reference
-				return {start: start, end: end, type: tp};
+			v = n.value;
+		if (start != end) { //text has selection, need to replace cell reference
+			return {start: start, end: end, type: tp};
+		} else {
+			if (!start) {
+				return {start: 0, end: 0, type: tp};
 			} else {
-				if (!start) {
-					return {start: 0, end: 0, type: tp};
-				} else {
-					var DELIMITERS = ['=', '+', '-', '*', '/', '!', ':', '^', '&', '(',  ',', '.'],
-						i = start - 1,
-						c = v.charAt(i);
-					if (DELIMITERS.$contains(c)) {
-						return {start: start, end: start, type: tp};
-					}
+				var DELIMITERS = ['=', '+', '-', '*', '/', '!', ':', '^', '&', '(',  ',', '.'],
+					i = start - 1,
+					c = v.charAt(i);
+				if (DELIMITERS.$contains(c)) {
+					return {start: start, end: start, type: tp};
 				}
 			}
 		}
@@ -199,17 +196,15 @@ zss.FormulabarEditor = zk.$extends(zul.inp.InputWidget, {
    	 * @param int p the text cursor position. If doesn't specify, use current text cursor position
    	 */
    	syncEditorPosition: function (p) {
-		var	sheet = this.sheet;
-		if (!sheet)
-			return;
-		
 		var n = this.$n('real');
-		p = p != undefined ? p : zk(n).getSelectionRange()[1];
+		if (p == undefined) {
+			p = zk(n).getSelectionRange()[1];
+		}
 		if (!p) {
 			jq(n).css('top', '0px');
 			return;
 		}
-		var	lineHeight = sheet.lineHeight,
+		var	lineHeight = zk.parseInt(jq(n).css('line-height')),
 			str = n.value,
 			len = str.length,
 			lineNum = 1;
@@ -243,7 +238,8 @@ zss.FormulabarEditor = zk.$extends(zul.inp.InputWidget, {
    		if (this.isRealVisible()) {
    	   		syncEditorHeight(n);
    	   		
-   	   		this.syncEditorPosition(pos != undefined ? pos : n.value.length);
+   	   		var p = pos || n.value.length;
+   	   		this.syncEditorPosition(p);
    		}
    	},
    	getValue: function () {
@@ -285,7 +281,7 @@ zss.FormulabarEditor = zk.$extends(zul.inp.InputWidget, {
 	   			if (!sheet._wgt.hasFocus()) {
 	   				sheet.dp.stopEditing(sheet.innerClicking > 0 ? "refocus" : "lostfocus");
 	   			}
-	   		}, 300);//ZSS-161: if click on cancel button: set timeout to change evt order: cancel btn click evt -> blur evt  
+	   		});
 	   	}
    	},
    	_onContentsChanged: function (evt) {
@@ -316,7 +312,7 @@ zss.FormulabarEditor = zk.$extends(zul.inp.InputWidget, {
    			   	}
    			} else if (sheet.state == zss.SSheetCtrl.EDITING) {
    				var info = sheet.editingFormulaInfo;
-   				if (info && 'formulabarEditing' == info.type && !sheet._skipInsertCellRef) {
+   				if (info && 'formulabarEditing' == info.type) {
    					var d = evt.data;
    					insertCellRef(sheet, this.$n('real'), d.top, d.left, d.bottom, d.right);
    				}
@@ -398,7 +394,7 @@ zss.FormulabarEditor = zk.$extends(zul.inp.InputWidget, {
    	setWidth: function (v) {
    		this.$supers(zss.FormulabarEditor, 'setWidth', arguments);
    		var w = this.$n().clientWidth;
-   		jq(this.$n('real')).css('width', jq.px(zk.ie ? w - 8 : w));//8: IE's textarea scrollbar width
+   		this.$n('real').style.width = jq.px(zk.ie ? w - 8: w); //8: IE's textarea scrollbar width
    	},
    	setHeight: function (v) {
    		this.$supers(zss.FormulabarEditor, 'setHeight', arguments);
@@ -468,7 +464,7 @@ zss.Editbox = zk.$extends(zul.inp.InputWidget, {
    		if (sheet) {
    			if (sheet.state == zss.SSheetCtrl.EDITING) {
    				var info = sheet.editingFormulaInfo;
-   				if (info && 'inlineEditing' == info.type && !sheet._skipInsertCellRef) {
+   				if (info && 'inlineEditing' == info.type) {
    					var d = evt.data,
    						formulabarEditor = sheet.formulabarEditor;
    					insertCellRef(sheet, this.comp, d.top, d.left, d.bottom, d.right);
@@ -491,7 +487,7 @@ zss.Editbox = zk.$extends(zul.inp.InputWidget, {
 	   			if (!sheet._wgt.hasFocus()) {
 	   				sheet.dp.stopEditing(sheet.innerClicking > 0 ? "refocus" : "lostfocus");
 	   			}
-	   		}, 300);//ZSS-161: if click on cancel button: set timeout to change evt order: cancel btn click evt -> blur evt  
+	   		});
 	   	}
 	},
 	doMouseDown_: function (evt) {
@@ -652,11 +648,13 @@ zss.Editbox = zk.$extends(zul.inp.InputWidget, {
 		editorcmp.value = value;
 		var w = cellcmp.ctrl.overflowed ? (cellcmp.firstChild.offsetWidth + this.sheet.cellPad) : (cellcmp.offsetWidth),
 			h = cellcmp.offsetHeight,
-			$cell = cellcmp.ctrl,
-			scrollPanel = sheet.sp,
-			l = sheet.custColWidth.getStartPixel($cell.c) + sheet.leftWidth - scrollPanel.currentLeft,
-			t = sheet.custRowHeight.getStartPixel($cell.r) + sheet.topHeight - scrollPanel.currentTop;
-		
+			l = cellcmp.offsetLeft,
+			t = cellcmp.parentNode.offsetTop;
+			blockcmp = cellcmp.ctrl.block.comp;//add block offset
+
+		//IE6 only: .zsrow css position changed from "relative" -> "static" for cell vertical merge which cause cellcmp.offsetLeft change
+		l += zk.ie6_ ? 0 : blockcmp.offsetLeft;//block 
+		t += blockcmp.offsetTop;//block
 		t -= 1;//position adjust
 		w -= 1;
 		h -= 1;
@@ -710,8 +708,6 @@ zss.Editbox = zk.$extends(zul.inp.InputWidget, {
 		this.row = this.col = -1;
 	},
 	stop: function () {
-		if (this.sheet)
-			this.sheet.editingFormulaInfo = null;
 		this._editing = false;
 		this.disable(true);
 		var editorcmp = this.comp,

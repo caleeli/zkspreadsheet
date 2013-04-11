@@ -105,8 +105,8 @@ public class DateInputMask { //ZSS-67
 		final AttributedCharacterIterator iter 
 			= format.formatToCharacterIterator(cal.getTime());
 		
-		final StringBuilder sb = new StringBuilder(); //generated regular expression
-		final StringBuilder sb1 = new StringBuilder(); //sample input text
+		final StringBuilder sb = new StringBuilder();
+		final StringBuilder sb1 = new StringBuilder();
 		boolean alreadyDate = false;
 		boolean alreadyMonth = false;
 		boolean alreadyYear = false;
@@ -130,8 +130,6 @@ public class DateInputMask { //ZSS-67
 					leadingSpace = j;
 					break;
 				case '.': //dot
-				case '-': //dash //ZSS-122: in Japan medium DateFormat is 1965/07/18
-				case '/': //slash
 					if (leadingSpace != (j-1)) {
 						sb.append(DOT_DASH_SLASH_SPACE);
 					}
@@ -167,7 +165,7 @@ public class DateInputMask { //ZSS-67
 			}
 			++j;
 		}
-		final StringBuilder sb2 = new StringBuilder(); //reqular expression with time part if any
+		final StringBuilder sb2 = new StringBuilder();
 		if (withTime) {
 			sb.append(SPACE1).append(TIME);
 			sb2.append(sb1).append(" 2 P");
@@ -854,7 +852,7 @@ public class DateInputMask { //ZSS-67
 		//given month and year, return the maxday
 		private int getMaxday(int month, int year) {
 			int maxday = MAXDAYS[month];
-			if (month == 1 && isLeapYear(year)) {//Feb index = 1
+			if (month == 2 && isLeapYear(year)) {
 				return maxday + 1;
 			}
 			return maxday;

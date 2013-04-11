@@ -16,6 +16,7 @@ package org.zkoss.zss.app.sheet;
 
 import org.zkoss.poi.ss.usermodel.Sheet;
 import org.zkoss.zss.model.Book;
+import org.zkoss.zss.model.impl.BookHelper;
 import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
 import org.zkoss.zss.ui.sys.SpreadsheetCtrl;
@@ -93,6 +94,26 @@ public final class SheetHelper {
 				//shift left
 				return index - 1;
 			}
+		}
+		return -1;
+	}
+	
+	/**
+	 * Rename sheet
+	 * @param spreadsheet
+	 * @param name
+	 * @return
+	 */
+	public static int renameSheet(Spreadsheet spreadsheet, String name) {
+		final Book book = spreadsheet.getBook();
+		if (book != null) {
+			final Sheet selsheet  = spreadsheet.getSelectedSheet();
+			Sheet sheet = book.getSheet(name);
+			if(sheet != null)
+				return -1;
+			final int index = book.getSheetIndex(selsheet);
+			book.setSheetName(index, name); //will handle refSheet inside 
+			return index;
 		}
 		return -1;
 	}

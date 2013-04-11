@@ -24,6 +24,7 @@ zss.FocusMarkCtrl = zk.$extends(zk.Object, {
 	$init: function (sheet, cmp, pos) {
 		this.$supers('$init', arguments);
 		this.id = cmp.id;
+		this.sheetid = sheet.sheetid;
 		this.comp = cmp;
 		var local = this;
 		

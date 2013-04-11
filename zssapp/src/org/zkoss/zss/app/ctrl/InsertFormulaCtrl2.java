@@ -24,7 +24,6 @@ import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
-import org.zkoss.zk.ui.event.ForwardEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zkplus.databind.BindingListModelList;
 import org.zkoss.zss.app.formula.FormulaMetaInfo;
@@ -33,7 +32,6 @@ import org.zkoss.zss.app.zul.Dialog;
 import org.zkoss.zss.app.zul.Zssapp;
 import org.zkoss.zss.app.zul.ctrl.DesktopWorkbenchContext;
 import org.zkoss.zss.ui.Position;
-import org.zkoss.zss.ui.Rect;
 import org.zkoss.zul.Button;
 import org.zkoss.zul.Combobox;
 import org.zkoss.zul.Label;
@@ -93,12 +91,6 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 				item.setLabel(info.getFunction());
 				item.setValue(info);
 			}
-
-			@Override
-			public void render(Listitem item, Object data, int index)
-					throws Exception {
-				render(item, data);
-			}
 		});
 		functionListbox.addEventListener(Events.ON_DOUBLE_CLICK, new EventListener() {
 			public void onEvent(Event event) throws Exception {
@@ -107,17 +99,18 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 		});
 	}
 	
-	public void onOpen$_insertFormulaDialog(ForwardEvent evt) {
-		
-		Rect selection = (Rect) evt.getOrigin().getData();
-		
-		_insertFormulaDialog.setMode(Window.MODAL);
+	public void onOpen$_insertFormulaDialog() {
+		try {
+			_insertFormulaDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 		searchTextbox.setText(null);
 		initFunctionListbox();
 		searchTextbox.focus();
 		
-		rowIdx = selection.getTop();
-		colIdx = selection.getLeft();
+		Position pos = getDesktopWorkbenchContext().getWorkbookCtrl().getCellFocus();
+		rowIdx = pos.getRow();
+		colIdx = pos.getColumn();
 	}
 	
 	public void onSelect$categoryCombobox() {
@@ -153,8 +146,11 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 	private void openComposeFormulaDialog() {
 		Listitem item = (Listitem)functionListbox.getSelectedItem();
 		if (item == null) {
-			Messagebox.show("Select a function");
-			return;
+			try {
+				Messagebox.show("Select a function");
+				return;
+			} catch (InterruptedException e) {
+			}
 		}	
 		
 		FormulaMetaInfo info = (FormulaMetaInfo) item.getValue();

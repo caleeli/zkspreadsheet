@@ -38,8 +38,9 @@ public interface SpreadsheetCtrl {
 
 	final public static String CHILD_PASSING_KEY = "zsschildren";
 	
-	public static final int DEFAULT_LOAD_COLUMN_SIZE = 40;
-	public static final int DEFAULT_LOAD_ROW_SIZE = 50;
+	//TODO: measure best load size
+	public static final int MIN_LOAD_COLUMN_SIZE = 20;
+	public static final int MIN_LOAD_ROW_SIZE = 20;
 	
 	public enum CellAttribute {
 		ALL(1), TEXT(2), STYLE(3), SIZE(5), MERGE(5);
@@ -78,6 +79,9 @@ public interface SpreadsheetCtrl {
 	public JSONObject getColumnHeaderAttrs(Worksheet sheet, int colStart, int colEnd);
 	
 	public JSONObject getRangeAttrs(Worksheet sheet, Header containsHeader, CellAttribute type, int left, int top, int right, int bottom);
+	
+	public String getDataPanelAttrs();
+	
 	
 	/**
 	 * Add widget to the {@link WidgetHandler} of this spreadsheet, 

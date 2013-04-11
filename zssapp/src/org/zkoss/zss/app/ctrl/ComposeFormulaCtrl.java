@@ -128,12 +128,6 @@ public class ComposeFormulaCtrl extends GenericForwardComposer {
 				cell.appendChild(tb);
 				item.appendChild(cell);
 			}
-
-			@Override
-			public void render(Listitem item, Object data, int index)
-					throws Exception {
-				render(item, data);
-			}
 		});
 		argsListbox.addEventListener("onAfterRender", new EventListener() {
 			public void onEvent(Event event) throws Exception {
@@ -242,7 +236,10 @@ public class ComposeFormulaCtrl extends GenericForwardComposer {
 					args.add(createNextArg());
 				}
 			} else {
-				Messagebox.show("You've entered too many arguments for this function");
+				try {
+					Messagebox.show("You've entered too many arguments for this function");
+				} catch (InterruptedException e) {
+				}
 				return;
 			}
 		for (int i = 0; i < args.size() && i < arg.length; i++) {

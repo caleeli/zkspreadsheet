@@ -21,16 +21,14 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
  * ScrollPanel is used to handle spreadsheet scroll moving event,  
  */
 zss.ScrollPanel = zk.$extends(zk.Object, {
-	/**
-	 * Scroll direction
-	 */
-	dir: 'south',
 	$init: function (sheet) {
-		this.$supers('$init', []);
-		var wgt = sheet._wgt,
-			scrollPanel = sheet.$n('sp');
+		this.$supers('$init', arguments);
+		var self = this,
+			wgt = sheet._wgt,
+			scrollPanel = wgt.$n('sp');
 		
 		this.id = scrollPanel.id;
+		this.sheetid = sheet.sheetid;
 		this.sheet = sheet;
 		this.comp = scrollPanel;
 		this.currentTop = this.currentLeft = this.timerCount = 0;
@@ -40,41 +38,21 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 		this.lastMove = "";//the last move of scrolling,
 		scrollPanel.ctrl = this;
 		
-		var dtcmp = this.sheet.dp.comp,//zkSDatapanelCtrl._currcmp(self);
-			sccmp = this.comp;
-		this.minLeft = this._getMaxScrollLeft(dtcmp, sccmp);
-		this.minTop = this._getMaxScrollTop(dtcmp, sccmp);
-		this.minHeight = dtcmp.offsetHeight;
-		this.minWidth = dtcmp.offsetWidth;
-		wgt.domListen_(scrollPanel, 'onScroll', this.proxy(this._doScrolling))
-			.domListen_(scrollPanel, 'onMouseDown', this.proxy(this._doMousedown));
-	},
-	/**
-	 * Returns the direction that scroll to
-	 * 
-	 * <ul>
-	 * 	<li>north</li>
-	 * 	<li>west</li>
-	 * 	<li>east</li>
-	 * 	<li>south</li>
-	 * </ul>
-	 * 
-	 * @return string direction
-	 */
-	getDirection: function () {
-		return this.dir;
-	},
-	reset: function (top, left) {
-		var n = this.comp;
-		n.scrollLeft = left;
-		n.scrollTop = top;
-		this.currentTop = top;
-		this.currentLeft = left;
+		sheet.insertSSInitLater(function() {//datapanel doesn't ready when cell initialing, so invoke later.
+			var dtcmp = self.sheet.dp.comp,//zkSDatapanelCtrl._currcmp(self);
+				sccmp = self.comp;
+			self.minLeft = self._getMaxScrollLeft(dtcmp, sccmp);
+			self.minTop = self._getMaxScrollTop(dtcmp, sccmp);
+			self.minHeight = dtcmp.offsetHeight;
+			self.minWidth = dtcmp.offsetWidth;
+
+			wgt.domListen_(scrollPanel, 'onScroll', self.proxy(self._doScrolling))
+				.domListen_(scrollPanel, 'onMouseDown', self.proxy(self._doMousedown));
+		}, false);
 	},
 	cleanup: function () {
-		var sheet = this.sheet,
-			wgt = sheet._wgt,
-			n = sheet.$n('sp');
+		var wgt = this.sheet._wgt,
+			n = wgt.$n('sp');
 		
 		wgt.domUnlisten_(n, 'onScroll', this.proxy(this._doScrolling))
 			.domUnlisten_(n, 'onMouseDown', this.proxy(this._doMousedown));
@@ -107,11 +85,6 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 			moveLeft = scleft < this.currentLeft,
 			moveTop = sctop < this.currentTop;
 		
-		if (moveHorizontal) {
-			this.dir = moveLeft ? 'west' : 'east';
-		} else {
-			this.dir = moveTop ? 'north' : 'south';
-		}
 		this.currentLeft = scleft;
 		this.currentTop = sctop;
 		sheet.tp._updateLeftPos(-this.currentLeft);

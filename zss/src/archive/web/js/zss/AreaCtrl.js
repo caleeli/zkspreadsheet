@@ -52,6 +52,7 @@ zss.AreaCtrl = zk.$extends(zk.Object, {
 	$init: function (sheet, cmp, range, mode) {
 		this.$supers('$init', arguments);
 		this.id = cmp.id;
+		this.sheetid = sheet.sheetid;
 		cmp.ctrl = this;
 		this.comp = cmp;
 		this.icomp = cmp.firstChild;
@@ -104,9 +105,6 @@ zss.AreaCtrl = zk.$extends(zk.Object, {
 		}
 
 		jq(this.comp).css({'width': jq.px0(w), 'height': jq.px0(h), 'left': jq.px(l), 'top': jq.px(t)});
-	},
-	isVisible: function () {
-		return this.comp.style.display == 'block';
 	},
 	/**
 	 * Display selection area
