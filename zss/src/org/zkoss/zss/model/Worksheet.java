@@ -12,12 +12,6 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model;
 
-import java.util.List;
-
-import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.DataValidation;
-import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 
 /**
  * ZK Spreadsheet sheet.
@@ -30,28 +24,4 @@ public interface Worksheet extends org.zkoss.poi.ss.usermodel.Sheet {
 	 * @return the associated ZK Spreadsheet {@link Book} of this ZK Spreadsheet Sheet.
 	 */
     public Book getBook();
-    
-    /**
-     * Returns pictures in this ZK Spreadsheet sheet.
-     * @return pictures in this ZK Spreadsheet sheet.
-     */
-    public List<Picture> getPictures();
-    
-    /**
-     * Returns charts in this ZK Spreadsheet sheet.
-     * @return charts in this ZK Spreadsheet sheet.
-     */
-    public List<Chart> getCharts();
-    
-    /**
-     * Returns validations in this ZK Spreadsheet sheet.
-     * @return validations in this ZK Spreadsheet sheet.
-     */
-    public List<DataValidation> getDataValidations();
-    
-    /**
-     * Returns 
-     * @return
-     */
-    public List<PivotTable> getPivotTables();
 }

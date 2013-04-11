@@ -78,7 +78,10 @@ public class ImportFileWindowCtrl extends GenericForwardComposer  {
 	}
 	
 	public void onOpen$_importFileDialog() {
-		_importFileDialog.setMode(Window.MODAL);
+		try {
+			_importFileDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 		Map<String, SpreadSheetMetaInfo> metaInfos = SpreadSheetMetaInfo.getMetaInfos();
 		if (metaInfos == null || metaInfos.isEmpty())
 			return;
@@ -113,6 +116,7 @@ public class ImportFileWindowCtrl extends GenericForwardComposer  {
 		
 		allFilesListbox.setItemRenderer(new ListitemRenderer() {
 			
+			@Override
 			public void render(Listitem item, Object obj) throws Exception {
 				final SpreadSheetMetaInfo info = (SpreadSheetMetaInfo)obj;
 				item.setValue(info);
@@ -130,12 +134,6 @@ public class ImportFileWindowCtrl extends GenericForwardComposer  {
 						_importFileDialog.fireOnClose(null);
 					}
 				});
-			}
-
-			@Override
-			public void render(Listitem item, Object data, int index)
-					throws Exception {
-				render(item, data);
 			}
 		});
 	}
@@ -158,7 +156,12 @@ public class ImportFileWindowCtrl extends GenericForwardComposer  {
 		try {
 			WorkspaceContext.getInstance(desktop).store(((UploadEvent) event.getOrigin()).getMedia());
 		} catch (UnsupportedSpreadSheetFileException e) {
-			Messagebox.show("Please import xls or xlsx file");
+			try {
+				//TODO: use I18n to replace message string
+				Messagebox.show("Please import xls or xlsx file");
+			} catch (InterruptedException ex) {
+			}
+			
 		}
 		allFilesListbox.setModel(new ListModelList(SpreadSheetMetaInfo.getMetaInfos().values()));	
 	}

@@ -9,7 +9,7 @@ public class SS_025_Test extends SSAbstractTestCase {
         clickCell(cell);
         clickCell(cell);
 
-    	click("$viewMenu");
+    	click("jq('$viewMenu button.z-menu-btn')");
     	waitResponse();
     	// TODO verify if cell is still selected. Need to check x,y coordinates instead of display
     	String display = jq("div.zsselect").css("display");

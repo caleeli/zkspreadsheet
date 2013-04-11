@@ -1,3 +1,5 @@
+import java.util.Map;
+
 import org.zkoss.ztl.JQuery;
 
 
@@ -6,9 +8,12 @@ public class SS_178_Test extends SSAbstractTestCase {
     @Override
     protected void executeTest() {
         // Select source cell
-    	focusOnCell(9, 12);
-    	String sourceBorderBottomStyle = getCellBorderStyle(9, 12, BORDER_BOTTOM);
-    	String sourceBorderRightStyle = getCellBorderStyle(9, 12, BORDER_RIGHT);
+        JQuery cell_J_13 = getSpecifiedCell(9, 12);
+        Map<String, String> sourceStyleMap = getCellStyleMap(cell_J_13);
+        String sourceBorderBottomStyle = sourceStyleMap.get("border-bottom");
+        String sourceBorderRightStyle = sourceStyleMap.get("border-right");
+        clickCell(cell_J_13);
+        clickCell(cell_J_13);
         
         // Ctrl + C
         keyDownNative(CTRL);
@@ -19,8 +24,11 @@ public class SS_178_Test extends SSAbstractTestCase {
         waitResponse();
         keyUpNative(CTRL);
         waitResponse();
-
-        JQuery L13 = rightClickCell(11, 12);
+        
+        // Right click target cell
+        JQuery cell_L_13 = loadTargetCell();
+        clickCell(cell_L_13);
+        rightClickCell(cell_L_13);
         waitResponse();
         
         // Click Paste Special on the context menu
@@ -34,7 +42,14 @@ public class SS_178_Test extends SSAbstractTestCase {
         waitResponse();
         
         // Verify
-        verifyNotEquals("border-bottom are not the same.", sourceBorderBottomStyle, getCellBorderStyle(L13, BORDER_BOTTOM));
-        verifyNotEquals("border-right are not the same.", sourceBorderRightStyle, getCellBorderStyle(L13, BORDER_RIGHT));
+        cell_L_13 = loadTargetCell();
+        Map<String, String> targetStyleMap = getCellStyleMap(cell_L_13);
+        verifyNotEquals("border-bottom are not the same.", sourceBorderBottomStyle, targetStyleMap.get("border-bottom"));
+        verifyNotEquals("border-right are not the same.", sourceBorderRightStyle, targetStyleMap.get("border-right"));
     }
+    
+    private JQuery loadTargetCell() {
+        return getSpecifiedCell(11, 12);
+    }
+
 }

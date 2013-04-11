@@ -27,7 +27,8 @@ zkS = {};
  * i want if scentance pass even val=0
  */
 zkS.t = function (val) {
-	return val || val === 0;
+	if(val || val===0) return true;
+	return false;
 };
 
 zkS._delayInit = false;/*should i init header and cell by dealy bath*/
@@ -94,20 +95,22 @@ zkS.doCallback = function (token) {
 	}
 };
 
+
 zkS.parentByZSType = function(el, type, pathlen) {
 	if (el) {
 		if (!(type instanceof Array))
 			type = [type];
 		var i = 0,
 			size = type.length, 
-			n = el;
-		for(; !!n; n = n.parentNode) {
-			if (!n.attributes) 
+			ancestors = jq(el).parents();
+		ancestors.splice(0,0,el);
+		for(var k = 0, len = ancestors.length; k < len; ++k) {
+			var el = ancestors[k];
+			if (!el.attributes) 
 				continue;
-			j = size;
-			while (j--) {
-				if (n.getAttribute('zs.t') == type[j])
-					return n;
+			for (var j = 0; j < size; j++) {
+				if (jq(el).attr('zs.t') == type[j])
+					return el;
 			}
 			if (pathlen && i++ > pathlen)
 				break;
@@ -116,11 +119,29 @@ zkS.parentByZSType = function(el, type, pathlen) {
 	return null;
 };
 
+
 zkS.copyParm = function (src, dest, parms) {
-	var i = parms.length;
-	while(i--)
+	var size = parms.length;
+	for(var i = 0; i < size; i++){
 		dest[parms[i]] = src[parms[i]];	
+	}
 };
+
+zkS.trimFirst = function (comp, tag) {
+	var node = comp.firstChild;
+	while(node && node.tagName!=tag){
+		comp.removeChild(node);
+		node = comp.firstChild;
+	}
+};
+zkS.trimLast = function (comp, tag) {
+	var node = comp.lastChild;
+	while(node && node.tagName != tag) {
+		comp.removeChild(node);
+		node = comp.lastChild;
+	}
+};
+
 
 /** Returns the data for onClick. */
 zkS._getMouseData = function (evt, target) {

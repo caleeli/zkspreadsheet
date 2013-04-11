@@ -23,10 +23,10 @@ import org.zkoss.zk.ui.IdSpace;
 import org.zkoss.zss.app.Consts;
 import org.zkoss.zss.app.zul.ctrl.DesktopCellStyleContext;
 import org.zkoss.zss.app.zul.ctrl.DesktopWorkbenchContext;
-import org.zkoss.zss.model.Book;
 import org.zkoss.zss.ui.Spreadsheet;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Menubar;
+import org.zkoss.zul.Window;
 
 /**
  * 
@@ -60,15 +60,9 @@ public class Zssapp extends Div implements IdSpace  {
 	}
 	
 	public void setSrc(String src) {
-		getDesktopWorkbenchContext().getWorkbookCtrl().setBookSrc(src);
-	}
-	
-	/**
-	 * Sets {@link #Book}
-	 * @param book
-	 */
-	public void setBook(Book book) {
-		getDesktopWorkbenchContext().getWorkbookCtrl().setBook(book);
+		DesktopWorkbenchContext workbench = getDesktopWorkbenchContext(this);
+		workbench.getWorkbookCtrl().setBookSrc(src);
+		workbench.fireWorkbookChanged();
 	}
 	
 	public void setMaxrows(int maxrows) {
@@ -133,7 +127,10 @@ public class Zssapp extends Div implements IdSpace  {
 		Menubar _menubar;
 		
 		FileMenu fileMenu;
+		EditMenu editMenu;
 		ViewMenu viewMenu;
+		FormatMenu formatMenu;
+		InsertMenu insertMenu;
 		
 		public Appmenubar(Menubar menubar) {
 			_menubar = menubar;
@@ -144,8 +141,20 @@ public class Zssapp extends Div implements IdSpace  {
 			return fileMenu;
 		}
 
+		public EditMenu getEditMenu() {
+			return editMenu;
+		}
+
 		public ViewMenu getViewMenu() {
 			return viewMenu;
+		}
+
+		public FormatMenu getFormatMenu() {
+			return formatMenu;
+		}
+
+		public InsertMenu getInsertMenu() {
+			return insertMenu;
 		}
 	}
 }

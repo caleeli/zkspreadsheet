@@ -4,33 +4,30 @@ import org.zkoss.ztl.JQuery;
 //edit -> insert -> Shift cells down"
 public class SS_018_Test extends SSAbstractTestCase {
 
-	/**
-	 * Shift cell down
-	 */
 	@Override
 	protected void executeTest() {
 		JQuery cell_B_6 = getSpecifiedCell(1, 5);
-		String origValue = getCellText(1, 5);
-
+		String origValue = getCellContent(cell_B_6);
+		JQuery cell_B_7 = getSpecifiedCell(1, 6);
+		String downCellValue = getCellContent(cell_B_7);
 		clickCell(cell_B_6);
 		clickCell(cell_B_6);
-		click("$editMenu");
+		click("jq('$editMenu button.z-menu-btn')");
 		waitResponse();
-		mouseOver(jq("$insert"));		
+		mouseOver(jq("$insert a.z-menu-cnt-img"));		
 		waitResponse();
-		click("$shiftCellDown:visible");
+		click("jq('$shiftCellDown a.z-menu-item-cnt')");
 		waitResponse();
-
+		sleep(5000);
 		cell_B_6 = getSpecifiedCell(1, 5);
-		String newValue = getCellText(1, 5);
-		String newDownCellValue = getCellText(1, 6);
+		String newValue = getSpecifiedCell(1, 5).text();
+		String newDownCellValue = getCellContent(cell_B_7);
 
-		/**
-		 * Expect
-		 * 
-		 * cell text and style shift down, the original cell is empty
-		 */
-		verifyTrue("Shift cell: source cell shall be empty, not: " + newValue, "".equals(newValue));
-        verifyTrue(newDownCellValue.equals(origValue));
+		// TODO verify if pasted cell style is cleared
+        verifyTrue("Original cell value=" + origValue 
+        		+ "\n, Original down cell value=" + downCellValue 
+        		+ "\n, New down cell value=" + newDownCellValue
+        		+ "\n, new value in B6 =" + newValue, 
+        		"".equals(newValue));
 	}
 }

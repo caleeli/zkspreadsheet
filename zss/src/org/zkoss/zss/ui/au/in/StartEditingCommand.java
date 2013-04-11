@@ -23,13 +23,16 @@ import java.util.Map;
 
 import org.zkoss.lang.Objects;
 import org.zkoss.poi.ss.usermodel.Cell;
+import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.zk.au.AuRequest;
 import org.zkoss.zk.mesg.MZk;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.Events;
+//import org.zkoss.zss.model.Cell;
 import org.zkoss.zss.model.Worksheet;
+import org.zkoss.zss.model.impl.BookHelper;
 import org.zkoss.zss.ui.Spreadsheet;
 import org.zkoss.zss.ui.event.StartEditingEvent;
 import org.zkoss.zss.ui.impl.Utils;
@@ -41,13 +44,14 @@ import org.zkoss.zss.ui.impl.Utils;
  *
  */
 public class StartEditingCommand implements Command {
+	final static String Command = org.zkoss.zss.ui.event.Events.ON_START_EDITING;
 
 	public void process (AuRequest request) {
 		final Component comp = request.getComponent();
 		if (comp == null)
 			throw new UiException(MZk.ILLEGAL_REQUEST_COMPONENT_REQUIRED, this);
 		final Map data = (Map)request.getData();
-		if (data == null || data.size() != 6)
+		if (data == null || data.size() != 5)
 			throw new UiException(MZk.ILLEGAL_REQUEST_WRONG_DATA, new Object[] {Objects.toString(data), this});
 
 		String token = (String) data.get("token");
@@ -55,7 +59,6 @@ public class StartEditingCommand implements Command {
 		int row = (Integer) data.get("row");
 		int col = (Integer) data.get("col");
 		String clienttxt = (String) data.get("clienttxt");
-		String type = (String) data.get("type");
 
 		Worksheet sheet = ((Spreadsheet) comp).getSelectedSheet();
 		if (!Utils.getSheetUuid(sheet).equals(sheetId))
@@ -71,6 +74,10 @@ public class StartEditingCommand implements Command {
 				org.zkoss.zss.ui.event.Events.ON_START_EDITING, comp, sheet,
 				row, col, editText, clienttxt);
 		Events.postEvent(event);
-		Events.postEvent(new Event("onStartEditingImpl", comp, new Object[] {token, event, type}));
+		Events.postEvent(new Event("onStartEditingImpl", comp, new Object[] {token, event }));
+	}
+
+	public String getCommand() {
+		return Command;
 	}
 }

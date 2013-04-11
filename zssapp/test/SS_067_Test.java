@@ -1,17 +1,35 @@
+import org.zkoss.ztl.JQuery;
+import org.zkoss.ztl.util.ColorVerifingHelper;
 
 
 public class SS_067_Test extends SSAbstractTestCase {
 
     @Override
     protected void executeTest() {
-        focusOnCell(1, 7);
+        // Select cell
+        JQuery cell_B_8 = getSpecifiedCell(1, 7);
+        clickCell(cell_B_8);
+        clickCell(cell_B_8);
         
         // Click font color button on the toolbar
-        String color = setCellBackgroundColorByToolbarbutton(1, 7, 98);
-    	
-        //TODO: compare hex format and rgb format
+        click(jq("$cellColorBtn"));
+        waitResponse();
+        
+        // Input color hex code, then press Enter.
+        JQuery colorTextbox = jq(".z-colorbtn-pp:visible .z-colorpalette-hex-inp");
+        String bgColorStr = "#990033";
+        type(colorTextbox, bgColorStr);
+        keyPressEnter(colorTextbox);
+        
         //Verify
-    	String bg = getCellBackgroundColor(1, 7);
-        verifyTrue("rgb(153, 102, 255)".equals(bg) || "#9966cc".equals(bg));
+        cell_B_8 = getSpecifiedCellOuter(1, 7);
+        String style = cell_B_8.css("background-color");
+        
+        if (style != null) {
+            verifyTrue("Unexcepted result: " + cell_B_8.css("background-color"), ColorVerifingHelper.isEqualColor(bgColorStr, style));
+        } else {
+            verifyTrue("Cannot get style of specified cell!", false);
+        }
     }
+
 }

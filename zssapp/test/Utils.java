@@ -7,12 +7,11 @@
 public class Utils {
 
     public static String getTarget() {
-        //return "http://localhost:8088/zssapp/zssapp.jsp";
-        return "http://localhost:8080/zssapp/";
+        return "http://10.1.3.142:8890/zssappdemo/";
     }
 
     public static String getBrowsers() {
-        return "ie";
+        return "all";
     }
 
     public static int getTimeout() {

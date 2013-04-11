@@ -19,7 +19,6 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 
 (function () {
 	_skey = [32,106,107,109,110,111,186,187,188,189,190,191,192,220,221,222,219];
-	_opearKey = [42, 43, 45, 47, 61];
 	function asciiChar (charcode) {
 		if ((charcode != 13 && charcode != 9 && charcode < 32) || charcode > 127) return null;
 		return String.fromCharCode(charcode);
@@ -38,8 +37,6 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 		if(r) return true;
 		while (i--)
 			if(keycode == _skey[i]) return true;
-		if (zk.opera && _opearKey.$contains(keycode))
-			return true;
 		//firefox fire + and ; with keycode 61 & 59
 		if(zk.gecko && (keycode == 61 || keycode == 59)) return true;
 		
@@ -68,104 +65,34 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 	function _isRightMouseEvt (evt) {
 		return (evt.which) && (evt.which == 3);
 	}
-	
-	function syncAttributes(dst, src, fields) {
-		for (var key in fields) {
-			var f = fields[key];
-			dst[f] = src[f];
-		}
+	function _findHeader(headers, index) {
+		for(var j = 0, len = headers.length; j < len; ++j)
+			if (headers[j].index == index)
+				return headers[j];
+		return null;
 	}
 	
-	/**
-	 * 1. show active block
-	 * 2. cells may need to process wrap height
-	 * 3. show focus/selection etc.
-	 */
-	function doAfterCSSReady(sheet) {
-		var wgt = sheet._wgt;
-		if (wgt.isSheetCSSReady()) {
-			sheet.activeBlock.setVisible(true); //show cells
-			sheet._doSSInitLater(); //may show focus, process wrap height
-			wgt.focus();
-		} else {
-			setTimeout(function () {
-				doAfterCSSReady(sheet);
-			}, 1);
-		}
-	}
-	
-	function newPositionArray(str) {
-		var array = [];
-		if (str) {
-			str = str.split(",");
-			var size  = str.length;
-			for (var i = 0; i < size; i = i + 4)
-				array.push([zk.parseInt(str[i]), zk.parseInt(str[i + 1]), zk.parseInt(str[i + 2]), 'true' == str[i+3]]);
-		}
-		return array;
-	}
-	
-	function newMergeMatrixArray(str) {
-		var array = [];
-		if (str && str != "") {
-			str = str.split(";");
-			var size = str.length,
-				r;
-			for (var i = 0; i < size; i++) {
-				r = str[i].split(",");
-				var range = new zss.Range(zk.parseInt(r[0]), zk.parseInt(r[1]), zk.parseInt(r[2]), zk.parseInt(r[3]));
-				range.id = zk.parseInt(r[4]);
-				array.push(range);
-			}
-		}
-		return array;
-	}
-	
-	
-	function toHeaderTitleArray(headers) {
-		var ts = [];
-		for (var i = 0, len = headers.length; i < len; i++) {
-			ts[i] = headers[i].t;
-		}
-		return ts;
-	}
-
 /**
  *  SSheetCtrl controls spreadsheet
- *  
- *  Sheet events
- *  <ul>
- *  	<li>onContentsChanged</li>
- *  	<li>onFocused: fire when sheet has focus (cell, widget etc...)</li>
- *  	<li>onCellSelection</li>
- *  	<li>onStartEditing</li>
- *  	<li>onStopEditing</li>
- *  </ul>
- *  
  */
-zss.SSheetCtrl = zk.$extends(zk.Widget, {	
-	$o: zk.$void, //no need to invoke _addIdSpaceDown, no fellows relationship
-	/**
-	 * Editing formula info
-	 * 
-	 * <ul>
-	 * 	<li>start: the start index position in formula string, for insert cell address reference</li>
-	 * 	<li>end: the end index position in formula string, for insert cell address reference</li>
-	 * 	<li>type: either 'inlineEditiong' or 'formulabarEditing'</li>
-	 *  <li>moveCell: boolean indicate whether key event shall move cell or not</li>
-	 * </ul>
-	 */
-	editingFormulaInfo: null,
-	lineHeight: 20,
-	$init: function (wgt) {
-		this.$supers(zss.SSheetCtrl, '$init', []);
+zss.SSheetCtrl = zk.$extends(zk.Object, {
+	$init: function (cmp, wgt) {
+		this.$supers(zss.SSheetCtrl, '$init', arguments);
 		this._wgt = wgt;
-		this.setHflex(true);
-		this.setVflex(true);
+		this.id = cmp.id;
+		this.sheetid = cmp.id;//must keep this for search current
+		cmp.ctrl = this;
+		this.comp = cmp;
+		var local = this;
+		this.activeBlock = null;
 		this.pageKeySize = 100;
 		this._initiated = false;
-		
+		var initparm = this.initparm = {};//initial time parameter
 		this._clienttxt = '';
+		
+		this.afterInit(function () {
+			zss.Spreadsheet.initLaterAfterCssReady(local);
+		}, false);
 		
 		//init function later queue, the function in this queue will be invoke in ZK InitialLater
 		//I create this queue because ZK initial later doesn't support parameter.
@@ -174,148 +101,31 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		
 		this.state = zss.SSheetCtrl.NOFOCUS;
 		
-		//initial default size;
-		this.topHeightDt = this.leftWidthDt = this.rowHeightDt = 
-			this.colWidthDt = this.lineHeightDt = this.cellPadDt =  false;
-
-		this.config = new zss.Configuration();
-	},
-	doSheetSelected: function (visRng) {
-		if (this.bindLevel < 0) {//this method shall invoke after bind
-			return;
-		}
-		var	wgt = this._wgt,
-			sheet = this,
-			cacheCtrl = wgt._cacheCtrl,
-			dp = this.dp,
-			sp = this.sp,
-			tp = this.tp,
-			lp = this.lp,
-			snapshop = cacheCtrl.getSnapshot(wgt.getSheetId());
-		if (snapshop) {
-			syncAttributes(wgt, snapshop, 
-				['_displayGridlines', '_rowFreeze', '_columnFreeze', '_rowHeight', '_columnWidth', '_protect']);
-			var d = snapshop.getDataPanelSize(),
-				s = snapshop.getScrollPanelPos();
-			
-			dp.reset(d.width, d.height);
-			sp.reset(s.scrollTop, s.scrollLeft);
-			lp._updateTopPos(snapshop.getLeftPanelPos());
-			tp._updateLeftPos(snapshop.getTopPanelPos());
-		} else { //switch to new sheet focus on [0, 0]
-			sp.reset(0, 0);
-			lp._updateTopPos(0);
-			tp._updateLeftPos(0);
-		}
-		
-		this.serverSheetId = wgt.getSheetId();
-		this.topHeight = wgt.getTopPanelHeight(); //default top panel height 20
-		this.leftWidth = wgt.getLeftPanelWidth(); //default left panel width 28
-		this.rowHeight = wgt.getRowHeight(); //default row height 20
-		this.colWidth = wgt.getColumnWidth(); //default column width 80
-		this.frozenRow = wgt.getRowFreeze();
-		this.frozenCol = wgt.getColumnFreeze();
-
-		this.custColWidth = new zss.PositionHelper(this.colWidth, snapshop ? snapshop.getCustColWidth() : newPositionArray(wgt.getCsc()));
-		this.custColWidth.ids = new zss.Id(0, 2);
-		
-		this.custRowHeight = new zss.PositionHelper(this.rowHeight, snapshop ? snapshop.getCustRowHeight() : newPositionArray(wgt.getCsr()));
-		this.custRowHeight.ids = new zss.Id(0, 2);
-		
-		//merge range
-		this.mergeMatrix = new zss.MergeMatrix(snapshop ? snapshop.getMergeMatrix() : newMergeMatrixArray(wgt.getMergeRange()), this);
-
-		var data = wgt._cacheCtrl.getSelectedSheet(),
-			sheetCSSReady = wgt.isSheetCSSReady();
-		visRng = visRng || zss.SSheetCtrl._getVisibleRange(this);
-		if (data) {			
-			var oldBlock = this.activeBlock,
-				oldTopPanel = this.tp,
-				oldLeftPanel = this.lp,
-				oldCornerPanel = this.cp,
-				rows = data.rows,
-				rect = data.rect,
-				tRow = visRng.top,
-				bRow = visRng.bottom,
-				lCol = visRng.left,
-				rCol = visRng.right,
-				rowHeadHidden = wgt._rowHeadHidden,
-				colHeadHidden = wgt._columnHeadHidden;
-			if (bRow > rect.bottom)
-				bRow = rect.bottom;
-			if (rCol > rect.right)
-				rCol = rect.right;
-			var	activeBlock = new zss.MainBlockCtrl(sheet, tRow, lCol, bRow, rCol, data),
-				topPanel = new zss.TopPanel(sheet, rowHeadHidden, lCol, rCol, data),
-				leftPanel = new zss.LeftPanel(sheet, colHeadHidden, tRow, bRow, data),
-				cornerPanel = new zss.CornerPanel(sheet, rowHeadHidden, colHeadHidden, lCol, tRow, rCol, bRow, data);
-
-			if (!sheetCSSReady) {//set visible after CSS loaded
-				activeBlock.setVisible(false);
-			}
-			if (oldTopPanel) {
-				oldTopPanel.replaceWidget(this.tp = topPanel);
-			} else {
-				this.appendChild(this.tp = topPanel, true);
-			}
-			
-			if (oldLeftPanel) {
-				oldLeftPanel.replaceWidget(this.lp = leftPanel);
-			} else {
-				this.appendChild(this.lp = leftPanel, true);
-			}
-			
-			if (oldCornerPanel) {
-				oldCornerPanel.replaceWidget(this.cp = cornerPanel);
-			} else {
-				this.appendChild(this.cp = cornerPanel, true);
-			}
-			if (oldBlock) {
-				//Note. do not use MainBlockCtrl.replaceWidget (for row/column freeze)
-				activeBlock.replaceHTML(oldBlock.$n(), this.desktop, null, true);
-				this.activeBlock = activeBlock;
-			} else {
-				this.appendChild(this.activeBlock = activeBlock, true);
-			}
-
-			this.fireProtectSheet(wgt.isProtect());
-			this.fireDisplayGridlines(wgt.isDisplayGridlines());
-			
-			dp._fixSize(this.activeBlock);
-			this._fixSize();
-		}
-		if (!sheetCSSReady) {
-			this.addSSInitLater(function () {
-				sheet._resize();
-			});
-		} else {
-			this._resize();
-		}
-		doAfterCSSReady(this);
-	},
-	afterParentChanged_: function () { //all attributes set when afterParentChanged_
-		var self = this,
-			wgt = this._wgt;
-		
-		this.sheetid = wgt.uuid;
-		
 		//current server sheet index
 		this.serverSheetId = wgt.getSheetId();
 		
-		var rowHeight = wgt.getRowHeight(),
-			colWidth = wgt.getColumnWidth();
-	
-		this.maxCols = wgt.getMaxColumns();
-		this.maxRows = wgt.getMaxRows();
-		this.topHeight = wgt.getTopPanelHeight(); //default top panel height 20
-		this.leftWidth = wgt.getLeftPanelWidth(); //default left panel width 28
-		this.cellPad = wgt.getCellPadding();
-		this.rowHeight = wgt.getRowHeight(); //default row height 20
-		this.colWidth = wgt.getColumnWidth(); //default column width 80
+		//initial default size;
+		this.topHeightDt = this.leftWidthDt = this.rowHeightDt = 
+			this.colWidthDt = this.lineHeightDt = this.cellPadDt =  false;
 		
-		//initial time parameter
-		var initparm = this.initparm = {},
-			fs = wgt.getFocusRect();
+		var maxCols = wgt.getMaxColumn(),
+			maxRows = wgt.getMaxRow(),
+			topHeight = wgt.getTopPanelHeight(),
+			leftWidth = wgt.getLeftPanelWidth(),
+			cellPad = wgt.getCellPadding(),
+			rowHeight = wgt.getRowHeight(),
+			colWidth = wgt.getColumnWidth(),
+			lineHeight = wgt.getLineh();
+
+		this.maxCols = maxCols != null ? maxCols : 10;//255;
+		this.maxRows = maxRows != null ? maxRows : 10;//1000; 
+		this.topHeight = topHeight != null ? topHeight : 20;
+		this.leftWidth = leftWidth != null ? leftWidth : 28;
+		this.cellPad = cellPad != null ? cellPad : 2;
+		this.rowHeight = rowHeight != null ? rowHeight : 20;
+		this.colWidth = colWidth != null ? colWidth : 80;
+		this.lineHeight = lineHeight != null ? lineHeight : 20;
+		var fs = wgt.getFocusRect();
 		fs = fs.split(",");
 		initparm.focus = new zss.Pos(zk.parseInt(fs[1]), zk.parseInt(fs[0]));//[row,col]
 		
@@ -330,81 +140,117 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			
 			this.addSSInitLater(function() {
 				var range = local.initparm.hlrange;
-				self.hlArea.show = true;
-				self.moveHighlight(range.left, range.top, range.right, range.bottom);
-				delete self.initparm;
+				local.hlArea.show = true;
+				local.moveHighlight(range.left, range.top, range.right, range.bottom);
 			});
 			
 		} else
 			initparm.hlrange = new zss.Range(-1, -1, -1, -1);
 
-		this.custColWidth = new zss.PositionHelper(this.colWidth, newPositionArray(wgt.getCsc()));
+		this.config = new zss.Configuration();
+		
+		//customized width Top Header array
+		var csc = wgt.getCsc(),
+			array = [];
+		if (csc && csc != "") {
+			csc = csc.split(",");
+			var size  = csc.length;
+			for (var i = 0; i < size; i = i + 4)
+				array.push([zk.parseInt(csc[i]), zk.parseInt(csc[i + 1]), zk.parseInt(csc[i + 2]), 'true' == csc[i+3]]);
+		}
+		this.custColWidth = new zss.PositionHelper(this.colWidth, array);
 		this.custColWidth.ids = new zss.Id(0, 2);
 		
-		this.custRowHeight = new zss.PositionHelper(this.rowHeight, newPositionArray(wgt.getCsr()));
-		this.custRowHeight.ids = new zss.Id(0, 2);
-		
-		this.mergeMatrix = new zss.MergeMatrix(newMergeMatrixArray(wgt.getMergeRange()), this);
-		
-		//frozen row & column
-		this.frozenRow = wgt.getRowFreeze();
-		this.frozenCol = wgt.getColumnFreeze();
-		
-		var sheet = this,
-			cacheCtrl = wgt._cacheCtrl,
-			ar = cacheCtrl.getSelectedSheet();
-		
-		this.appendChild(this.inlineEditor = new zss.Editbox(sheet));
-		if (ar) {
-			var	rows = ar.rows,
-				rect = ar.rect,
-				tRow = rect.top,
-				lCol = rect.left,
-				rCol = rect.right,
-				rowHeadHidden = wgt._rowHeadHidden,
-				colHeadHidden = wgt._columnHeadHidden;
-			//TODO: measure best init size
-			bRow = tRow + 20; //load row size
-			rCol = lCol + 20; //load column size
-			if (bRow > rect.bottom)
-				bRow = rect.bottom;
-			if (rCol > rect.right)
-				rCol = rect.right;
-			this.appendChild(this.activeBlock = new zss.MainBlockCtrl(sheet, tRow, lCol, bRow, rCol, ar), true);
-			this.appendChild(this.tp = new zss.TopPanel(sheet, rowHeadHidden, lCol, rCol, ar), true);
-			this.appendChild(this.lp = new zss.LeftPanel(sheet, colHeadHidden, tRow, bRow, ar), true);
-			this.appendChild(this.cp = new zss.CornerPanel(sheet, rowHeadHidden, colHeadHidden, lCol, tRow, rCol, bRow, ar), true);
+		//customized height Left Header array
+		var csr = wgt.getCsr("csr"),
+			array = [];
+		if (csr && csr != "") {
+			csr = csr.split(",");
+			var size  = csr.length;
+			for (var i = 0; i < size; i = i + 4)
+				array.push([zk.parseInt(csr[i]), zk.parseInt(csr[i + 1]), zk.parseInt(csr[i + 2]), 'true' == csr[i+3]]);
 		}
+		this.custRowHeight = new zss.PositionHelper(this.rowHeight, array);
+		this.custRowHeight.ids = new zss.Id(0, 2);
+
+		//merge range
+		var mers = wgt.getMergeRange(),
+			array = [];
+		if (mers && mers != "") {
+			mers = mers.split(";");
+			var size  = mers.length,
+				r;
+			for (var i = 0; i < size; i++) {
+				r = mers[i].split(",");
+				var range = new zss.Range(zk.parseInt(r[0]), zk.parseInt(r[1]), zk.parseInt(r[2]), zk.parseInt(r[3]));
+				range.id = zk.parseInt(r[4]);
+				array.push(range);
+			}
+		}
+
+		//frozen row & column
+		var fzr = wgt.getRowFreeze(),
+			fzc = wgt.getColumnFreeze();
+		this.frozenRow = fzr != null ? zk.parseInt(fzr) : -1;
+		this.frozenCol = fzc != null ? zk.parseInt(fzc) : -1;
+		
+		this.mergeMatrix = new zss.MergeMatrix(array, this);
+		
+		//init inner components
+		zss.SSheetCtrl._initInnerComp(this, this._wgt._autoFilter ? this._wgt._autoFilter.range.top : null);
 		
 		this.innerClicking = 0;// mouse down counter to check that is focus rellay lost.
-	},
-	setFlexSize_: function(sz, isFlexMin) {
-		var r = this.$supers(zss.SSheetCtrl, 'setFlexSize_', arguments);
-		if (!this._initiated) {
-			zss.Spreadsheet.initLaterAfterCssReady(this);
+
+		if (zk(wgt).isRealVisible()) {
+			this.insertSSInitLater(function () {
+				local._fixSize();//fix size and scroll after initial.
+			});
 		}
-		this._resize();
-		return r;
+		this.addSSInitLater(function() {
+			delete local.initparm;
+		});
 	},
-	bind_: function (desktop, skipper, after) {
-		this.$supers(zss.SSheetCtrl, 'bind_', arguments);
-		//ZSS 125: already process wrap on row.bind_
-		delete this._wrapRange;
-		
-		zss.SSheetCtrl._initInnerComp(this, this._wgt._autoFilter ? this._wgt._autoFilter.range.top : null);
-		this.listen({onContentsChanged: this, onRowHeightChanged: this});
-		
-		var n = this.comp = this.$n();
-		n.ctrl = this;
+	addEditorFocus : function(name, color){
+		var x = this.focusmarkcmp,
+			div = x.cloneNode(true);
+		div.style.borderColor = color;
+		div.style.borderWidth = "3px";
+		x.parentNode.appendChild(div);
+		if(!this.editorFocusMark)
+			this.editorFocusMark = new Object();
+		this.editorFocusMark[name] = new zss.FocusMarkCtrl(this, div, new zss.Pos(0, 0));
 	},
-	unbind_: function () { 
-		this.unlisten({onContentsChanged: this, onRowHeightChanged: this});
+	removeEditorFocus : function(name){
+		if (!this.editorFocusMark)
+			return;
+		var ctrl = this.editorFocusMark[name];
+		if (ctrl) {
+			ctrl.comp.parentNode.removeChild(ctrl.comp);
+			ctrl.cleanup();
+		}
+		this.editorFocusMark[name] = null;
+	},
+	moveEditorFocus : function(name, color, row, col){
+		if(!this.editorFocusMark || !this.editorFocusMark[name]){
+			this.addEditorFocus(name, color);
+		}
+		this.editorFocusMark[name].relocate(row, col);
+		this.editorFocusMark[name].showMark();
+	},
+	_resize: function () {
+		if (this.invalid) return;
+
+		this._fixSize();
+		if (!this.activeBlock.loadForVisible()) //bug#303:avoid hide to visible and the mask is still there
+			this.showMask(false);
+	},
+	cleanup: function () {
 		this.animateHighlight(false);
 		this.invalid = true;
 
 		if(this.comp) this.comp.ctrl = null;
 		this.comp = this.busycmp = this.maskcmp = this.spcmp = this.topcmp = 
-		this.leftcmp = this.sinfocmp = this.infocmp = this.focusmarkcmp =
+		this.leftcmp = this.dpcmp = this.sinfocmp = this.infocmp = this.focusmarkcmp =
 		this.selareacmp = this.selchgcmp = this.hlcmp = this.wpcmp = null;
 		
 		if (this.dragging) {
@@ -414,145 +260,24 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		
 		this.sp.cleanup();
 		this.dp.cleanup();
-		
+		this.tp.cleanup();
+		this.lp.cleanup();
+		this.cp.cleanup();
 		this.sinfo.cleanup();
 		this.info.cleanup();
+		this.editor.cleanup();
 		this.focusMark.cleanup();
 		this.selArea.cleanup();
 		this.selChgArea.cleanup();
 		this.hlArea.cleanup();
 		this.sp = this.dp = this.tp = this.lp = this.cp = this.sinfo = this.info = 
-		this.inlineEditor = this.focusMark = this.selArea = this.selChgArea = this.hlArea = null;
+		this.editor = this.focusMark = this.selArea = this.selChgArea = this.hlArea = null;
 		
-		this.custTHSize = this.custLHSize = this._initLaterQ =
+		if (this.activeBlock)
+			this.activeBlock.cleanup();
+		
+		this.activeBlock = this.custTHSize = this.custLHSize = this._initLaterQ =
 		this._lastmdelm = this._lastmdstr = null;
-		
-		this.$supers(zss.SSheetCtrl, 'unbind_', arguments);
-	},
-	/**
-	 * Sets the overflow column, columns before need to process overflow
-	 * 
-	 * @param int row the row index
-	 * @param int col the column index
-	 * @param boolean run indicate whether to process overflow now or not
-	 */
-	triggerOverflowColumn_: function (row, col, run) {
-		var r = this._overflowRange;
-		if (!r)
-			r = this._overflowRange = {}; //tRow, bRow, and col attributes
-		var rCol = r.col;
-		rCol ? r.col = Math.max(rCol, col) : r.col = col;
-		if (row) {
-			var	tRow = r.tRow,
-				bRow = r.bRow;
-			tRow ? r.tRow = Math.min(tRow, row) : r.tRow = row;
-			bRow ? r.bRow = Math.max(bRow, row) : r.bRow = row;
-		}
-		if (run) {
-			this.fireProcessOverflow_();
-		}
-	},
-	triggerWrap: function (row, run) {
-		var r = this._wrapRange;
-		if (!r) {
-			r = this._wrapRange = {};//tRow, bRow
-		}
-		var	tRow = r.tRow,
-			bRow = r.bRow;
-		tRow ? r.tRow = Math.min(tRow, row) : r.tRow = row;
-		bRow ? r.bRow = Math.max(bRow, row) : r.bRow = row;
-		if (run) {
-			this.fireProcessWrap_();
-		}
-	},
-	/**
-	 * Fire process cell overflow event
-	 */
-	fireProcessOverflow_: function () {
-		var r = this._overflowRange;
-		if (r != undefined) {
-			this.fire('onProcessOverflow', {col: r.col, tRow: r.tRow, bRow: r.bRow});
-			delete this._overflowRange;
-		}
-	},
-	fireProcessWrap_: function () {
-		var r = this._wrapRange;
-		if (r != undefined) {
-			this.fire('onProcessWrap', {tRow: r.tRow, bRow: r.bRow});
-			delete this._wrapRange;
-		}
-	},
-	//TODO: change to fire 'onSelectedSheet' evt
-	fireProtectSheet: function (protect) {
-		this.fire('onProtectSheet', {protect: protect});
-	},
-	fireDisplayGridlines: function (show) {
-		this.fire('onDisplayGridlines', {show: show});
-	},
-	triggerSelection: function (tRow, lCol, bRow, rCol) {
-		var r = this._selectionRange;
-		if (!r) {
-			r = this._selectionRange = {};//tRow, lCol, bRow, rCol
-		}
-		
-		var top = r.tRow,
-			left = r.lCol,
-			btm = r.bRow,
-			right = r.rCol;
-		top ? r.tRow = Math.min(tRow, top) : r.tRow = tRow;
-		left ? r.lCol = Math.min(lCol, left) : r.lCol = lCol;
-		btm ? r.bRow = Math.max(bRow, btm) : r.bRow = bRow;
-		right ? r.rCol = Math.max(rCol, right) : r.rCol = rCol;
-	},
-	onContentsChanged: function (evt) {
-		this.fireProcessOverflow_();
-		this.fireProcessWrap_();
-		
-		var r = this._selectionRange;
-		if (r) {
-			this.deferFireCellSelection(r.lCol, r.tRow, r.rCol, r.bRow);
-			this._selectionRange = null;
-		}
-	},
-	onRowHeightChanged: function () {
-		var h = this.hlArea;
-		if (h.show) {
-			h.relocate();
-		}
-	},
-	addEditorFocus : function(id, name, color){
-		var x = this.focusmarkcmp,
-			div = x.cloneNode(true);
-		div.style.borderColor = color;
-		div.style.borderWidth = "3px";
-		x.parentNode.appendChild(div);
-		if(!this.editorFocusMark)
-			this.editorFocusMark = new Object();
-		this.editorFocusMark[id] = new zss.FocusMarkCtrl(this, div, new zss.Pos(0, 0));
-	},
-	removeEditorFocus : function(id){
-		if (!this.editorFocusMark)
-			return;
-		var ctrl = this.editorFocusMark[id];
-		if (ctrl) {
-			ctrl.comp.parentNode.removeChild(ctrl.comp);
-			ctrl.cleanup();
-		}
-		this.editorFocusMark[id] = null;
-	},
-	moveEditorFocus : function(id, name, color, row, col){
-		if(!this.editorFocusMark || !this.editorFocusMark[id]){
-			this.addEditorFocus(id, name, color);
-		}
-		this.editorFocusMark[id].relocate(row, col);
-		this.editorFocusMark[id].showMark();
-	},
-	_resize: function () {
-		if (this.invalid) return;
-
-		this._fixSize();
-		if (!this.activeBlock.loadForVisible()) //bug#303:avoid hide to visible and the mask is still there
-			this.showMask(false);
 	},
 	/**
 	 * Returns whether is dragging or not
@@ -611,6 +336,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	},
 	_doSSInitLater: function () {
 		if(this.invalid) return;
+		
 		var local = this,
 			queu = local._initLaterQ;
 
@@ -630,7 +356,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		}
 		queu.urgent = 0;
 	},
-	_cmdCellUpdate: function (shtId, result) {
+	_cmdCellUpdate: function (result) {
 		var type = result.type,
 			row = result.r,
 			col = result.c,
@@ -641,49 +367,30 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			this._updateText(result);
 			break;
 		case "udcell":
-			var wgt = this._wgt,
-				data = result,
-				cCtl = this._wgt._cacheCtrl,
-				cacheSheet = cCtl.getSheetBy(shtId),
-				selSheet = cCtl.getSelectedSheet();
-			if (cacheSheet) {
-				cacheSheet.update(data);
-				if (cacheSheet.id == selSheet.id) {//update current sheet
-					this.update_(data.t, data.l, data.b, data.r);
-					wgt._triggerContentsChanged = true;
-				}
-			}
+			this._updateCell(result);
 			break;
 		case "startedit":
-			var editType = result.et,
-				dp = this.dp;
-			//ZSS 171
-			this._skipInsertCellRef = true;
-			if ('inlineEditing' == editType) {
-				if (!dp._moveFocus(row, col, true, true)) {
-					//TODO, if cell not initial, i should skip or put to delay batch? 
-					break;
-				}
+			var dp = this.dp;
+			if (!this.dp._moveFocus(row, col, true, true)) {
+				//TODO, if cell not initial, i should skip or put to delay batch? 
+				break;
 			}
-			dp._startEditing(value, server, editType);
+			dp._startEditing(value, server);
 			break;
 		case "stopedit":
-			this.dp._stopEditing();
+			var dp = this.dp;
+			dp._stopEditing(value);
 			break;
 		case "canceledit":
-			this.dp.cancelEditing(result.et);
-			break;
-		case "retryedit":
-			this.dp.retryEditing(value);
+			var dp = this.dp;
+			dp.cancelEditing();
 			break;
 		}
 	},
-	_cmdBlockUpdate: function (type, dir, tRow, lCol, bRow, rCol) {
-		switch (type) {
-		case 'neighbor': //move to a neighbor block
-			this.activeBlock.loadForVisible();
+	_cmdBlockUpdate: function (result) {
+		if (result.type == "neighbor") {//move to a neighbor block
+			this.activeBlock._createCell(result);
 			if (zk.ie) {
-				//TODO: test if set display none could speedup or not when switch cache  
 				//ie have some display error(cell overlap) when scroll up(neighbor north)
 				//same issue when scroll right
 				var dp = this.dp.comp,
@@ -697,19 +404,31 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 				jq(dp).css('display', '');
 				jq(l).css('display', '');
 			}
-			break;
-		case 'jump'://jump to another bolck, not a neighbor
-			var oldBlock = this.activeBlock,
-				wgt = this._wgt,
-				data = wgt._cacheCtrl.getSelectedSheet();
-			oldBlock.replaceWidget(this.activeBlock = new zss.MainBlockCtrl(this, tRow, lCol, bRow, rCol, data));
+		} else if (result.type == "jump") {//jump to another bolck, not a neighbor
+
+			var oldBlock = this.activeBlock;
+			this.activeBlock = zss.MainBlockCtrl.createComp(this, result.left, result.top);
+			this.activeBlock._createCell(result);
+
+			// to avoid row slip effect when replace child, i hide it, the show it (but it cause flash effect)
+			//this.activeBlock.hide();
+			this.dp.comp.replaceChild(this.activeBlock.comp, oldBlock.comp);
+			//this.activeBlock.show();
+			
 			this.dp._fixSize(this.activeBlock);
-			this.activeBlock.loadForVisible();
-			break;
-		case 'error': //fetch cell with exception
-			break;
+			oldBlock.cleanup();
+		} else if (result.type == "prune") {//jump to another bolck, not a neighbor
+			
+			this.activeBlock.pruneCell(result.dir, null, result.reserve);
+		} else if (result.type == "ack") {//fetch cell will empty return,(not thing need to fetch)
+			
+		} else if (result.type == "error") {//fetch cell with exception
+			
 		}
+
 		this.showMask(false);
+		//close busy after all initial after load block
+		//this.addSSInitLater(function(sheet){sheet.showBusy(false);},this);
 		
 		//bug 1951423 IE : row is broken when scroll down, st time to do ss initiallater
 		var self = this;
@@ -718,13 +437,11 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		}, 0);
 	},
 	_cmdInsertRC: function (result) {
+		var local = this;
 		if (result.type == "column") {
 			var col = result.col,
-				size = result.size,
-				headers = result.hs,
-				ar = this._wgt._cacheCtrl.getSelectedSheet();
-			ar.insertNewColumn(col, size, headers);
-			this._insertNewColumn(col, size, toHeaderTitleArray(headers.hs));
+				size = result.size;
+			this._insertNewColumn(col, size, result.extnm);
 			//update positionHelper
 			this.custColWidth.shiftMeta(col, size);
 			// adjust data panel size;
@@ -743,16 +460,12 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			var block = this.activeBlock;
 			if (col < block.range.left)// insert before current block, then jump
 				block.reloadBlock("east");
-			else
-				this.triggerOverflowColumn_(null, col);
+			else 
+				block._processTextOverflow(col);
 		} else if (result.type == "row") {//jump to another bolck, not a neighbor
 			var row = result.row,
-				size = result.size,
-				headers = result.hs,
-				ar = this._wgt._cacheCtrl.getSelectedSheet();
-			ar.insertNewRow(row, size, headers);
-			this._insertNewRow(row, size, toHeaderTitleArray(headers.hs));
-			
+				size = result.size;
+			this._insertNewRow(row, size, result.extnm);
 			//update positionHelper
 			this.custRowHeight.shiftMeta(row, size);
 			// adjust datapanel size;
@@ -771,22 +484,14 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			var block = this.activeBlock;
 			if (row < block.range.top)// insert before current block, then jump
 				block.reloadBlock("south");
-		}
-		
+		}		
 		dp._fixSize(this.activeBlock);
 		this._fixSize();
+
 		this.sendSyncblock();
-		
-		var sel = this.getLastSelection();
-		if (sel)
-			this.moveCellSelection(sel.left, sel.top, sel.right, sel.bottom);
 		
 		var self = this;
 		setTimeout(function () {
-			var h = self.hlArea;
-			if (h.show) {
-				h.relocate();
-			}
 			self._doSSInitLater();//after creating cell need to invoke init later
 		},0);
 	},
@@ -794,11 +499,9 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		var lfv = true;
 		if (result.type == "column") {
 			var col = result.col,
-				size = result.size,
-				headers = result.hs,
-				ar = this._wgt._cacheCtrl.getSelectedSheet();
-			ar.removeColumns(col, size, headers);
-			this._removeColumn(col, size, toHeaderTitleArray(headers.hs));
+				size = result.size;
+			
+			this._removeColumn(col,size,result.extnm)
 			
 			// adjust datapanel size;
 			var dp = this.dp,
@@ -822,16 +525,13 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 				block.reloadBlock("east");
 				lfv = false;
 			} else
-				this.triggerOverflowColumn_(null, col);// no need to invoke 
+				block._processTextOverflow(col);
 			
 			this._syncColFocusAndSelection(col, col + size - 1);
 		} else if (result.type == "row") {//jump to another bolck, not a neighbor
 			var row = result.row,
-				size = result.size,
-				headers = result.hs,
-				ar = this._wgt._cacheCtrl.getSelectedSheet();
-			ar.removeRows(row, size, headers);
-			this._removeRow(row, size, toHeaderTitleArray(headers.hs));
+				size = result.size;
+			this._removeRow(row, size, result.extnm);
 			
 			// adjust datapanel size;
 			var dp = this.dp,
@@ -857,7 +557,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			}
 			this._syncRowFocusAndSelection(row, row + size - 1);
 		}
-		
+
 		dp._fixSize(this.activeBlock);
 		this._fixSize();		
 		this.sendSyncblock();
@@ -879,10 +579,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		
 		var self = this;
 		setTimeout(function () {
-			var h = self.hlArea;
-			if (h.show) {
-				h.relocate();
-			}
 			self._doSSInitLater();//after creating cell need to invoke init later
 		}, 0);
 	},
@@ -902,7 +598,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			dp._fixSize(this.activeBlock);
 			this._fixSize();
 			
-			this.activeBlock.loadForVisible();
+			this.activeBlock.loadForVisible()
 		} else if (maxcol < this.maxCols) {
 			var result = {};
 			result.type = "column";
@@ -930,7 +626,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			dp._fixSize(this.activeBlock);
 			this._fixSize();
 			
-			this.activeBlock.loadForVisible();
+			this.activeBlock.loadForVisible()
 		} else if (maxrow < this.maxRows) {
 			var result = {};
 			result.type = "row";
@@ -997,8 +693,10 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	_cmdHighlight: function (result) {
 		var type = result.type;
 		if (type == "hide") {
-			this.hideHighlight(true);
+			this.hlArea.show = false;
+			this.hideHighlight();
 		} else if(type == "show") {
+			this.hlArea.show = true;
 			this.moveHighlight(result.left, result.top, result.right, result.bottom);
 		}
 	},
@@ -1040,6 +738,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			return;
 		} else
 			this._nfdown = false;
+
 		if (!_isEvtButton(evt, "lr"))
 			return;
 		
@@ -1129,8 +828,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 				firebtndown = (rx >= btn.imgleft && rx < right && ry >= btn.imgtop && ry < bottom); //click on AutoFilter button
 			}
 			if (firebtndown)
-				this._doBtndown(evt, btn.btntype, btn.$n(), btn);
-			else if (_isLeftMouseEvt(evt) || cmp.getAttribute('zs.t') == "SHighlight") {
+				this._doBtndown(evt, 'af', btn.$n(), btn);
+			else if (_isLeftMouseEvt(evt) || jq(cmp).attr('zs.t') == "SHighlight") {
 				sheet.dp.moveFocus(row, col, false, true, false, true);
 				var ls = this.getLastSelection();//cause of merge, focus might be change, get form last
 				this.selType = zss.SelDrag.SELCELLS;
@@ -1176,20 +875,19 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			}
 		} else if ((cmp = zkS.parentByZSType(elm, "SLheader")) != null 
 			|| (cmp = zkS.parentByZSType(elm, "STheader")) != null) {
-			var type = (cmp.getAttribute('zs.t') == "SLheader") ? zss.Header.VER : zss.Header.HOR,
+			var type = (jq(cmp).attr('zs.t') == "SLheader") ? zss.Header.VER : zss.Header.HOR,
 				row, col, onsel,	//process select row or column
-				ls = this.selArea.lastRange,
-				header = evt.target;
+				ls = this.selArea.lastRange;
 			this._lastmdstr = "h";
 			if (type == zss.Header.HOR) {
 				row = -1;
-				col = header.index;
+				col = cmp.ctrl.index;
 				if(col >= ls.left && col <= ls.right &&
 					ls.top == 0 && ls.bottom == this.maxRows - 1) {
 					onsel = true;
 				}
 			} else {
-				row = header.index;
+				row = cmp.ctrl.index;
 				col = -1;
 				if(row >= ls.top && row <= ls.bottom &&
 					ls.left == 0 && ls.right == this.maxCols - 1) {
@@ -1252,8 +950,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		if (this.isAsync())//wait async event, skip mouse click;
 			return;
 
-		//bug#1974069, leftkey & has last mouse down element, bug#zss-30 Cannot trigger hyperlink in Cell
-		if (_isLeftMouseEvt(evt) && this._lastmdelm && zkS.parentByZSType(this._lastmdelm, zk.ie8 ? ["SCell", "SHighlight", "SSelInner"] : ["SCell", "SHighlight"], this._lastmdelm.tagName.toLowerCase() == 'a' ? 4 : 1) != null) {
+		//bug#1974069, leftkey & has last mouse down element,
+		if (_isLeftMouseEvt(evt) && this._lastmdelm && zkS.parentByZSType(this._lastmdelm, zk.ie8 ? ["SCell", "SHighlight", "SSelInner"] : ["SCell", "SHighlight"], 1) != null) {
 			this._doMouseclick(evt, "lc", this._lastmdelm);
 		}
 		this._lastmdelm = null;
@@ -1276,115 +974,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			return;
 		this._doMouseclick(evt, "dbc");
 		evt.stop();
-	},
-	getStyleMenupopup: function () {
-		var p = this._styleMenupopup;
-		if (!p) {
-			var wgt = this._wgt;
-			p = this._styleMenupopup = new zss.MenupopupFactory(wgt).style();
-			p.setDisabled(wgt.getActionDisabled());
-			this.appendChild(p);
-		}
-		return p;
-	},
-	getRowHeaderMenupopup: function () {
-		var p = this._rowHeaderMenupopup;
-		if (!p) {
-			var wgt = this._wgt;
-			p = this._rowHeaderMenupopup = new zss.MenupopupFactory(wgt).rowHeader();
-			p.setDisabled(wgt.getActionDisabled());
-			this.appendChild(p);
-		}
-		return p;
-	},
-	showRowHeaderMenu: function (pageX, pageY) {
-		var show = this._wgt.isShowContextMenu();
-		if (show) {
-			var x = pageX + 5,
-				menu = this.getRowHeaderMenupopup();
-			menu.open(null, [x, pageY]);
-			this.openStyleMenupopup(x, menu);
-		}
-	},
-	getColumnHeaderMenupopup: function () {
-		var p = this._columnHeaderMenupopup;
-		if (!p) {
-			var wgt = this._wgt;
-			p = this._columnHeaderMenupopup = new zss.MenupopupFactory(this._wgt).columnHeader();
-			p.setDisabled(wgt.getActionDisabled());
-			this.appendChild(p);
-		}
-		return p;
-	},
-	showColumnHeaderMenu: function (pageX, pageY) {
-		var show = this._wgt.isShowContextMenu();
-		if (show) {
-			var x = pageX + 5,
-				menu = this.getColumnHeaderMenupopup();
-			menu.open(null, [x, pageY]);
-			this.openStyleMenupopup(x, menu);
-		}
-	},
-	getCellMenupopup: function () {
-		var p = this._cellMenupopup;
-		if (!p) {
-			var wgt = this._wgt;
-			p = this._cellMenupopup = new zss.MenupopupFactory(wgt).cell();
-			p.setDisabled(wgt.getActionDisabled());
-			this.appendChild(p);
-		}
-		return p;
-	},
-	showCellContextMenu: function (pageX, pageY) {
-		var show = this._wgt.isShowContextMenu();
-		if (show) {
-			var x = pageX + 5,
-				menu = this.getCellMenupopup();
-			menu.open(null, [x, pageY]);
-			this.openStyleMenupopup(x, menu);
-		}
-	},
-	setActionDisabled: function (actions) {
-		var show = this._wgt.isShowContextMenu();
-		if (show && actions) {
-			var cellPopup = this.getCellMenupopup();
-			if (cellPopup) {
-				cellPopup.setDisabled(actions);
-			}
-			var rowPopup = this.getRowHeaderMenupopup();
-			if (rowPopup) {
-				rowPopup.setDisabled(actions);
-			}
-			var colPopup = this.getColumnHeaderMenupopup();
-			if (colPopup) {
-				colPopup.setDisabled(actions);
-			}
-			var stylePopup = this.getStyleMenupopup();
-			if (stylePopup) {
-				stylePopup.setDisabled(actions);
-			}
-		}
-	},
-	openStyleMenupopup: function (x, refPop) {
-		var y = zk.parseInt(jq(refPop.$n()).css('top')) - 70;//70: space between menupopup
-		this.getStyleMenupopup().open(null, [x, y < 0 ? 0 : y]);
-	},
-	runAfterMouseClick: function (fn) {
-		var fns = this._afterMouseClick;
-		if (!fns) {
-			fns = this._afterMouseClick = [];
-		}
-		fns.push(fn);
-	},
-	doAfterMouseClick: function () {
-		var fns = this._afterMouseClick;
-		if (fns) {
-			var fn;
-			while (fn = fns.shift()) {
-				fn();
-			}
-			this._afterMouseClick = null;
-		}
 	},
 	/**
 	 * @param zk.Event, mouse event
@@ -1424,13 +1013,9 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			col = cellpos[1];
 			mdstr = "c_" + row + "_" + col;
 
-			if (this._lastmdstr == mdstr) {
-				if (type == 'rc') {
-					this.showCellContextMenu(mx, my);
-				}
+			if (this._lastmdstr == mdstr)
 				wgt.fireCellEvt(type, shx, shy, md1[2], row, col, mx, my);
-			}
-				
+
 			if (type == 'lc' && this.selArea) {
 				this.selArea._setHyperlinkElment(elm);
 				this.selArea._tryAndEndHyperlink(row, col, evt);
@@ -1474,23 +1059,22 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			my = evt.pageY;
 			shx = Math.round(mx - sheetofs[0]);
 			shy = Math.round(my - sheetofs[1]);
+			
 			var cellpos = zss.SSheetCtrl._calCellPos(sheet, mx, my, false),
 				cx = cellpos[4]; //x relative to cell 
 			row = cellpos[0];
 			col = cellpos[1];
 			
-			//try hyperlink, ZSS-21: Right click on hyperlink should not jump to the link
-			if (type == 'lc' && this.selArea) {
+			//try hyperlink
+			if (this.selArea) {
 				this.selArea._tryAndEndHyperlink(row, col, evt);
 			}
+			
 			mdstr = "c_" + row + "_" + col;
 			if (this._lastmdstr == mdstr) {
-				if (type == 'rc') {
-					this.showCellContextMenu(mx, my);
-				} else if (type == "dbc") {
-					sheet._enterEditing(null);
-				}
 				wgt.fireCellEvt(type, shx, shy, md1[2], row, col, mx, my);
+				if (type == "dbc")
+					sheet._enterEditing(null);
 			}
 		} else if ((cmp = zkS.parentByZSType(elm, "STheader",1)) != null ||
 			(cmp = zkS.parentByZSType(elm, "SLheader",1)) != null) {
@@ -1511,13 +1095,9 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 				col = -1;
 			}
 			mdstr = "h_" + row + "_" + col;
-			if (this._lastmdstr == mdstr) {
-				
-				this['show' + (headercmp.ctrl.type == 'V' ? 'Row' : 'Column') + 'HeaderMenu'](mx, my);
+			if (this._lastmdstr == mdstr)
 				wgt.fireHeaderEvt(type, shx, shy, md1[2], row, col, mx, my);
-			}
 		}
-		this.doAfterMouseClick();
 	},
 	_sendOnCellFocused: function (row, col) {
 		var wgt = this._wgt;
@@ -1547,8 +1127,9 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	_doKeypress: function (evt) {
 		if (this._skipress) //wait async event, skip
 			return;
-		var charcode = evt.which,
-			c = asciiChar(charcode == 0 && evt.keyCode == 9 ? keyCode : charcode);
+		
+		var charcode = evt.which;
+		var	c = asciiChar(charcode == 0 && evt.keyCode == 9 ? keyCode : charcode);
 		//ascii, not editing, not special key
 		if (c != null && !(evt.altKey || evt.ctrlKey) && this.state != zss.SSheetCtrl.EDITING) {
 			if (this.state == zss.SSheetCtrl.START_EDIT) //startEditing but not get response from server yet
@@ -1558,24 +1139,25 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 					this._clienttxt = c;
 			}
 			//bug #117: Barcode Scanner data incomplete
-			this._fireOnOpenAndEdit();
+			this._fireOnOpenAndEdit(); 				
 			evt.stop();
 		}
 	},
 	_enterEditing: function(evt) {
-		var p = this.getLastFocus();
-		this.dp.startEditing(evt, this.getCell(p.row, p.column).edit);
+		var pos = this.getLastFocus(),
+			row = pos.row,
+			col = pos.column,
+			cell = this.getCell(row, col);
+		this.dp.startEditing(evt, cell.edit);
 		this.dp._openEditbox();
 	},
 	_doKeydown: function(evt) {
 		this._skipress = false;
 		//wait async event, skip
 		//handle spreadsheet common keydown event
+
 		if (this.isAsync()) return;
 		
-		//ctrl-paste: avoid multi-paste same clipboard content to focus textarea
-		if (this._wgt._ctrlPasteDown)
-			evt.stop();
 		var keycode = evt.keyCode,
 			ctrl;
 		switch (keycode) {
@@ -1588,33 +1170,30 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			evt.stop();
 			break;
 		case 35: //End
-			var info = this.editingFormulaInfo;
-			if((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break; //editing
+			if(this.state != zss.SSheetCtrl.FOCUSED) break; //editing
 			this.dp.moveEnd(evt);
 			evt.stop();
 			break;
 		case 36: //Home
-			var info = this.editingFormulaInfo;
-			if((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
+			if(this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveHome(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 37: //Left
-			var info = this.editingFormulaInfo;
-			if((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
+			if(this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveLeft(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 38: //Up
-			var info = this.editingFormulaInfo;
-			if((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
+			if(this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveUp(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 9://tab;
 			if (this.state == zss.SSheetCtrl.EDITING){
 				if (evt.altKey || evt.ctrlKey)
 					break;
+
 				this.dp.stopEditing(evt.shiftKey ? "moveleft" : "moveright");//invoke move right after stopEdit
 				evt.stop();
 				break;
@@ -1628,16 +1207,14 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			}
 			break;
 		case 39: //Right
-			var info = this.editingFormulaInfo;
-			if ((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
+			if (this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveRight(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 40: //Down
-			var info = this.editingFormulaInfo;
-			if ((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
+			if (this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveDown(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 113: //F2
 			if(this.state == zss.SSheetCtrl.FOCUSED)
@@ -1647,7 +1224,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		case 13://Enter
 			if (this.state == zss.SSheetCtrl.EDITING){
 				if(evt.altKey || evt.ctrlKey){
-					this.dp.getEditor().newLine();
+					this.editor.newLine();
 					evt.stop();
 					break;
 				}
@@ -1662,7 +1239,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			break;
 		case 27://ESC
 			if (this.state == zss.SSheetCtrl.EDITING) {
-				this.dp.cancelEditing();
+				this.dp.cancelEditing(evt);
 				evt.stop();
 			} else if(this.state == zss.SSheetCtrl.FOCUSED) {
 				//TODO should i send onCancel here?
@@ -1671,35 +1248,17 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		}
 		//in my notebook,some keycode ex : LEFT(37) and RIGHT(39) will fire keypress after keydown,
 		//it confuse with the ascii value "%' and ''', so add this to do some controll in key press
-		if (!isAsciiCharkey(keycode)) {
+		if (!isAsciiCharkey(keycode))
 			this._skipress = true;
-		}
 	},
 	_doKeyup: function(evt) { //feature #161: Support copy&paste from clipboard to a cell
 		//if(this._skipress) delete this._skipress;
 		//check CTRL-V and do the copy on the sheet!
 		if (evt.ctrlKey && evt.keyCode == 86) {
-			var wgt = this._wgt,
-				sl = this,
-				//ZSS-169
-				fn = function () {
-					if (!wgt._doPasteFromServer) {//do paste from client when server doesn't do it
-						var focustag = sl.dp.focustag,
-							value = jq(focustag).val(),
-							pos = sl.dp._speedCopy(value);
-						
-						//Note. _speedCopy will fire edit cmd to server, set selection after response
-						if (pos)
-							wgt._onResponseCallback.push(function () {
-								sl._doCellSelection(pos.left, pos.top, pos.right, pos.bottom);
-							});
-					}	
-				};
-			if (wgt._sendAu) {//flag that indicate ZK send Au request. (cannot use zAu.processing(), it may be null since ZK use timeout to send request) 
-				wgt._onResponseCallback.push(fn); 
-			} else {
-				fn();
-			}
+			var focustag = this.dp.focustag,
+				value = jq(focustag).val(),
+				pos = this.dp._speedCopy(value);
+			this._doCellSelection(pos.left, pos.top, pos.right, pos.bottom);
 		}
 	},
 	/**
@@ -1715,28 +1274,27 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		if (h)
 			jq(sheetcmp).css('height', h);
 		
-		var self = this;
+		var local = this;
 		setTimeout(function(){
-			self._resize();
+			local._resize();
 		}, 0);
 	},
 	/**fix sp, tp and lp size*/
 	_fixSize: function () {
 		var sheetcmp = this.comp,
 			spcmp = this.sp.comp,
-			$n = zk(sheetcmp),
-			w = $n.offsetWidth() - 2,//2 is border width
-			h = $n.offsetHeight() - 2;//2 is border width
+			w = zk(sheetcmp).offsetWidth() - 2,//2 is border width
+			h = zk(sheetcmp).offsetHeight() - 2;//2 is border width
 		if (h <= 0)
 			//if user doesn't set the height of style sheet set height on it's parent, 
 			//then we will get a zero height, so , i assign a default height here
 			h = 100;
+
 		var barHeight = zkS._hasScrollBar(spcmp) ? zss.Spreadsheet.scrollWidth : 0,
 			barWidth = zkS._hasScrollBar(spcmp, true) ? zss.Spreadsheet.scrollWidth : 0,
 			zkdp = zk(this.dp.comp), //bug #61: Fronzen row/column does not comply with Spreadsheet's maxrows/maxcolumn
 			rw = Math.min(zkdp.offsetWidth() - this.leftWidth, w - this.leftWidth- barWidth),
 			rh = Math.min(zkdp.offsetHeight() - this.topHeight, h - this.topHeight - barHeight);
-		
 		this.tp._updateWidth(rw);
 		this.lp._updateHeight(rh);
 		this.sp._doScrolling();
@@ -1746,8 +1304,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	 * @return zss.Pos
 	 */
 	getLastFocus: function () {
-		if (!this.focusMark)
-			return null;
 		return new zss.Pos(this.focusMark.row, this.focusMark.column);
 	},
 	/**
@@ -1755,8 +1311,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	 * @return zss.Range
 	 */
 	getLastSelection: function () {
-		if (!this.selArea)
-			return null;
 		var range = this.selArea.lastRange;
 		return !range ? null : new zss.Range(range.left, range.top, range.right, range.bottom);
 	},
@@ -1805,8 +1359,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			this._setColumnWidth(col, width, fireevent, loadvis, hidden, metaid);
 	},
 	_setColumnWidth: function (col, width, fireevent, loadvis, hidden, metaid) {
-		var wgt = this._wgt,
-			sheetid = this.sheetid,
+		var sheetid = this.sheetid,
 			custColWidth = this.custColWidth,
 			oldw = custColWidth.getSize(col);
 		if (width < 0)
@@ -1834,8 +1387,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		}
 		cellwidth = zk.ie || zk.safari || zk.opera ? celltextwidth : width;
 		
-		var name = wgt.getSelectorPrefix(),
-			cssId = wgt.getSheetCSSId(),
+		var name = "#" + sheetid,
 			createbefor = ".zs_header";
 		if(zk.opera) //opera bug, it cannot insert rul to special position
 			createbefor = true;
@@ -1845,28 +1397,28 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			zsw = zkS.t(metaid) ? metaid : custColWidth.ids.next();
 			custColWidth.setCustomizedSize(col, width, zsw, hidden);
 			this._appendZSW(col, zsw);
-			this._wgt._cacheCtrl.getSelectedSheet().updateColumnWidthId(col, zsw);
 		} else {
 			zsw = zkS.t(metaid) ? metaid : meta[2];
 			custColWidth.setCustomizedSize(col, width, zsw, hidden);
 		}
 
 		if (width <= 0 || hidden)
-			zcss.setRule(name + " .zsw" + zsw, "display", "none", createbefor, cssId);
+			zcss.setRule(name + " .zsw" + zsw, "display", "none", createbefor, sheetid + "-sheet");
 		else {
-			zcss.setRule(name + " .zsw" + zsw, ["display", "width"], ["", cellwidth + "px"], createbefor, cssId);
-			zcss.setRule(name + " .zswi" + zsw, "width", celltextwidth + "px", createbefor, cssId);
+			zcss.setRule(name + " .zsw" + zsw, ["display", "width"], ["", cellwidth + "px"], createbefor, sheetid + "-sheet");
+			zcss.setRule(name + " .zswi" + zsw, "width", celltextwidth + "px", createbefor, sheetid + "-sheet");
 			//bug 1989680
 			if (fixpadding)
-				zcss.setRule(name + " .zsw" + zsw, "padding", "0px", createbefor, cssId);
+				zcss.setRule(name + " .zsw" + zsw, "padding", "0px", createbefor, sheetid + "-sheet");
 			else
-				zcss.setRule(name + " .zsw" + zsw, "padding", "", createbefor, cssId);
+				zcss.setRule(name + " .zsw" + zsw, "padding", "", createbefor, sheetid + "-sheet");
 		}
 
 		//set merged cell width;
 		var ranges = this.mergeMatrix.getRangesByColumn(col),
 			size = ranges.length,
-			range;
+			range,
+			cssid = sheetid + "-sheet" +((zk.opera) ? "-opera" : "");//opera bug, it cannot insert rul to special position
 		
 		for (var i = 0; i < size; i++) {
 			range = ranges[i];
@@ -1882,20 +1434,21 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			cellwidth = zk.ie || zk.safari || zk.opera ? celltextwidth : w;
 
 			if (w < 0)
-				zcss.setRule(name+" .zsmerge"+range.id,"display","none",true, cssId);
+				zcss.setRule(name+" .zsmerge"+range.id,"display","none",true,cssid);
 			else {
-				zcss.setRule(name+" .zsmerge"+range.id,"width", jq.px0(cellwidth), true, cssId);
-				zcss.setRule(name+" .zsmerge"+range.id+" .zscelltxt","width", jq.px0(celltextwidth), true, cssId);
+				zcss.setRule(name+" .zsmerge"+range.id,"width",cellwidth+"px",true,cssid);
+				zcss.setRule(name+" .zsmerge"+range.id+" .zscelltxt","width",celltextwidth+"px",true,cssid);
 				if (fixpadding)
-					zcss.setRule(name+" .zsmerge"+range.id,"padding", "0px",true, cssId);
+					zcss.setRule(name+" .zsmerge"+range.id,"padding", "0px",true,cssid);
 				else
-					zcss.setRule(name+" .zsmerge"+range.id,"padding", "", true, cssId);
+					zcss.setRule(name+" .zsmerge"+range.id,"padding", "", true,cssid);
 			}
 		}
 		
 		//adjust header
 		var tp = this.tp, 
-			header = tp ? tp.getHeader(col) : null;
+			headers = tp ? tp.headers : null,
+			header = headers ? _findHeader(headers, col) : null;
 		if (header)
 			header.setColumnHeader(hidden);
 		
@@ -1905,20 +1458,33 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			dp.updateWidth((hidden ? 0 : width) - oldw);
 		
 			//process text overflow when resize column
-			this.triggerOverflowColumn_(null, col + 1, true);
+			var block = this.activeBlock;
+			block._processTextOverflow(col);
 			
-			if (this.frozenCol >= col) {
+			if (this.cp.block)
+				this.cp.block._processTextOverflow(col);	
+
+			if(this.tp.block)
+				this.tp.block._processTextOverflow(col);	
+
+			if(this.lp.block)
+				this.lp.block._processTextOverflow(col);	
+			
+			var fzc = this.frozenCol;
+			
+			if (fzc >= col) {
 				this.lp._fixSize();
 				this.cp._fixSize();
 			}
 
 			//update datapanel padding
 			dp._fixSize(this.activeBlock);
+			
+			if(loadvis) this.activeBlock.loadForVisible();
 		
-			var self = this;
+			var local = this;
 			setTimeout(function(){
-				self._fixSize();
-				//self.triggerOverflowColumn_(null, col + 1, true);
+				local._fixSize();
 			}, 0);
 
 			this._wgt.syncWidgetPos(-1, col);
@@ -1930,10 +1496,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		if (fireevent) {
 			this._wgt.fire('onZSSHeaderModif', 
 					{sheetId: this.serverSheetId, type: "top", event: "size", index: col, newsize: width, id: zsw, hidden: hidden},
-					{toServer: true, sendAhead: true}, 25);//ZSS-180
+					{toServer: true}, 25);
 		}
-		//ZSS-180
-		if(col < this.maxCols && loadvis) this.activeBlock.loadForVisible();
 	},
 	_syncColFocusAndSelection: function(left, right) {
 		var focPos = this.getLastFocus(),
@@ -1982,8 +1546,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			this._setRowHeight(row, height, fireevent, loadvis, hidden, metaid);
 	},
 	_setRowHeight: function(row, height, fireevent, loadvis, hidden, metaid) {
-		var wgt = this._wgt,
-			sheetid = this.sheetid,
+		var sheetid = this.sheetid,
 			custRowHeight = this.custRowHeight,
 			oldh = custRowHeight.getSize(row);
 		height = height <= 0 ? 0 : height;
@@ -2010,32 +1573,30 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			zsh = zkS.t(metaid) ? metaid : custRowHeight.ids.next();
 			custRowHeight.setCustomizedSize(row, height, zsh, hidden);
 			this._appendZSH(row, zsh);
-			this._wgt._cacheCtrl.getSelectedSheet().updateRowHeightId(row, zsh);
 		} else {
 			zsh = zkS.t(metaid) ? metaid : meta[2];
 			custRowHeight.setCustomizedSize(row, height, zsh, hidden);
 		}
 		
-		var name = wgt.getSelectorPrefix(),
-			cssId = wgt.getSheetCSSId(),
-			createbefor = ".zs_header";
+		var createbefor = ".zs_header";
 		if (zk.opera)//opera bug, it cannot insert rul to special position
 			createbefor = true;
 
 		if (height <= 0 || hidden) {
-			zcss.setRule(name + " .zslh" + zsh, "display", "none", createbefor, cssId);
-			zcss.setRule(name + " .zsh" + zsh, "display", "none", createbefor, cssId);
+			zcss.setRule(name + " .zslh" + zsh, "display", "none", createbefor, this.sheetid + "-sheet");
+			zcss.setRule(name + " .zsh" + zsh, "display", "none", createbefor, this.sheetid + "-sheet");
 		} else {
-			zcss.setRule(name + " .zsh" + zsh, ["display", "height"],["", height + "px"], createbefor, cssId);
-			zcss.setRule(name + " .zshi" + zsh, "height", cellheight + "px", createbefor, cssId);//both zscell and zscelltxt
+			zcss.setRule(name + " .zsh" + zsh, ["display", "height"],["", height + "px"], createbefor, this.sheetid+"-sheet");
+			zcss.setRule(name + " .zshi" + zsh, "height", cellheight + "px", createbefor, this.sheetid + "-sheet");//both zscell and zscelltxt
 			var h2 = (height > 0) ? height - 1 : 0;
-			zcss.setRule(name + " .zslh" + zsh, ["display", "height", "line-height"], ["", h2 + "px", h2 + "px"], createbefor, cssId);
+			zcss.setRule(name + " .zslh" + zsh, ["display", "height", "line-height"], ["", h2 + "px", h2 + "px"], createbefor, this.sheetid + "-sheet");
 		}
 		
 		//set merged cell height;
 		var ranges = this.mergeMatrix.getRangesByRow(row),
 			size = ranges.length,
-			range;
+			range,
+			cssid = sheetid + "-sheet" +((zk.opera) ? "-opera" : "");//opera bug, it cannot insert rul to special position
 		
 		for (var i = 0; i < size; i++) {
 			range = ranges[i];
@@ -2046,16 +1607,17 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			cellheight = zk.ie || zk.safari || zk.opera ? celltextheight : h;
 
 			if (h < 0)
-				zcss.setRule(name+" .zsmerge"+range.id,"display","none",true, cssId);
+				zcss.setRule(name+" .zsmerge"+range.id,"display","none",true,cssid);
 			else {
-				zcss.setRule(name+" .zsmerge"+range.id,"height", jq.px0(cellheight), true, cssId);
-				zcss.setRule(name+" .zsmerge"+range.id+" .zscelltxt","height", jq.px0(celltextheight),true, cssId);
+				zcss.setRule(name+" .zsmerge"+range.id,"height",cellheight+"px",true,cssid);
+				zcss.setRule(name+" .zsmerge"+range.id+" .zscelltxt","height",celltextheight+"px",true,cssid);
 			}
 		}
 		
 		//adjust header
 		var lp = this.lp,
-			header = lp ? lp.getHeader(row) : null;
+			headers = lp ? lp.headers : null,
+			header = headers ? _findHeader(headers, row) : null;
 		if (header)
 			header.setRowHeader(hidden);
 		
@@ -2071,53 +1633,59 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			}
 	
 			dp._fixSize(this.activeBlock);
+			
+			if (loadvis) this.activeBlock.loadForVisible();
 		
 			var local = this;
 			setTimeout(function () {
 				local._fixSize();
 			}, 0);
-			
+
 			this._wgt.syncWidgetPos(row, -1);
 		}
 		//sync focus and selection area
 		this._syncRowFocusAndSelection(row, row);
-		this.fire('onRowHeightChanged', {row: row});
-
+		this.activeBlock.onRowHeightChanged(row);
 		if (fireevent) {
 			this._wgt.fire('onZSSHeaderModif', 
 					{sheetId: this.serverSheetId, type: "left", event: "size", index: row, newsize: height, id: zsh, hidden: hidden},
-					{toServer: true, sendAhead: true}, 25);//ZSS-180
+					{toServer: true}, 25);
 		}
-		//ZSS-180
-		if (row < this.maxRows && loadvis) this.activeBlock.loadForVisible();
+
 	},
 	_updateText: function (result) {
-		var cell = this.activeBlock.getCell(result.r, result.c);
-		if (cell)//update if cell exist 
-			cell.setText(result.val, true);
+		var row = result.r,
+			col = result.c,
+			cell = this.activeBlock.getCell(row, col);
+		if (cell)//update if cell exist
+			cell._setText(result.val);
 	},
-	/**
-	 * Update cells
-	 */
-	update_: function (tRow, lCol, bRow, rCol) {
-		var cb = this.cp.block,
-			tb = this.tp.block,
-			lb = this.lp.block;
-		this.activeBlock.update_(tRow, lCol, bRow, rCol);
-		if (cb)
-			cb.update_(tRow, lCol, bRow, rCol);
-		if (tb)
-			tb.update_(tRow, lCol, bRow, rCol);
-		if (lb)
-			lb.update_(tRow, lCol, bRow, rCol);
+	_updateCell: function (result) {
+		var row = result.r,
+			col = result.c,
+			cell = this.activeBlock.getCell(row, col),
+			parm = {"txt": result.val,"edit":result.edit};
+		zkS.copyParm(result, parm, ["st", "ist", "wrap", "hal", "vtal", "drh", "lock", "rbo", "merr", "merl", "mert", "merb"]);
 		
-		/* ZSS-169: prepare client side paste src when user set selection by drag cells 
-		//feature #26: Support copy/paste value to local Excel		
-		var ls = this.getLastSelection();
-		if (tRow >= ls.top && bRow <= ls.bottom && lCol >= ls.left && rCol <= ls.right) {
-			this._prepareCopy(debug);
+		if (cell)//update when cell exist
+			zss.Cell.updateCell(cell, parm);
+
+		if (this.cp.block) {
+			cell = this.cp.block.getCell(row, col);
+			if (cell) zss.Cell.updateCell(cell, parm);
 		}
-		*/
+		if (this.tp.block) {
+			cell = this.tp.block.getCell(row, col);
+			if (cell) zss.Cell.updateCell(cell, parm);
+		}
+		if (this.lp.block) {
+			cell = this.lp.block.getCell(row, col);
+			if (cell) zss.Cell.updateCell(cell, parm);
+		}
+		//feature #26: Support copy/paste value to local Excel
+		var ls = this.getLastSelection();
+		if (row >= ls.top && row <= ls.bottom && col >= ls.left && col <= ls.right)
+			this._prepareCopy();
 	},
 	_updateHeaderSelectionCss: function (range, remove) {
 		var top = range.top,
@@ -2137,22 +1705,10 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	 * Sets whether display the gridlines for this sheet.
 	 */
 	setDisplayGridlines: function (show) {
-		var wgt = this._wgt,
+		var sheetid = this.sheetid,
+			name = '#' + sheetid,
 			bc = show ? '':'#FFFFFF';
-		zcss.setRule(wgt.getSelectorPrefix() + ' .zscell', ['border-bottom-color', 'border-right-color'],[bc, bc], true, wgt.getSheetCSSId());
-		this.fireDisplayGridlines(show);
-	},
-	deferFireCellSelection: function (left, top, right, bottom) {
-		var id = this._fireCellSelectionId,
-			self = this;
-		if (id) {
-			clearTimeout(id);
-		}
-		this._fireCellSelectionId = setTimeout(function () {
-			self.fire('onCellSelection', {left: left, top: top, right: right, bottom: bottom});
-			//ZSS 171
-			self._skipInsertCellRef = false;
-		}, 50);
+		zcss.setRule(name + ' .zscell', ['border-bottom-color', 'border-right-color'],[bc, bc], true, sheetid+'-sheet');
 	},
 	/**
 	 * Sets the cell's selection area and display it
@@ -2162,7 +1718,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	 * @param int right column end index
 	 * @param int bottom row end index
 	 * @param boolean snap whether snap to merge cell border
-	 * @param boolean not trigger DOM Element focus event
+	 * @param boolean not trigger focus
 	 */
 	moveCellSelection: function (left, top, right, bottom, snap, noTrigger) {
 		var lastRange = this.selArea.lastRange;
@@ -2206,8 +1762,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		}
 		
 		var selRange = new zss.Range(left, top, right, bottom);
-		this.state == zss.SSheetCtrl.START_EDIT ? 
-				this.fire('onCellSelection', {left: left, top: top, right: right, bottom: bottom}) : this.deferFireCellSelection(left, top, right, bottom);
 		this.selArea.relocate(selRange);
 		
 		if (show) {
@@ -2233,45 +1787,20 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	},
 	//feature #26: Support copy/paste value to local Excel
 	_prepareCopy: function () {
-		var range =  this._wgt._cacheCtrl.getSelectedSheet(),
-			ls = this.getLastSelection(),
-			top = ls.top,
-			btm = ls.bottom,
-			left = ls.left,
-			right = ls.right,
-			result = '';
-		if (range) {
-			var rows = range.rows;
-			for(var r = top; r <= btm; ++r) {
-				var row = rows[r];
-				for(var c = left; c <= right; ++c) {
-					var val = '';
-					if (row) {
-						var cell = row.cells[c];
-						if (cell) {
-							val = cell.formatText;
-						}
-					}
-					result += val;
-					if (c < ls.right)
-						result+='\t';
-					
-				}
-				result += '\n';
+		var ls = this.getLastSelection(),
+			result='';
+		for(var r = ls.top; r <= ls.bottom; ++r) {
+			for(var c = ls.left; c <= ls.right; ++c) {
+				var cell = this.getCell(r, c),
+					val = !cell ? null : cell.getPureText();
+				if (val != null)
+					result+=val;
+				if (c < ls.right)
+					result+='\t';
 			}
-		} else {
-			for(var r = top; r <= btm; ++r) {
-				for(var c = left; c <= right; ++c) {
-					var cell = this.getCell(r, c),
-						val = !cell ? null : cell.getPureText();
-					if (val != null)
-						result+=val;
-					if (c < right)
-						result+='\t';
-				}
-				result+='\n';
-			}
+			result+='\n';
 		}
+		
 		if (this.state != zss.SSheetCtrl.FOCUSED)
 			return;
 		var focustag = this.dp.focustag;
@@ -2294,21 +1823,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 
 		if (this.cp.selArea)
 			this.cp.selArea.hideArea();
-
-		var lastRange = this.selArea.lastRange;
-		if (lastRange)
-			this._updateHeaderSelectionCss(lastRange, true);
-	},
-	showCellSelection: function () {
-		this.selArea.showArea();
-		if (this.tp.selArea)
-			this.tp.selArea.showArea();
-
-		if (this.lp.selArea)
-			this.lp.selArea.showArea();
-
-		if (this.cp.selArea)
-			this.cp.selArea.showArea();
 
 		var lastRange = this.selArea.lastRange;
 		if (lastRange)
@@ -2358,9 +1872,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	 * Sets cell's focus mark
 	 * @param int row row index
 	 * @param int col column index
-	 * @param boolean noEvt indicate whether shall fire onFocused or not
 	 */
-	moveCellFocus: function (row, col, noEvt) {
+	moveCellFocus: function (row, col) {
 		var show = !(this.state == zss.SSheetCtrl.NOFOCUS),
 			cell = this.getCell(row, col);
 		if (cell && cell.merl < col) {//check if a merged cell
@@ -2368,9 +1881,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			row = cell.mert;
 		}
 		this.focusMark.relocate(row, col);
-		if (!noEvt) {
-			this.fire('onFocused', {row: row, col: col});
-		}
 		if (show)
 			this.focusMark.showMark();
 		if (this.tp.focusMark) {
@@ -2605,10 +2115,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	 * @param int bottom
 	 */
 	moveHighlight: function (left, top, right, bottom) {
-		
 		//1995691 Highlight doesn't showup after invalidate
 		var show = this.hlArea.show;
-		
 		if (left < 0 || top < 0 || right < 0 || bottom < 0) {
 			this.hideHighlight();
 			return;
@@ -2616,39 +2124,26 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		var hlRange = new zss.Range(left, top, right, bottom);
 		this.hlArea.relocate(hlRange);
 		
-		this.hlArea.show = true;
-		this.hlArea.showArea();
+		if (show)
+			this.hlArea.showArea();
 
 		if (this.tp.hlArea) {
 			this.tp.hlArea.relocate(hlRange);
-			if (show) 
-				this.tp.hlArea.showArea();
+			if (show) this.tp.hlArea.showArea();
 		}
 		if (this.lp.hlArea) {
 			this.lp.hlArea.relocate(hlRange);
-			if (show) 
-				this.lp.hlArea.showArea();
+			if (show) this.lp.hlArea.showArea();
 		}
 		if (this.cp.hlArea) {
 			this.cp.hlArea.relocate(hlRange);
-			if (show) 
-				this.cp.hlArea.showArea();
+			if (show) this.cp.hlArea.showArea();
 		}
-	},
-	getLastHighlight: function () {
-		var range = this.hlArea.lastRange;
-		return !range ? null : new zss.Range(range.left, range.top, range.right, range.bottom);
-	},
-	isHighlightVisible: function () {
-		return this.hlArea.isVisible();
 	},
 	/**
 	 * Hides the highlight area
 	 */
-	hideHighlight: function(clear){
-		if (clear) {
-			this.hlArea.lastRange = new zss.Range(-1, -1, -1, -1);
-		}
+	hideHighlight: function(){
 		this.hlArea.hideArea();
 		if (this.tp.hlArea)
 			this.tp.hlArea.hideArea();
@@ -2691,6 +2186,12 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		this.info.hideInfo();
 	},
 	/**
+	 * Display busy
+	 */
+	showBusy: function (show) {
+		jq(this.busycmp).css('visibility', show ? 'visible' : 'hidden');
+	},
+	/**
 	 * Display mark
 	 */
 	showMask: function (show, txt) {
@@ -2717,20 +2218,14 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			fzc = this.frozenCol,
 			cell = null;
 		
-		if (row <= fzr && col <= fzc) { //corner
-			var cp = this.cp;
-			cell = cp && cp.block ? cp.block.getCell(row, col) : null
-		}
-		else if(fzr > 0 && row <= fzr) {
-			var tp = this.tp;
-			cell = tp && tp.block ? tp.block.getCell(row, col) : null; //top panel
-		}
-		else if(fzc > 0 && col <= fzc)  {
-			var lp = this.lp;
-			cell = lp && lp.block ? lp.block.getCell(row, col) : null; //left panel.
-		} else {
+		if (row <= fzr && col <= fzc)
+			cell = this.cp.block.getCell(row, col); //corner
+		else if(row <= fzr) 
+			cell = this.tp.block.getCell(row, col); //top panel
+		else if(col <= fzc) 
+			cell = this.lp.block.getCell(row, col); //left panel.
+		else 
 			cell = this.activeBlock.getCell(row, col); //data panel
-		} 
 		return cell;
 	},
 	/**
@@ -2761,8 +2256,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	sendSyncblock: function (now) {
 		var spcmp = this.sp.comp,
 			dp = this.dp,
-			brange = this.activeBlock.range,
-			rect = this._wgt._cacheCtrl.getSelectedSheet().rect;
+			brange = this.activeBlock.range;
 
 		this._wgt.fire('onZSSSyncBlock', {
 			sheetId: this.sheetid,
@@ -2778,10 +2272,10 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			fetchTop: -1,
 			fetchWidth: -1,
 			fetchHeight: -1,
-			rangeLeft: rect.left,
-			rangeTop: rect.top,
-			rangeRight: rect.right,
-			rangeBottom: rect.bottom
+			rangeLeft: -1,
+			rangeTop: -1,
+			rangeRight: -1,
+			rangeBottom: -1
 		}, now ? {toServer: true} : null, (now ? 25 : -1));
 	},
 	_insertNewColumn: function (col, size, extnm) {
@@ -2827,24 +2321,22 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			top = result.top,
 			right = result.right,
 			bottom = result.bottom,
-			sheetid = this.sheetid,
-			cssid = sheetid + "-sheet" + ((zk.opera) ? "-opera" : ""),//opera bug, it cannot insert rul to special position
-			name = "#" + sheetid,
-			cBlock = this.cp.block,
-			tBlock = this.tp.block,
-			lBlock = this.lp.block;
+			sheetid = this.sheetid;
+		
+		var cssid = sheetid + "-sheet" + ((zk.opera) ? "-opera" : ""),//opera bug, it cannot insert rul to special position
+			name = "#" + sheetid;
 		zcss.removeRule(name + " .zsmerge" + id, cssid);
 		zcss.removeRule(name + " .zsmerge" + id + " .zscelltxt", cssid);
 		
 		this.mergeMatrix.removeMergeRange(id);
 		this.activeBlock.removeMergeRange(id, left, top, right, bottom);
 
-		if(cBlock)
-			cBlock.removeMergeRange(id, left, top, right, bottom);
-		if(tBlock)
-			tBlock.removeMergeRange(id, left, top, right, bottom);
-		if(lBlock)
-			lBlock.removeMergeRange(id, left, top, right, bottom);
+		if(this.cp.block)
+			this.cp.block.removeMergeRange(id, left, top, right, bottom);
+		if(this.tp.block)
+			this.tp.block.removeMergeRange(id, left, top, right, bottom);
+		if(this.lp.block)
+			this.lp.block.removeMergeRange(id, left, top, right, bottom);
 	},
 	_addMergeRange: function (result) {
 		var id = result.id,
@@ -2853,79 +2345,31 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			right = result.right,
 			bottom = result.bottom,
 			width = result.width,
-			height = result.height,
+			height = result.height;
+
+		var cssid = this.sheetid + "-sheet" + ((zk.opera) ? "-opera" : ""),//opera bug, it cannot insert rul to special position
 			cp = this.cellPad,
 			celltextwidth = width - 2 * cp - 1,
 			cellwidth = zk.ie || zk.safari || zk.opera ? celltextwidth : width,
 			celltextheight = height - 1,
 			cellheight = zk.ie || zk.safari || zk.opera ? celltextheight : height,
-			wgt = this._wgt,
-			cssId = wgt.getSheetCSSId(),
-			name = wgt.getSelectorPrefix(),
-			cBlock = this.cp.block,
-			tBlock = this.tp.block,
-			lBlock = this.lp.block;
-
-		zcss.setRule(name + " .zsmerge" + id, "width", cellwidth + "px", true, cssId);
-		zcss.setRule(name + " .zsmerge" + id + " .zscelltxt", "width", celltextwidth + "px", true, cssId);
-		zcss.setRule(name + " .zsmerge" + id, "height", cellheight + "px", true, cssId);
-		zcss.setRule(name + " .zsmerge" + id + " .zscelltxt", "height", celltextheight + "px", true, cssId);
+			name = "#" + this.sheetid;
+		zcss.setRule(name + " .zsmerge" + id, "width", cellwidth + "px", true, cssid);
+		zcss.setRule(name + " .zsmerge" + id + " .zscelltxt", "width", celltextwidth + "px", true, cssid);
+		zcss.setRule(name + " .zsmerge" + id, "height", cellheight + "px", true, cssid);
+		zcss.setRule(name + " .zsmerge" + id + " .zscelltxt", "height", celltextheight + "px", true, cssid);
 		
-		this.mergeMatrix.addMergeRange(id, left, top, right, bottom);	
+		this.mergeMatrix.addMergeRange(id, left, top, right, bottom);		
 		this.activeBlock.addMergeRange(id, left, top, right, bottom);
-		
-		if(cBlock)
-			cBlock.addMergeRange(id, left, top, right, bottom);
-		if(tBlock)
-			tBlock.addMergeRange(id, left, top, right, bottom);
-		if(lBlock)
-			lBlock.addMergeRange(id, left, top, right, bottom);
+
+		if(this.cp.block)
+			this.cp.block.addMergeRange(id, left, top, right, bottom);
+		if(this.tp.block)
+			this.tp.block.addMergeRange(id, left, top, right, bottom);
+		if(this.lp.block)
+			this.lp.block.addMergeRange(id, left, top, right, bottom);
 		
 		this.moveCellFocus(top, left);		
-	},
-	afterKeyDown_: function (wevt) {
-		var wgt = this._wgt; 
-		wevt.target = wgt; //mimic as keydown directly sent to wgt
-		return wgt.afterKeyDown_(wevt, true);
-	},
-	redraw: function (out) {
-		var wgt = this._wgt,
-			uuid = this.uuid,
-			activeBlock = this.activeBlock,
-			topPanel = this.tp,
-			leftPanel = this.lp,
-			cornerPanel = this.cp,
-			hidecolhead = wgt.isColumnHeadHidden(),
-			hiderowhead = wgt.isRowHeadHidden();
-		out.push('<div ' + this.domAttrs_() + '><textarea id="', uuid, '-fo" class="zsfocus"></textarea>',
-				'<div id="', uuid, '-mask" class="zssmask" zs.t="SMask"><div class="zssmask2"><div id="', uuid, '-masktxt" class="zssmasktxt" align="center"></div></div></div>', 
-				'<div id="', uuid, '-sp" class="zsscroll" zs.t="SScrollpanel">',
-				'<div id="', uuid, '-dp" class="zsdata" zs.t="SDatapanel">',
-				'<div id="', uuid, '-datapad" class="zsdatapad"></div>');
-
-		if (activeBlock)
-			activeBlock.redraw(out);
-		
-		out.push(
-				'<div id="', uuid, '-select" class="zsselect" zs.t="SSelect"><div id="', uuid, '-selecti" class="zsselecti" zs.t="SSelInner"></div><div class="zsseldot" zs.t="SSelDot"></div></div>',
-				'<div id="', uuid, '-selchg" class="zsselchg" zs.t="SSelChg"><div id="', uuid, '-selchgi" class="zsselchgi"></div></div>',
-				'<div id="', uuid, '-focmark" class="zsfocmark" zs.t="SFocus"><div id="', uuid, '-focmarki" class="zsfocmarki"></div></div>',
-				'<div id="', uuid, '-highlight" class="zshighlight" zs.t="SHighlight"><div id="', uuid, '-highlighti" ,class="zshighlighti" zs.t="SHlInner"></div></div>',
-				'</div><div id="', uuid, '-wp" class="zswidgetpanel" zs.t="SWidgetpanel"></div><div id="', uuid, '-pp" class="zspopuppanel"></div></div>');
-		
-		if (topPanel)
-			topPanel.redraw(out);
-		
-		if (leftPanel)
-			leftPanel.redraw(out);
-		
-		out.push(this.inlineEditor.redrawHTML_() + '<span id="', uuid, '-sinfo" class="zsscrollinfo"><span class="zsscrollinfoinner"></span></span>',
-				'<span id="', uuid, '-info" class="zsinfo"><span class="zsinfoinner"></span></span>');
-		
-		if (cornerPanel)
-			cornerPanel.redraw(out);
-		
-	    out.push('</div>');
 	}
 }, {
 	NOFOCUS: 0,
@@ -2934,33 +2378,44 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	EDITING: 6, //3*2 ,
 	STOP_EDIT: 9, //4*2 + 1;//async state is odd
 	_initInnerComp: function (sheet, row) {
-		sheet.maskcmp = sheet.$n('mask');
-		sheet.busycmp = sheet.$n('busy');
-		sheet.spcmp = sheet.$n('sp');//scroll panel comp
-		sheet.topcmp = sheet.$n('top');//top panel comp
-		sheet.leftcmp = sheet.$n('left');//left panel comp
-		sheet.wpcmp = sheet.$n('wp');//widget panel comp
-		sheet.sinfocmp = sheet.$n('sinfo');
-		sheet.infocmp = sheet.$n('info');
+		var wgt = sheet._wgt;
+		sheet.maskcmp = wgt.$n('mask');
+		sheet.busycmp = wgt.$n('busy');
+		sheet.spcmp = wgt.$n('sp');//scroll panel comp
+		sheet.topcmp = wgt.$n('top');//top panel comp
+		sheet.leftcmp = wgt.$n('left');//left panel comp
+		sheet.dpcmp = wgt.$n('dp');//data panel comp
+		sheet.wpcmp = wgt.$n('wp');//widget panel comp
+		sheet.sinfocmp = wgt.$n('sinfo');
+		sheet.infocmp = wgt.$n('info');
+		sheet.cpcmp = wgt.$n('co');
 
+
+		sheet.sp = new zss.ScrollPanel(sheet);
 		sheet.dp = new zss.DataPanel(sheet);
-		sheet.sp = new zss.ScrollPanel(sheet); //ScrollPanel depends DataPanel
+		sheet.tp = new zss.TopPanel(sheet, sheet.topcmp);
+		sheet.lp = new zss.LeftPanel(sheet, sheet.leftcmp);
+		sheet.cp = new zss.CornerPanel(sheet);
 		
-		var dppadcmp = sheet.$n('datapad');
+		var dppadcmp = wgt.$n('datapad'),
+			blockcmp = wgt.$n('block');
+	
+		sheet.activeBlock = new zss.MainBlockCtrl(sheet, blockcmp, 0, 0);
+		sheet.activeBlock.loadByComp(blockcmp, row);
 		
-		var next = sheet.$n('select');
-		if (next.getAttribute('zs.t') == "SSelect") {
+		var next = wgt.$n('select');
+		if (jq(next).attr('zs.t') == "SSelect") {
 			sheet.selareacmp = next;
-			sheet.selchgcmp = sheet.$n('selchg');
-			sheet.focusmarkcmp = sheet.$n('focmark');
-			sheet.hlcmp = sheet.$n('highlight');
-			sheet.editorcmp = sheet.$n('eb');
+			sheet.selchgcmp = wgt.$n('selchg');
+			sheet.focusmarkcmp = wgt.$n('focmark');
+			sheet.hlcmp = wgt.$n('highlight');
+			sheet.editorcmp = wgt.$n('eb');
 			
 			sheet.focusMark = new zss.FocusMarkCtrl(sheet, sheet.focusmarkcmp, sheet.initparm.focus.clone());
 			sheet.selArea = new zss.SelAreaCtrl(sheet, sheet.selareacmp, sheet.initparm.selrange.clone());
 			sheet.selChgArea = new zss.SelChgCtrl(sheet, sheet.selchgcmp);
 			sheet.hlArea = new zss.Highlight(sheet, sheet.hlcmp,sheet.initparm.hlrange.clone(), "inner");
-			//sheet.inlineEditor = new zss.Editbox(sheet);
+			sheet.editor = new zss.Editbox(sheet);
 		} else {
 			//error
 			//zk.log('error to parse component');
@@ -2971,10 +2426,30 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		sheet.sinfo = new zss.ScrollInfo(sheet, sheet.sinfocmp);
 		sheet.info = new zss.Info(sheet, sheet.infocmp);
 	},
+	_getColumnCells: function (sheet, index) {
+		var cells = [],
+			next = jq(sheet.dpcmp).children("DIV:first")[0];
+		while (next) {
+			if (jq(next).attr('zs.t') == "SRow") {
+				var nextcell = jq(next).children("DIV:first")[0];
+				while (nextcell) {
+					if (nextcell.ctrl.c == index) {
+						cells.push(nextcell);
+						break;
+					}
+					nextcell = jq(nextcell).next("DIV")[0];
+				}
+			}
+			next = jq(next).next("DIV")[0];	
+		}
+		return cells;
+	},
 	_getVisibleRange: function (sheet) {
-		var //scrollSize = zss.Spreadsheet.scrollWidth, 
-			sp = sheet.sp,
+		var sp = sheet.sp,
 			spcmp = sp.comp,
+			block = sheet.activeBlock,
+			leftCell = block.range.left,
+			bottomCell = block.range.bottom,
 			scrollLeft = spcmp.scrollLeft,
 			scrollTop = spcmp.scrollTop,
 			custColWidth = sheet.custColWidth,
@@ -3034,6 +2509,27 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		var xcol = custColWidth.getCellIndex(rx),
 			xrow = custRowHeight.getCellIndex(ry);
 		return [xrow[0], xcol[0], rx, ry, xcol[1], xrow[1]];
+	},
+	/* static, get current sheet obj */
+	_curr: function (obj) {
+		var cmp = zss.SSheetCtrl._currcmp(obj);
+		if (cmp != null && cmp.ctrl) return cmp.ctrl;
+		return null;
+	},
+	_currcmp: function(obj) {
+		if (typeof obj == "string")
+			return zk.Widget.$(obj).$n();
+
+		if (obj.sheetid)
+			return zk.Widget.$(obj.sheetid).$n();
+
+		if (obj.ctrl)
+			return zk.Widget.$(obj.ctrl.sheetid).$n();
+
+		return null;
+	},
+	_assignSheet: function (ctrl) {
+		ctrl.sheet = zss.SSheetCtrl._curr(ctrl.sheetid);
 	}
 });
 })();

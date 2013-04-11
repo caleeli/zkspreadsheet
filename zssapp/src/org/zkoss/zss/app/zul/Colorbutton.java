@@ -23,10 +23,10 @@ import org.zkoss.lang.Objects;
 import org.zkoss.zk.au.AuRequest;
 import org.zkoss.zk.ui.Desktop;
 import org.zkoss.zk.ui.UiException;
+import org.zkoss.zk.ui.WebApps;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.sys.ContentRenderer;
-import org.zkoss.zk.ui.util.DeferredValue;
 import org.zkoss.zul.impl.Utils;
 import org.zkoss.zul.impl.XulElement;
 
@@ -112,7 +112,7 @@ public class Colorbutton extends XulElement {
 			dt.getExecution().encodeURL(_src): null;
 	}
 
-	private class EncodedImageURL implements DeferredValue {
+	private class EncodedImageURL implements org.zkoss.zk.ui.util.DeferredValue {
 		public Object getValue() {
 			return getEncodedImageURL();
 		}

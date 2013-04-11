@@ -253,15 +253,10 @@ public class AutoFilterCtrl extends GenericForwardComposer {
 		}
 		
 		_filterListbox.setItemRenderer(new ListitemRenderer() {
+			@Override
 			public void render(Listitem item, Object data) throws Exception {
 				RowInfo info = (RowInfo)data;
 				item.setLabel(info.display);
-			}
-
-			@Override
-			public void render(Listitem item, Object data, int index)
-					throws Exception {
-				render(item, data);
 			}
 		});
 	}

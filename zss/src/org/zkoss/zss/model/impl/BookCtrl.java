@@ -12,10 +12,6 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model.impl;
 
-import java.util.List;
-
-import org.zkoss.poi.ss.usermodel.PivotCache;
-import org.zkoss.poi.ss.util.AreaReference;
 import org.zkoss.zss.engine.RefBook;
 import org.zkoss.zss.model.Book;
 
@@ -37,16 +33,4 @@ public interface BookCtrl {
 	 * @return next sheet id.
 	 */
 	public Object nextSheetId();
-	
-	/**
-	 * Return next focus id for the UI.
-	 * @return next focus id.
-	 */
-	public String nextFocusId();
-	
-	public void addFocus(Object focus);
-	
-	public void removeFocus(Object focus);
-	
-	public boolean containsFocus(Object focus);
 }

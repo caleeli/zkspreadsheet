@@ -121,7 +121,10 @@ public class FileHelper {
 			ss.setBookFromStream(input, info.getFileName());
 			return true;
 		} catch (FileNotFoundException e) {
-			Messagebox.show("Can not find file: " + info.getFileName());
+			try {
+				Messagebox.show("Can not find file: " + info.getFileName());
+			} catch (InterruptedException e1) {
+			}
 		} finally {
 			if (input != null)
 				try {
@@ -134,13 +137,11 @@ public class FileHelper {
 	}
 	
 	public static void openNewSpreadsheet(Spreadsheet ss) {
-		InputStream input = null;
+		FileInputStream input = null;
 		try {
-			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			input = loader.getResourceAsStream("web/zssapp/xls/Untitled");
-			
+			input = new FileInputStream(getSpreadsheetStorageFolderPath() + EMPTY_FILE_NAME);
 			ss.setBookFromStream(input, EMPTY_FILE_NAME);
-		} catch (Exception e) {
+		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		} finally {
 			if (input != null)
@@ -167,8 +168,11 @@ public class FileHelper {
 			c.export(wb, out);
 			SpreadSheetMetaInfo.add(info);
 		} catch (IOException e) {
-			Messagebox.show("Save excel failed");
-			e.printStackTrace();
+			try {
+				Messagebox.show("Save excel failed");
+				e.printStackTrace();
+			} catch (InterruptedException e1) {
+			}
 			return;
 		} finally {
 			if (out != null)
@@ -212,7 +216,10 @@ public class FileHelper {
 		try {
 			SpreadSheetMetaInfo.delete(info);
 		} catch (IOException e) {
-			Messagebox.show("Delete file failed");
+			try {
+				Messagebox.show("Delete file failed");
+			} catch (InterruptedException e1) {
+			}
 		}
 	}
 

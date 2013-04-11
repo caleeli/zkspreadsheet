@@ -13,9 +13,9 @@ public class SS_045_Test extends SSAbstractTestCase {
     	verifyTrue(jq(".toolbarMask").isVisible());
     	verifyFalse(jq("$closeBtn").isVisible());
     	
-    	click(jq("$fileMenu"));
+    	click("jq('$fileMenu button.z-menu-btn')");
     	waitResponse();
-    	click(jq("$openFile"));
+    	click("jq('$openFile a.z-menu-item-cnt')");
     	waitResponse();
     	
     	verifyTrue(isWidgetVisible("$_openFileDialog"));

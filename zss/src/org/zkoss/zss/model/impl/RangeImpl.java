@@ -22,38 +22,25 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
-import org.zkoss.lang.Strings;
 import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.usermodel.AutoFilter;
 import org.zkoss.poi.ss.usermodel.BorderStyle;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.CellStyle;
 import org.zkoss.poi.ss.usermodel.CellValue;
-import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.ClientAnchor;
-import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.FilterColumn;
-import org.zkoss.poi.ss.usermodel.FormulaError;
 import org.zkoss.poi.ss.usermodel.Hyperlink;
-import org.zkoss.poi.ss.usermodel.Picture;
 import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.poi.ss.usermodel.Row;
-import org.zkoss.poi.ss.usermodel.Sheet;
+import org.zkoss.zss.model.Worksheet;
 import org.zkoss.poi.ss.usermodel.Workbook;
-import org.zkoss.poi.ss.usermodel.ZssContext;
-import org.zkoss.poi.ss.usermodel.charts.ChartData;
-import org.zkoss.poi.ss.usermodel.charts.ChartGrouping;
-import org.zkoss.poi.ss.usermodel.charts.ChartType;
-import org.zkoss.poi.ss.usermodel.charts.LegendPosition;
 import org.zkoss.poi.ss.util.CellRangeAddress;
-import org.zkoss.poi.xssf.usermodel.XSSFChartX;
 import org.zkoss.zk.ui.UiException;
-import org.zkoss.zk.ui.event.EventQueue;
 import org.zkoss.zss.engine.Ref;
 import org.zkoss.zss.engine.RefBook;
 import org.zkoss.zss.engine.RefSheet;
@@ -69,8 +56,6 @@ import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.FormatText;
 import org.zkoss.zss.model.Range;
 import org.zkoss.zss.model.Ranges;
-import org.zkoss.zss.model.Worksheet;
-import org.zkoss.zul.Messagebox;
 /**
  * Implementation of {@link Range} which plays a facade to operate on the spreadsheet data models
  * and maintain the reference dependency. 
@@ -150,33 +135,28 @@ public class RangeImpl implements Range {
 
 	@Override
 	public Hyperlink getHyperlink() {
-		synchronized(_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				if (cell != null)
-					return BookHelper.getHyperlink(cell);
-			}
-			return null;
+		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
+		if (ref != null) {
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final Cell cell = getCell(tRow, lCol, refSheet);
+			if (cell != null)
+				return BookHelper.getHyperlink(cell);
 		}
+		return null;
 	}
-	@Override
 	public void setHyperlink(int linkType, String address, String display) {
-		synchronized(_sheet) {
-			if (display == null) {
-				display = address;
-			}
-			new HyperlinkSetter().setValue(new HyperlinkContext(linkType, address, display));
-			final boolean old = isDirectHyperlink();
-			try {
-				setDirectHyperlink(true); //avoid setEditText() recursive to HyperlinkStringSetter#setCellValue()
-				setEditText(display);
-			} finally {
-				setDirectHyperlink(old);
-			}
+		if (display == null) {
+			display = address;
+		}
+		new HyperlinkSetter().setValue(new HyperlinkContext(linkType, address, display));
+		final boolean old = isDirectHyperlink();
+		try {
+			setDirectHyperlink(true); //avoid setEditText() recursive to HyperlinkStringSetter#setCellValue()
+			setEditText(display);
+		} finally {
+			setDirectHyperlink(old);
 		}
 	}
 
@@ -245,145 +225,107 @@ public class RangeImpl implements Range {
 	}
 	@Override
 	public RichTextString getText() {
-		synchronized(_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				if (cell != null)
-					return BookHelper.getText(cell);
-			}
-			return null;
+		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
+		if (ref != null) {
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final Cell cell = getCell(tRow, lCol, refSheet);
+			if (cell != null)
+				return BookHelper.getText(cell);
 		}
+		return null;
 	}
 	@Override
 	public FormatText getFormatText() {
-		synchronized(_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				if (cell != null)
-					return BookHelper.getFormatText(cell);
-			}
-			return null;
+		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
+		if (ref != null) {
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final Cell cell = getCell(tRow, lCol, refSheet);
+			if (cell != null)
+				return BookHelper.getFormatText(cell);
 		}
+		return null;
 	}
 	
 	@Override
 	public RichTextString getRichEditText() {
-		synchronized(_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				if (cell != null) {
-					return BookHelper.getRichEditText(cell);
-				}
+		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
+		if (ref != null) {
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final Cell cell = getCell(tRow, lCol, refSheet);
+			if (cell != null) {
+				return BookHelper.getRichEditText(cell);
 			}
-			return null;
 		}
+		return null;
 	}
 	
 	@Override
 	public void setRichEditText(RichTextString rstr) {
-		synchronized(_sheet) {
-			setValue(rstr);
-		}
+		setValue(rstr);
 	}
 	
 	@Override
 	public String getEditText() {
-		synchronized(_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				if (cell != null) {
-					return BookHelper.getEditText(cell);
-				}
+		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
+		if (ref != null) {
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final Cell cell = getCell(tRow, lCol, refSheet);
+			if (cell != null) {
+				return BookHelper.getEditText(cell);
 			}
-			return null;
 		}
-	}
-	
-	//return null if a valid input; otherwise the associated DataVailation for invalid input.
-	@Override
-	public DataValidation validate(String txt) {
-		synchronized(_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				
-				final Object[] values = BookHelper.editTextToValue(txt, cell);
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				
-				final int cellType = values == null ? -1 : ((Integer)values[0]).intValue();
-				final Object value = values == null ? null : values[1];
-				
-				return BookHelper.validate(sheet, tRow, lCol, value, cellType);
-			}
-			return null;
-		}
+		return null;
 	}
 	
 	@Override
 	public void setEditText(String txt) {
-		synchronized(_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				
-				final Object[] values = BookHelper.editTextToValue(txt, cell);
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				
-				final int cellType = values == null ? -1 : ((Integer)values[0]).intValue();
-				final Object value = values == null ? null : values[1];
-				
-				Set<Ref>[] refs = null;
-				if (cellType != -1) {
-					switch(((Integer)values[0]).intValue()) {
-					case Cell.CELL_TYPE_FORMULA:
-						refs = setFormula((String)values[1]); //Formula
-						break;
-					case Cell.CELL_TYPE_STRING:
-						refs = setValue((String)values[1]); //String
-						break;
-					case Cell.CELL_TYPE_BOOLEAN:
-						refs = setValue((Boolean)values[1]); //boolean
-						break;
-					case Cell.CELL_TYPE_NUMERIC:
-						final Object val = values[1];
-						refs = val instanceof Number ?
-							setValue((Number)val): //number
-							setValue((Date)val); //date
-						if (values.length > 2 && values[2] != null) {
-							setDateFormat((String) values[2]);
-						}
-						break;
-					case Cell.CELL_TYPE_ERROR:
-						refs = setValue((Byte)values[1]);
-						break;
+		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
+		if (ref != null) {
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final Cell cell = getCell(tRow, lCol, refSheet);
+
+			final Object[] values = BookHelper.editTextToValue(txt, cell);
+			
+			Set<Ref>[] refs = null;
+			if (values != null) {
+				switch(((Integer)values[0]).intValue()) {
+				case Cell.CELL_TYPE_FORMULA:
+					refs = setFormula((String)values[1]); //Formula
+					break;
+				case Cell.CELL_TYPE_STRING:
+					refs = setValue((String)values[1]); //String
+					break;
+				case Cell.CELL_TYPE_BOOLEAN:
+					refs = setValue((Boolean)values[1]); //boolean
+					break;
+				case Cell.CELL_TYPE_NUMERIC:
+					final Object val = values[1];
+					refs = val instanceof Number ?
+						setValue((Number)val): //number
+						setValue((Date)val); //date
+					if (values.length > 2 && values[2] != null) {
+						setDateFormat((String) values[2]);
 					}
-				} else {
-					refs = setValue((String) null); 
+					break;
+				case Cell.CELL_TYPE_ERROR:
+					refs = setValue((Byte)values[1]);
+					break;
 				}
-				reevaluateAndNotify(refs);
+			} else {
+				refs = setValue((String) null); 
 			}
+			
+			reevaluateAndNotify(refs);
 		}
 	}
 	
@@ -591,17 +533,6 @@ public class RangeImpl implements Range {
 		}
 	}
 	
-	private Row getRow(int rowIndex, RefSheet refSheet) {
-		final Book book = BookHelper.getBook(_sheet, refSheet);
-		if (book != null) {
-			final Worksheet sheet = book.getWorksheet(refSheet.getSheetName());
-			if (sheet != null) {
-				return sheet.getRow(rowIndex);
-			}
-		}
-		return null;
-	}
-	
 	private Cell getCell(int rowIndex, int colIndex, RefSheet refSheet) {
 		//locate the model book and sheet of the refSheet
 		final Book book = BookHelper.getBook(_sheet, refSheet);
@@ -662,86 +593,82 @@ public class RangeImpl implements Range {
 	
 	@Override
 	public void delete(int shift) {
-		synchronized(_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				if (!((SheetCtrl)sheet).isEvalAll()) {
-					((SheetCtrl)sheet).evalAll();
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final RefBook refBook = refSheet.getOwnerBook();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			if (!((SheetCtrl)sheet).isEvalAll()) {
+				((SheetCtrl)sheet).evalAll();
+			}
+			switch(shift) {
+			default:
+			case SHIFT_DEFAULT:
+				if (ref.isWholeRow()) {
+					final ChangeInfo info = BookHelper.deleteRows(sheet, ref.getTopRow(), ref.getRowCount());
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_V);
+				} else if (ref.isWholeColumn()) {
+					final ChangeInfo info = BookHelper.deleteColumns(sheet, ref.getLeftCol(), ref.getColumnCount());
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_H);
 				}
-				switch(shift) {
-				default:
-				case SHIFT_DEFAULT:
-					if (ref.isWholeRow()) {
-						final ChangeInfo info = BookHelper.deleteRows(sheet, ref.getTopRow(), ref.getRowCount());
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_V);
-					} else if (ref.isWholeColumn()) {
-						final ChangeInfo info = BookHelper.deleteColumns(sheet, ref.getLeftCol(), ref.getColumnCount());
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_H);
-					}
-					break;
-				case SHIFT_LEFT:
-					if (ref.isWholeRow() || ref.isWholeColumn()) {
-						delete(SHIFT_DEFAULT);
-					} else {
-						final ChangeInfo info = BookHelper.deleteRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), true);
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_H);
-					}
-					break;
-				case SHIFT_UP:
-					if (ref.isWholeRow() || ref.isWholeColumn()) {
-						delete(SHIFT_DEFAULT);
-					} else {
-						final ChangeInfo info = BookHelper.deleteRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), false);
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_V);
-					}
-					break;
+				break;
+			case SHIFT_LEFT:
+				if (ref.isWholeRow() || ref.isWholeColumn()) {
+					delete(SHIFT_DEFAULT);
+				} else {
+					final ChangeInfo info = BookHelper.deleteRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), true);
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_H);
 				}
+				break;
+			case SHIFT_UP:
+				if (ref.isWholeRow() || ref.isWholeColumn()) {
+					delete(SHIFT_DEFAULT);
+				} else {
+					final ChangeInfo info = BookHelper.deleteRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), false);
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_DELETE, SSDataEvent.MOVE_V);
+				}
+				break;
 			}
 		}
 	}
 	
 	@Override
 	public void insert(int shift, int copyOrigin) {
-		synchronized(_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				if (!((SheetCtrl)sheet).isEvalAll()) {
-					((SheetCtrl)sheet).evalAll();
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final RefBook refBook = refSheet.getOwnerBook();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			if (!((SheetCtrl)sheet).isEvalAll()) {
+				((SheetCtrl)sheet).evalAll();
+			}
+			switch(shift) {
+			default:
+			case SHIFT_DEFAULT:
+				if (ref.isWholeRow()) {
+					final ChangeInfo info = BookHelper.insertRows(sheet, ref.getTopRow(), ref.getRowCount(), copyOrigin);
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_V);
+				} else if (ref.isWholeColumn()) {
+					final ChangeInfo info = BookHelper.insertColumns(sheet, ref.getLeftCol(), ref.getColumnCount(), copyOrigin);
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_H);
 				}
-				switch(shift) {
-				default:
-				case SHIFT_DEFAULT:
-					if (ref.isWholeRow()) {
-						final ChangeInfo info = BookHelper.insertRows(sheet, ref.getTopRow(), ref.getRowCount(), copyOrigin);
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_V);
-					} else if (ref.isWholeColumn()) {
-						final ChangeInfo info = BookHelper.insertColumns(sheet, ref.getLeftCol(), ref.getColumnCount(), copyOrigin);
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_H);
-					}
-					break;
-				case SHIFT_RIGHT:
-					if (ref.isWholeRow() || ref.isWholeColumn()) {
-						insert(SHIFT_DEFAULT, copyOrigin);
-					} else {
-						final ChangeInfo info = BookHelper.insertRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), true, copyOrigin);
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_H);
-					}
-					break;
-				case SHIFT_DOWN:
-					if (ref.isWholeRow() || ref.isWholeColumn()) {
-						insert(SHIFT_DEFAULT, copyOrigin);
-					} else {
-						final ChangeInfo info = BookHelper.insertRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), false, copyOrigin);
-						notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_V);
-					}
-					break;
+				break;
+			case SHIFT_RIGHT:
+				if (ref.isWholeRow() || ref.isWholeColumn()) {
+					insert(SHIFT_DEFAULT, copyOrigin);
+				} else {
+					final ChangeInfo info = BookHelper.insertRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), true, copyOrigin);
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_H);
 				}
+				break;
+			case SHIFT_DOWN:
+				if (ref.isWholeRow() || ref.isWholeColumn()) {
+					insert(SHIFT_DEFAULT, copyOrigin);
+				} else {
+					final ChangeInfo info = BookHelper.insertRange(sheet, ref.getTopRow(), ref.getLeftCol(), ref.getBottomRow(), ref.getRightCol(), false, copyOrigin);
+					notifyMergeChange(refBook, info, ref, SSDataEvent.ON_RANGE_INSERT, SSDataEvent.MOVE_V);
+				}
+				break;
 			}
 		}
 	}
@@ -778,64 +705,41 @@ public class RangeImpl implements Range {
 		return null;
 	}
 	
-	//enforce lock sequence
-	private Worksheet[] getLockSheets(Range dstRange) {
-		final int srcIndex = _sheet.getBook().getSheetIndex(_sheet);
-		final Worksheet dstSheet = dstRange.getSheet();
-		final int dstIndex = dstSheet.getBook().getSheetIndex(dstSheet);
-		final Worksheet[] sheets = new Worksheet[2];
-		final Worksheet sheet1 = srcIndex > dstIndex ? _sheet : dstSheet;
-		final Worksheet sheet2 = srcIndex > dstIndex ? dstSheet : _sheet;
-		return new Worksheet[] {sheet1, sheet2};
-	}
-	
 	@Override
 	public Range pasteSpecial(Range dstRange, int pasteType, int pasteOp, boolean skipBlanks, boolean transpose) {
-		final Worksheet[] sheets = getLockSheets(dstRange); //enforce lock sequence
-		synchronized(sheets[0]) { 
-			synchronized(sheets[1]) {
-				final Ref ref = paste0(dstRange, pasteType, pasteOp, skipBlanks, transpose);
-				return ref == null ? null : new RangeImpl(ref, BookHelper.getSheet(_sheet, ref.getOwnerSheet()));
-			}
-		}
+		final Ref ref = paste0(dstRange, pasteType, pasteOp, skipBlanks, transpose);
+		return ref == null ? null : new RangeImpl(ref, BookHelper.getSheet(_sheet, ref.getOwnerSheet()));
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public void sort(Range rng1, boolean desc1, Range rng2, int type, boolean desc2, Range rng3, boolean desc3, int header, int orderCustom,
 			boolean matchCase, boolean sortByRows, int sortMethod, int dataOption1, int dataOption2, int dataOption3) {
-		synchronized(_sheet) {
-			final Ref key1 = rng1 != null ? ((RangeImpl)rng1).getRefs().iterator().next() : null;
-			final Ref key2 = rng2 != null ? ((RangeImpl)rng2).getRefs().iterator().next() : null;
-			final Ref key3 = rng3 != null ? ((RangeImpl)rng3).getRefs().iterator().next() : null;
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final int bRow = ref.getBottomRow();
-				final int rCol = ref.getRightCol();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
-				final RefBook refBook = ref.getOwnerSheet().getOwnerBook();
-				ChangeInfo info = BookHelper.sort(sheet, tRow, lCol, bRow, rCol, 
-									key1, desc1, key2, type, desc2, key3, desc3, header, 
-									orderCustom, matchCase, sortByRows, sortMethod, dataOption1, dataOption2, dataOption3);
-				if (info == null) {
-					info = new ChangeInfo(new HashSet<Ref>(0), new HashSet<Ref>(), new ArrayList<MergeChange>(0));
-				}
-				info.getAffected().add(ref);
-				notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
+		final Ref key1 = rng1 != null ? ((RangeImpl)rng1).getRefs().iterator().next() : null;
+		final Ref key2 = rng2 != null ? ((RangeImpl)rng2).getRefs().iterator().next() : null;
+		final Ref key3 = rng3 != null ? ((RangeImpl)rng3).getRefs().iterator().next() : null;
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final int bRow = ref.getBottomRow();
+			final int rCol = ref.getRightCol();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
+			final RefBook refBook = ref.getOwnerSheet().getOwnerBook();
+			ChangeInfo info = BookHelper.sort(sheet, tRow, lCol, bRow, rCol, 
+								key1, desc1, key2, type, desc2, key3, desc3, header, 
+								orderCustom, matchCase, sortByRows, sortMethod, dataOption1, dataOption2, dataOption3);
+			if (info == null) {
+				info = new ChangeInfo(new HashSet<Ref>(0), new HashSet<Ref>(), new ArrayList<MergeChange>(0));
 			}
+			info.getAffected().add(ref);
+			notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
 		}
 	}
 	@Override
 	public Range copy(Range dstRange) {
-		final Worksheet[] sheets = getLockSheets(dstRange); //enforce lock sequence
-		synchronized(sheets[0]) { //enforce lock sequence
-			synchronized(sheets[1]) {
-				final Ref ref = paste0(dstRange, Range.PASTE_ALL, Range.PASTEOP_NONE, false, false);
-				return ref == null ? null : new RangeImpl(ref, BookHelper.getSheet(_sheet, ref.getOwnerSheet()));
-			}
-		}
+		final Ref ref = paste0(dstRange, Range.PASTE_ALL, Range.PASTEOP_NONE, false, false);
+		return ref == null ? null : new RangeImpl(ref, BookHelper.getSheet(_sheet, ref.getOwnerSheet()));
 	}
 	private Ref paste0(Range dstRange, int pasteType, int pasteOp, boolean skipBlanks, boolean transpose) {
 		if (_refs != null && !_refs.isEmpty() && !((RangeImpl)dstRange).getRefs().isEmpty()) {
@@ -894,9 +798,7 @@ public class RangeImpl implements Range {
 			} else {
 				pasteRef = copy(ref1, srcColCount, srcRowCount, dstRange, dstRef, pasteType, pasteOp, skipBlanks, transpose, info);
 			}
-			if (pasteRef != null) {
-				notifyMergeChange(ref1.getOwnerSheet().getOwnerBook(), info, ref1, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
-			}
+			notifyMergeChange(ref1.getOwnerSheet().getOwnerBook(), info, ref1, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
 			return pasteRef;
 		}
 		return null;
@@ -909,48 +811,42 @@ public class RangeImpl implements Range {
 	
 	@Override
 	public void merge(boolean across) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final int bRow = ref.getBottomRow();
-				final int rCol = ref.getRightCol();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				final ChangeInfo info = BookHelper.merge(sheet, tRow, lCol, bRow, rCol, across);
-				notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final RefBook refBook = refSheet.getOwnerBook();
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final int bRow = ref.getBottomRow();
+			final int rCol = ref.getRightCol();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			final ChangeInfo info = BookHelper.merge(sheet, tRow, lCol, bRow, rCol, across);
+			notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
 		}
 	}
 	
 	@Override
 	public void unMerge() {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final int bRow = ref.getBottomRow();
-				final int rCol = ref.getRightCol();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				final ChangeInfo info = BookHelper.unMerge(sheet, tRow, lCol, bRow, rCol);
-				notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final RefBook refBook = refSheet.getOwnerBook();
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final int bRow = ref.getBottomRow();
+			final int rCol = ref.getRightCol();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			final ChangeInfo info = BookHelper.unMerge(sheet, tRow, lCol, bRow, rCol);
+			notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
 		}
 	}
 	
 	@Override
 	public Range getCells(int row, int col) {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final int col1 = ref.getLeftCol() + col;
-			final int row1 = ref.getTopRow() + row;
-			return new RangeImpl(row1, col1, _sheet, _sheet);
-		}
+		final Ref ref = getRefs().iterator().next();
+		final int col1 = ref.getLeftCol() + col;
+		final int row1 = ref.getTopRow() + row;
+		return new RangeImpl(row1, col1, _sheet, _sheet);
 	}
 			
 	private Ref copyMulti(boolean sameRow, SortedMap<Integer, Ref> srcRefs, int srcColCount, int srcRowCount, Ref dstRef, int pasteType, int pasteOp, boolean skipBlanks, boolean transpose, ChangeInfo info) {
@@ -1005,44 +901,6 @@ public class RangeImpl implements Range {
 			dstrCol += srcColCount;
 		}
 	}
-	
-	//Any cell is protecetd and locked
-	@Override
-	public boolean isAnyCellProtected() {
-		synchronized (_sheet) {
-			final Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final int left = ref.getLeftCol();
-				final int right = ref.getRightCol();
-				final int top = ref.getTopRow();
-				final int bottom = ref.getBottomRow();
-				
-				//ZSS-22: Shall not allow Copy and Paste operation in a protected spreadsheet
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				if (sheet.getProtect()) {
-					for (int r = top; r <= bottom; ++r) {
-						final Row row = sheet.getRow(r);
-						if (row != null) {
-							for (int c = left; c <= right; ++c) {
-								final Cell cell = row.getCell(c);
-								if (cell != null) {
-									final CellStyle cs = cell.getCellStyle();
-									if (cs != null && cs.getLocked()) {
-										//as long as one is protected and locked, return true
-										return true;
-									}
-								}
-							}
-						}
-					}
-				}
-				return false;
-			}
-			return true;
-		}
-	}
-	
 	private Ref getPasteRef(int srcRowCount, int srcColCount, int rowRepeat, int colRepeat, Ref dstRef, boolean transpose) {
 		final RefSheet dstRefSheet = dstRef.getOwnerSheet();
 		final int dstT = dstRef.getTopRow();
@@ -1051,17 +909,10 @@ public class RangeImpl implements Range {
 		final int dstColCount = transpose ? srcRowCount * rowRepeat : srcColCount * colRepeat; 
 		final int dstB = dstT + dstRowCount - 1;
 		final int dstR = dstL + dstColCount - 1;
-		
-		//ZSS-22: Shall not allow Copy and Paste operation in a protected spreadsheet
-		final Worksheet dstSheet = BookHelper.getSheet(_sheet, dstRefSheet);
-		final Ref pasteRef = new AreaRefImpl(dstT, dstL, dstB, dstR, dstRefSheet);
-		return new RangeImpl(pasteRef, dstSheet).isAnyCellProtected() ? null : pasteRef;
+		return new AreaRefImpl(dstT, dstL, dstB, dstR, dstRefSheet);
 	}
 	private Ref copyRefs(boolean sameRow, SortedMap<Integer, Ref> srcRefs, int srcColCount, int srcRowCount, int colRepeat, int rowRepeat, Ref dstRef, int pasteType, int pasteOp, boolean skipBlanks, boolean transpose, ChangeInfo info) {
 		final Ref pasteRef = getPasteRef(srcRowCount, srcColCount, rowRepeat, colRepeat, dstRef, transpose);
-		if (pasteRef == null) {
-			return null;
-		}
 		if (pasteType == Range.PASTE_COLUMN_WIDTHS) {
 			final Integer lastKey = srcRefs.lastKey();
 			final Ref srcRef = srcRefs.get(lastKey);
@@ -1097,7 +948,12 @@ public class RangeImpl implements Range {
 	
 	private Ref copy(Ref srcRef, int srcColCount, int srcRowCount, Range dstRange, Ref dstRef, int pasteType, int pasteOp, boolean skipBlanks, boolean transpose, ChangeInfo info) {
 		if (pasteType == Range.PASTE_COLUMN_WIDTHS) { //ignore transpose in such case when only one srcRef
-			transpose = false; //ignore transpose
+			final int lCol = srcRef.getLeftCol();
+			final int rCol = srcRef.getRightCol();
+			for (int j = lCol; j <= rCol; ++j) {
+				final int char256 = _sheet.getColumnWidth(j);
+				dstRange.setColumnWidth(char256);
+			}
 		}
 		final int dstColCount = transpose ? dstRef.getRowCount() : dstRef.getColumnCount();
 		final int dstRowCount = transpose ? dstRef.getColumnCount() : dstRef.getRowCount();
@@ -1125,10 +981,8 @@ public class RangeImpl implements Range {
 			BookHelper.setColumnWidth(dstSheet, dstCol, dstCol, char256);
 		}
 		final Book book = (Book) dstSheet.getWorkbook();
-		//bug# ZSS-52: Past special, copy column width's behavior doesn't correct
-		final int maxrow = book.getSpreadsheetVersion().getLastRowIndex();
 		final Set<Ref> affected = new HashSet<Ref>();
-		affected.add(dstRef.isWholeColumn() ? dstRef : new AreaRefImpl(0, dstlCol, maxrow, dstRef.getRightCol(), dstRefSheet));
+		affected.add(dstRef);
 		BookHelper.notifySizeChanges(book, affected);
 	}
 	
@@ -1136,9 +990,6 @@ public class RangeImpl implements Range {
 		final int srcRowCount = srcRef.getRowCount();
 		final int srcColCount = srcRef.getColumnCount();
 		final Ref pasteRef = getPasteRef(srcRowCount, srcColCount, rowRepeat, colRepeat, dstRef, transpose);
-		if (pasteRef == null) {
-			return null;
-		}
 		if (pasteType == Range.PASTE_COLUMN_WIDTHS) {
 			final int srclCol = srcRef.getLeftCol();
 			final Worksheet srcSheet = BookHelper.getSheet(_sheet, srcRef.getOwnerSheet());
@@ -1204,134 +1055,115 @@ public class RangeImpl implements Range {
 	
 	@Override
 	public void setBorders(short borderIndex, BorderStyle lineStyle, String color) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final int bRow = ref.getBottomRow();
-				final int rCol = ref.getRightCol();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				final Set<Ref> all = BookHelper.setBorders(sheet, tRow, lCol, bRow, rCol, borderIndex, lineStyle, color);
-				if (all != null) {
-					final Book book = (Book) _sheet.getWorkbook();
-					BookHelper.notifyCellChanges(book, all);
-				}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final int bRow = ref.getBottomRow();
+			final int rCol = ref.getRightCol();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			final Set<Ref> all = BookHelper.setBorders(sheet, tRow, lCol, bRow, rCol, borderIndex, lineStyle, color);
+			if (all != null) {
+				final Book book = (Book) _sheet.getWorkbook();
+				BookHelper.notifyCellChanges(book, all);
 			}
 		}
 	}
 	
 	@Override
 	public void setColumnWidth(int char256) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final int lCol = ref.getLeftCol();
-				final int rCol = ref.getRightCol();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				final Set<Ref> all = BookHelper.setColumnWidth(sheet, lCol, rCol, char256);
-				if (all != null) {
-					final Book book = (Book) _sheet.getWorkbook();
-					BookHelper.notifySizeChanges(book, all);
-				}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final int lCol = ref.getLeftCol();
+			final int rCol = ref.getRightCol();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			final Set<Ref> all = BookHelper.setColumnWidth(sheet, lCol, rCol, char256);
+			if (all != null) {
+				final Book book = (Book) _sheet.getWorkbook();
+				BookHelper.notifySizeChanges(book, all);
 			}
 		}
 	}
 	
 	@Override
 	public void setRowHeight(int points) {
-		setRowHeight(points, true);
-	}
-	
-	@Override
-	public void setRowHeight(int points, boolean customHeight) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final int tRow = ref.getTopRow();
-				final int bRow = ref.getBottomRow();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				final Set<Ref> all = BookHelper.setRowHeight(sheet, tRow, bRow, (short) (points * 20), customHeight); //in twips, set customHeight
-				if (all != null) {
-					final Book book = (Book) _sheet.getWorkbook();
-					BookHelper.notifySizeChanges(book, all);
-				}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final int tRow = ref.getTopRow();
+			final int bRow = ref.getBottomRow();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			final Set<Ref> all = BookHelper.setRowHeight(sheet, tRow, bRow, (short) (points * 20)); //in twips
+			if (all != null) {
+				final Book book = (Book) _sheet.getWorkbook();
+				BookHelper.notifySizeChanges(book, all);
 			}
 		}
 	}
 	
 	@Override
 	public void move(int nRow, int nCol) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final RefBook refBook = refSheet.getOwnerBook();
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final int bRow = ref.getBottomRow();
-				final int rCol = ref.getRightCol();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				final ChangeInfo info = BookHelper.moveRange(sheet, tRow, lCol, bRow, rCol, nRow, nCol);
-				notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final RefBook refBook = refSheet.getOwnerBook();
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final int bRow = ref.getBottomRow();
+			final int rCol = ref.getRightCol();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			final ChangeInfo info = BookHelper.moveRange(sheet, tRow, lCol, bRow, rCol, nRow, nCol);
+			notifyMergeChange(refBook, info, ref, SSDataEvent.ON_CONTENTS_CHANGE, SSDataEvent.MOVE_NO);
 		}
 	}
 	
 	@Override
 	public void setStyle(CellStyle style) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Set<Ref> all = new HashSet<Ref>();
-				for (Ref ref : _refs) {
-					final RefSheet refSheet = ref.getOwnerSheet();
-					final int tRow = ref.getTopRow();
-					final int lCol = ref.getLeftCol();
-					final int bRow = ref.getBottomRow();
-					final int rCol = ref.getRightCol();
-					final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-					final Set<Ref> refs = BookHelper.setCellStyle(sheet, tRow, lCol, bRow, rCol, style);
-					all.addAll(refs);
-				}
-				if (!all.isEmpty()) {
-					final Book book = (Book) _sheet.getWorkbook();
-					BookHelper.notifyCellChanges(book, all);
-				}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Set<Ref> all = new HashSet<Ref>();
+			for (Ref ref : _refs) {
+				final RefSheet refSheet = ref.getOwnerSheet();
+				final int tRow = ref.getTopRow();
+				final int lCol = ref.getLeftCol();
+				final int bRow = ref.getBottomRow();
+				final int rCol = ref.getRightCol();
+				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+				final Set<Ref> refs = BookHelper.setCellStyle(sheet, tRow, lCol, bRow, rCol, style);
+				all.addAll(refs);
+			}
+			if (!all.isEmpty()) {
+				final Book book = (Book) _sheet.getWorkbook();
+				BookHelper.notifyCellChanges(book, all);
 			}
 		}
 	}
 	
 	@Override
 	public void autoFill(Range dstRange, int fillType) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty() && !((RangeImpl)dstRange).getRefs().isEmpty()) {
-				//destination range allow only one contiguous reference
-				if (((RangeImpl)dstRange).getRefs().size() > 1) {
-					throw new UiException("Command cannot be used on multiple selections");
-				}
-				final Ref srcRef = _refs.iterator().next();
-				final Ref dstRef = ((RangeImpl)dstRange).getRefs().iterator().next();
-				fillRef(srcRef, dstRef, fillType);
+		if (_refs != null && !_refs.isEmpty() && !((RangeImpl)dstRange).getRefs().isEmpty()) {
+			//destination range allow only one contiguous reference
+			if (((RangeImpl)dstRange).getRefs().size() > 1) {
+				throw new UiException("Command cannot be used on multiple selections");
 			}
+			final Ref srcRef = _refs.iterator().next();
+			final Ref dstRef = ((RangeImpl)dstRange).getRefs().iterator().next();
+			fillRef(srcRef, dstRef, fillType);
 		}
 	}
 	
 	@Override
 	public void clearContents() {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref ref = _refs.iterator().next();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final int bRow = ref.getBottomRow();
-				final int rCol = ref.getRightCol();
-				final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-				clearContents(sheet, tRow, lCol, bRow, rCol);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref ref = _refs.iterator().next();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final int bRow = ref.getBottomRow();
+			final int rCol = ref.getRightCol();
+			final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+			clearContents(sheet, tRow, lCol, bRow, rCol);
 		}
 	}
 	
@@ -1359,115 +1191,101 @@ public class RangeImpl implements Range {
 
 	@Override
 	public void fillDown() {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref dstRef = _refs.iterator().next();
-				final Ref srcRef = new AreaRefImpl(dstRef.getTopRow(), dstRef.getLeftCol(), dstRef.getTopRow(), dstRef.getRightCol(), dstRef.getOwnerSheet());
-				fillRef(srcRef, dstRef, Range.FILL_COPY);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref dstRef = _refs.iterator().next();
+			final Ref srcRef = new AreaRefImpl(dstRef.getTopRow(), dstRef.getLeftCol(), dstRef.getTopRow(), dstRef.getRightCol(), dstRef.getOwnerSheet());
+			fillRef(srcRef, dstRef, Range.FILL_COPY);
 		}
 	}
 	
 	@Override
 	public void fillLeft() {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref dstRef = _refs.iterator().next();
-				final Ref srcRef = new AreaRefImpl(dstRef.getTopRow(), dstRef.getRightCol(), dstRef.getBottomRow(), dstRef.getRightCol(), dstRef.getOwnerSheet());
-				fillRef(srcRef, dstRef, Range.FILL_COPY);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref dstRef = _refs.iterator().next();
+			final Ref srcRef = new AreaRefImpl(dstRef.getTopRow(), dstRef.getRightCol(), dstRef.getBottomRow(), dstRef.getRightCol(), dstRef.getOwnerSheet());
+			fillRef(srcRef, dstRef, Range.FILL_COPY);
 		}
 	}
 
 	@Override
 	public void fillRight() {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref dstRef = _refs.iterator().next();
-				final Ref srcRef = new AreaRefImpl(dstRef.getTopRow(), dstRef.getLeftCol(), dstRef.getBottomRow(), dstRef.getLeftCol(), dstRef.getOwnerSheet());
-				fillRef(srcRef, dstRef, Range.FILL_COPY);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref dstRef = _refs.iterator().next();
+			final Ref srcRef = new AreaRefImpl(dstRef.getTopRow(), dstRef.getLeftCol(), dstRef.getBottomRow(), dstRef.getLeftCol(), dstRef.getOwnerSheet());
+			fillRef(srcRef, dstRef, Range.FILL_COPY);
 		}
 	}
 
 	@Override
 	public void fillUp() {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Ref dstRef = _refs.iterator().next();
-				final Ref srcRef = new AreaRefImpl(dstRef.getBottomRow(), dstRef.getLeftCol(), dstRef.getBottomRow(), dstRef.getRightCol(), dstRef.getOwnerSheet());
-				fillRef(srcRef, dstRef, Range.FILL_COPY);
-			}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Ref dstRef = _refs.iterator().next();
+			final Ref srcRef = new AreaRefImpl(dstRef.getBottomRow(), dstRef.getLeftCol(), dstRef.getBottomRow(), dstRef.getRightCol(), dstRef.getOwnerSheet());
+			fillRef(srcRef, dstRef, Range.FILL_COPY);
 		}
 	}
 	
 	@Override
 	public void setHidden(boolean hidden) {
-		synchronized (_sheet) {
-			if (_refs != null && !_refs.isEmpty()) {
-				final Set<Ref> all = new HashSet<Ref>();
-				for (Ref ref : _refs) {
-					if (ref.isWholeRow()) {
-						final RefSheet refSheet = ref.getOwnerSheet();
-						final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-						final int tRow = ref.getTopRow();
-						final int bRow = ref.getBottomRow();
-						final Set<Ref> refs = BookHelper.setRowsHidden(sheet, tRow, bRow, hidden);
-						all.addAll(refs);
-					} else if (ref.isWholeColumn()) {
-						final RefSheet refSheet = ref.getOwnerSheet();
-						final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
-						final int lCol = ref.getLeftCol();
-						final int rCol = ref.getRightCol();
-						final Set<Ref> refs = BookHelper.setColumnsHidden(sheet, lCol, rCol, hidden);
-						all.addAll(refs);
-					}
+		if (_refs != null && !_refs.isEmpty()) {
+			final Set<Ref> all = new HashSet<Ref>();
+			for (Ref ref : _refs) {
+				if (ref.isWholeRow()) {
+					final RefSheet refSheet = ref.getOwnerSheet();
+					final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+					final int tRow = ref.getTopRow();
+					final int bRow = ref.getBottomRow();
+					final Set<Ref> refs = BookHelper.setRowsHidden(sheet, tRow, bRow, hidden);
+					all.addAll(refs);
+				} else if (ref.isWholeColumn()) {
+					final RefSheet refSheet = ref.getOwnerSheet();
+					final Worksheet sheet = BookHelper.getSheet(_sheet, refSheet);
+					final int lCol = ref.getLeftCol();
+					final int rCol = ref.getRightCol();
+					final Set<Ref> refs = BookHelper.setColumnsHidden(sheet, lCol, rCol, hidden);
+					all.addAll(refs);
 				}
-				if (!all.isEmpty()) {
-					final Book book = (Book) _sheet.getWorkbook();
-					BookHelper.notifySizeChanges(book, all);
-				}
+			}
+			if (!all.isEmpty()) {
+				final Book book = (Book) _sheet.getWorkbook();
+				BookHelper.notifySizeChanges(book, all);
 			}
 		}
 	}
 	
 	@Override
 	public void setDisplayGridlines(boolean show) {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
-			final Set<Ref> all = new HashSet<Ref>(); 
-			final boolean old = sheet.isDisplayGridlines();
-			if (old != show) {
-				sheet.setDisplayGridlines(show);
-				//sheet is important, row, column is not in this event
-				all.add(ref); 
-			}
-			if (!all.isEmpty()) {
-				final Book book = (Book) sheet.getWorkbook();
-				BookHelper.notifyGridlines(book, all, show);
-			}
+		final Ref ref = getRefs().iterator().next();
+		final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
+		final Set<Ref> all = new HashSet<Ref>(); 
+		final boolean old = sheet.isDisplayGridlines();
+		if (old != show) {
+			sheet.setDisplayGridlines(show);
+			//sheet is important, row, column is not in this event
+			all.add(ref); 
+		}
+		if (!all.isEmpty()) {
+			final Book book = (Book) sheet.getWorkbook();
+			BookHelper.notifyGridlines(book, all, show);
 		}
 	}
 	
 	@Override
 	public void protectSheet(String password) {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
-			final Set<Ref> all = new HashSet<Ref>(); 
-			final boolean oldProtected = sheet.getProtect();
-			if (oldProtected && password == null) {
-				sheet.protectSheet(null);
-				all.add(ref);
-			} else if (oldProtected == false && password != null) {
-				sheet.protectSheet(password);
-				all.add(ref);
-			}
-			if (!all.isEmpty()) {
-				final Book book = (Book) sheet.getWorkbook();
-				BookHelper.notifyProtectSheet(book, all, password);
-			}
+		final Ref ref = getRefs().iterator().next();
+		final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
+		final Set<Ref> all = new HashSet<Ref>(); 
+		final boolean oldProtected = sheet.getProtect();
+		if (oldProtected && password == null) {
+			sheet.protectSheet(null);
+			all.add(ref);
+		} else if (oldProtected == false && password != null) {
+			sheet.protectSheet(password);
+			all.add(ref);
+		}
+		if (!all.isEmpty()) {
+			final Book book = (Book) sheet.getWorkbook();
+			BookHelper.notifyProtectSheet(book, all, password);
 		}
 	}
 
@@ -1530,59 +1348,51 @@ public class RangeImpl implements Range {
 	
 	@Override
 	public Range getDependents() {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
-			final int row = ref.getTopRow();
-			final int col = ref.getLeftCol();
-			final RefSheet refSheet = ref.getOwnerSheet();
-			Set<Ref> refs = ((RefSheetImpl)refSheet).getAllDependents(row, col);
-			return refs != null && !refs.isEmpty() ?
-					new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
-		}
+		final Ref ref = getRefs().iterator().next();
+		final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
+		final int row = ref.getTopRow();
+		final int col = ref.getLeftCol();
+		final RefSheet refSheet = ref.getOwnerSheet();
+		Set<Ref> refs = ((RefSheetImpl)refSheet).getAllDependents(row, col);
+		return refs != null && !refs.isEmpty() ?
+				new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
 	}
 	
 	@Override
 	public Range getDirectDependents() {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
-			final int row = ref.getTopRow();
-			final int col = ref.getLeftCol();
-			final RefSheet refSheet = ref.getOwnerSheet();
-			Set<Ref> refs = ((RefSheetImpl)refSheet).getDirectDependents(row, col);
-			return refs != null && !refs.isEmpty() ?
-					new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
-		}
+		final Ref ref = getRefs().iterator().next();
+		final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
+		final int row = ref.getTopRow();
+		final int col = ref.getLeftCol();
+		final RefSheet refSheet = ref.getOwnerSheet();
+		Set<Ref> refs = ((RefSheetImpl)refSheet).getDirectDependents(row, col);
+		return refs != null && !refs.isEmpty() ?
+				new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
 	}
 	
 	@Override
 	public Range getPrecedents() {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
-			final int row = ref.getTopRow();
-			final int col = ref.getLeftCol();
-			final RefSheet refSheet = ref.getOwnerSheet();
-			Set<Ref> refs = refSheet.getAllPrecedents(row, col);
-			return refs != null && !refs.isEmpty() ?
-					new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
-		}
+		final Ref ref = getRefs().iterator().next();
+		final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
+		final int row = ref.getTopRow();
+		final int col = ref.getLeftCol();
+		final RefSheet refSheet = ref.getOwnerSheet();
+		Set<Ref> refs = refSheet.getAllPrecedents(row, col);
+		return refs != null && !refs.isEmpty() ?
+				new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
 		
 	}
 	
 	@Override
 	public Range getDirectPrecedents() {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
-			final int row = ref.getTopRow();
-			final int col = ref.getLeftCol();
-			final RefSheet refSheet = ref.getOwnerSheet();
-			Set<Ref> refs = refSheet.getDirectPrecedents(row, col);
-			return refs != null && !refs.isEmpty() ?
-					new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
-		}
+		final Ref ref = getRefs().iterator().next();
+		final Worksheet sheet = BookHelper.getSheet(_sheet, ref.getOwnerSheet());
+		final int row = ref.getTopRow();
+		final int col = ref.getLeftCol();
+		final RefSheet refSheet = ref.getOwnerSheet();
+		Set<Ref> refs = refSheet.getDirectPrecedents(row, col);
+		return refs != null && !refs.isEmpty() ?
+				new RangeImpl(refs, sheet) : Ranges.EMPTY_RANGE;
 	}
 	
 	@Override
@@ -1611,19 +1421,17 @@ public class RangeImpl implements Range {
 
 	@Override
 	public Object getValue() {
-		synchronized (_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final int tRow = ref.getTopRow();
-				final int lCol = ref.getLeftCol();
-				final RefSheet refSheet = ref.getOwnerSheet();
-				final Cell cell = getCell(tRow, lCol, refSheet);
-				if (cell != null) {
-					return getValue0(cell);
-				}
+		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
+		if (ref != null) {
+			final int tRow = ref.getTopRow();
+			final int lCol = ref.getLeftCol();
+			final RefSheet refSheet = ref.getOwnerSheet();
+			final Cell cell = getCell(tRow, lCol, refSheet);
+			if (cell != null) {
+				return getValue0(cell);
 			}
-			return null;
 		}
+		return null;
 	}
 
 	private Object getValue0(Cell cell) {
@@ -1641,38 +1449,7 @@ public class RangeImpl implements Range {
 
 	@Override
 	public void setValue(Object value) {
-		//ZSS-78: Implementation of RangeImpl#setValue() is not correct
-		synchronized (_sheet) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				Set<Ref>[] refs = null;
-				if (value instanceof FormulaError) {
-					refs = setValue(Byte.valueOf(((FormulaError)value).getCode()));
-				} else if (value instanceof Byte) {
-					try {
-						FormulaError.forInt(((Byte)value).byteValue());
-						refs = setValue((Byte) value);
-					} catch (IllegalArgumentException ex) {
-						refs = setValue((Number) value);
-					}
-				} else if (value instanceof Number) {
-					refs = setValue((Number)value);
-				} else if (value instanceof String) {
-					refs = setValue((String) value);
-				} else if (value instanceof Boolean) {
-					refs = setValue((Boolean) value);
-				} else if (value instanceof Date) {
-					refs = setValue((Date) value);
-				} else if (value == null) {
-					refs = setValue((String) null);
-				} else {
-					 throw new IllegalArgumentException("Unknown value type; must be a FormulaError, a leagal errorCode(a Byte), a Number, a String, a Boolean, a Date, or null: " + value);
-				}
-				if (refs != null) {
-					reevaluateAndNotify(refs);
-				}
-			}
-		}
+		setEditText(value != null ? value.toString() : null);
 	}
 
 	@Override
@@ -1810,15 +1587,13 @@ public class RangeImpl implements Range {
 	
 	@Override
 	public Range getCurrentRegion() {
-		synchronized (_sheet) {
-			final Ref ref = getRefs().iterator().next();
-			final int row = ref.getTopRow();
-			final int col = ref.getLeftCol();
-			CellRangeAddress cra = getCurrentRegion(_sheet, row, col);
-			return cra == null ? 
-					new RangeImpl(row, col, _sheet, _sheet) :
-					new RangeImpl(cra.getFirstRow(), cra.getFirstColumn(), cra.getLastRow(), cra.getLastColumn(), _sheet, _sheet);
-		}
+		final Ref ref = getRefs().iterator().next();
+		final int row = ref.getTopRow();
+		final int col = ref.getLeftCol();
+		CellRangeAddress cra = getCurrentRegion(_sheet, row, col);
+		return cra == null ? 
+				new RangeImpl(row, col, _sheet, _sheet) :
+				new RangeImpl(cra.getFirstRow(), cra.getFirstColumn(), cra.getLastRow(), cra.getLastColumn(), _sheet, _sheet);
 	}
 	
 	private int[] getCellMinMax(Worksheet sheet, int row, int col) {
@@ -1908,33 +1683,6 @@ public class RangeImpl implements Range {
 		return allblank ? null : new int[] {minc, minr, maxc, maxr};
 	}
 	
-	//given row return the maximum range
-	private CellRangeAddress getRowCurrentRegion(Worksheet sheet, int topRow, int btmRow) {
-		int minc = 0;
-		int maxc = 0;
-		int minr = topRow;
-		int maxr = btmRow;
-		final Row roworg = sheet.getRow(topRow);
-		for (int c = minc; c <= roworg.getLastCellNum(); c++) {
-			boolean foundMax = false;
-			for (int r = minr + 1; r <= sheet.getLastRowNum(); r++) {
-				int[] cellMinMax = getCellMinMax(sheet, r, c);
-				if (cellMinMax == null && r >= btmRow) {
-					break;
-				}
-				if (cellMinMax != null) {
-					foundMax = true;
-					maxr = Math.max(maxr, cellMinMax[3]);
-				}
-			}
-			if (foundMax) {
-				maxc = c;
-			}
-		}
-
-		return new CellRangeAddress(minr, maxr, minc, maxc);
-	}
-	
 	//given a cell return the maximum range
 	private CellRangeAddress getCurrentRegion(Worksheet sheet, int row, int col) {
 		int minc = col;
@@ -2009,74 +1757,63 @@ public class RangeImpl implements Range {
 	private static final String ALL_BLANK_MSG = "Cannot find the range. Please select a cell within the range and try again!";
 	@Override
 	public AutoFilter autoFilter() {
-		synchronized (_sheet) {
-			CellRangeAddress affectedArea;
-			if(_sheet.isAutoFilterMode()){
-				affectedArea = _sheet.removeAutoFilter();
-				Range unhideArea = Ranges.range(_sheet,
-						affectedArea.getFirstRow(),affectedArea.getFirstColumn(),
-						affectedArea.getLastRow(),affectedArea.getLastColumn());
-				unhideArea.getRows().setHidden(false);
-			} else {
-				//The logic to decide the actual affected range to implement autofilter:
-				//If it's a multi cell range, it's the range intersect with largest range of the sheet.
-				//If it's a single cell range, it has to be extend to a continuous range by looking up the near 8 cells of the single cell.
-				affectedArea = new CellRangeAddress(getRow(), getLastRow(), getColumn(), getLastColumn());
-				final Ref ref = getRefs().iterator().next();
-				//ZSS-199
-				if (ref.isWholeRow()) {
-					//extend to a continuous range from the top row
-					CellRangeAddress maxRange = getRowCurrentRegion(_sheet, ref.getTopRow(), ref.getBottomRow());
-					if (maxRange == null) {
-						throw new RuntimeException(ALL_BLANK_MSG);
-					}
-					affectedArea = maxRange;
-				} else if (BookHelper.isOneCell(_sheet, affectedArea)) { //only one cell selected(include merged one), try to look the max range surround by blank cells 
-					CellRangeAddress maxRange = getCurrentRegion(_sheet, getRow(), getColumn());
-					if (maxRange == null) {
-						throw new RuntimeException(ALL_BLANK_MSG);
-					}
-					affectedArea = maxRange;
-				} else {
-					CellRangeAddress largeRange = getLargestRange(_sheet); //get the largest range that contains non-blank cells
-					if (largeRange == null) {
-						throw new RuntimeException(ALL_BLANK_MSG);
-					}
-					int left = largeRange.getFirstColumn();
-					int top = largeRange.getFirstRow();
-					int right = largeRange.getLastColumn();
-					int bottom = largeRange.getLastRow();
-					if (left < getColumn()) {
-						left = getColumn();
-					}
-					if (right > getLastColumn()) {
-						right = getLastColumn();
-					}
-					if (top < getRow()) {
-						top = getRow();
-					}
-					if (bottom > getLastRow()) {
-						bottom = getLastRow();
-					}
-					if (top > bottom || left > right) {
-						throw new RuntimeException(ALL_BLANK_MSG);
-					}
-					affectedArea = new CellRangeAddress(top, bottom, left, right);
-				}
-				_sheet.setAutoFilter(affectedArea);
-			}
-			 
-			//I have to know the top row area to show/remove the combo button
-			//changed by this autofilter action, it's not the same area
-			//and then send ON_CONTENTS_CHANGE event
-			RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, 
+		CellRangeAddress affectedArea;
+		if(_sheet.isAutoFilterMode()){
+			affectedArea = _sheet.removeAutoFilter();
+			Range unhideArea = Ranges.range(_sheet,
 					affectedArea.getFirstRow(),affectedArea.getFirstColumn(),
-					affectedArea.getFirstRow(),affectedArea.getLastColumn());
-			
-			BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
-			
-			return _sheet.getAutoFilter();
+					affectedArea.getLastRow(),affectedArea.getLastColumn());
+			unhideArea.getRows().setHidden(false);
+		} else {
+			//The logic to decide the actual affected range to implement autofilter:
+			//If it's a multi cell range, it's the range intersect with largest range of the sheet.
+			//If it's a single cell range, it has to be extend to a continuous range by looking up the near 8 cells of the single cell.
+			affectedArea = new CellRangeAddress(getRow(), getLastRow(), getColumn(), getLastColumn());
+			if (BookHelper.isOneCell(_sheet, affectedArea)) { //only one cell selected(include merged one), try to look the max range surround by blank cells 
+				CellRangeAddress maxRange = getCurrentRegion(_sheet, getRow(), getColumn());
+				if (maxRange == null) {
+					throw new RuntimeException(ALL_BLANK_MSG);
+				}
+				affectedArea = maxRange;
+			} else {
+				CellRangeAddress largeRange = getLargestRange(_sheet); //get the largest range that contains non-blank cells
+				if (largeRange == null) {
+					throw new RuntimeException(ALL_BLANK_MSG);
+				}
+				int left = largeRange.getFirstColumn();
+				int top = largeRange.getFirstRow();
+				int right = largeRange.getLastColumn();
+				int bottom = largeRange.getLastRow();
+				if (left < getColumn()) {
+					left = getColumn();
+				}
+				if (right > getLastColumn()) {
+					right = getLastColumn();
+				}
+				if (top < getRow()) {
+					top = getRow();
+				}
+				if (bottom > getLastRow()) {
+					bottom = getLastRow();
+				}
+				if (top > bottom || left > right) {
+					throw new RuntimeException(ALL_BLANK_MSG);
+				}
+				affectedArea = new CellRangeAddress(top, bottom, left, right);
+			}
+			_sheet.setAutoFilter(affectedArea);
 		}
+		 
+		//I have to know the top row area to show/remove the combo button
+		//changed by this autofilter action, it's not the same area
+		//and then send ON_CONTENTS_CHANGE event
+		RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, 
+				affectedArea.getFirstRow(),affectedArea.getFirstColumn(),
+				affectedArea.getFirstRow(),affectedArea.getLastColumn());
+		
+		BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
+		
+		return _sheet.getAutoFilter();
 	}
 	
 	private boolean canUnhide(AutoFilter af, FilterColumn fc, int row, int col) {
@@ -2101,25 +1838,72 @@ public class RangeImpl implements Range {
 
 	@Override
 	public void showAllData() {
-		synchronized (_sheet) {
-			AutoFilter af = _sheet.getAutoFilter();
-			if (af == null) { //no AutoFilter to apply 
-				return;
+		AutoFilter af = _sheet.getAutoFilter();
+		if (af == null) { //no AutoFilter to apply 
+			return;
+		}
+		final CellRangeAddress afrng = af.getRangeAddress();
+		final List<FilterColumn> fcs = af.getFilterColumns();
+		if (fcs == null)
+			return;
+		for(FilterColumn fc : fcs) {
+			BookHelper.setProperties(fc, null, AutoFilter.FILTEROP_VALUES, null, null); //clear all filter
+		}
+		final int row1 = afrng.getFirstRow();
+		final int row = row1 + 1;
+		final int row2 = afrng.getLastRow();
+		final int col1 = afrng.getFirstColumn();
+		final int col2 = afrng.getLastColumn();
+		final Set<Ref> all = new HashSet<Ref>();
+		for (int r = row; r <= row2; ++r) {
+			final Row rowobj = _sheet.getRow(r);
+			if (rowobj != null && rowobj.getZeroHeight()) { //a hidden row
+				final int left = rowobj.getFirstCellNum();
+				final int right = rowobj.getLastCellNum() - 1;
+				final RangeImpl rng = (RangeImpl) new RangeImpl(r, left, r, right, _sheet, _sheet); 
+				all.addAll(rng.getRefs());
+				rng.getRows().setHidden(false); //unhide
 			}
-			final CellRangeAddress afrng = af.getRangeAddress();
+		}
+
+		BookHelper.notifyCellChanges(_sheet.getBook(), all); //unhidden row must reevaluate
+		
+		//update button
+		final RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, row1, col1, row1, col2);
+		BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
+	}
+	
+	@Override
+	public void applyFilter() {
+		AutoFilter af = _sheet.getAutoFilter();
+		if (af == null) { //no AutoFilter to apply 
+			return;
+		}
+		final CellRangeAddress affectedArea = af.getRangeAddress();
+		final int row1 = affectedArea.getFirstRow();
+		final int col1 = affectedArea.getFirstColumn(); 
+		final int row = row1 + 1;
+		final int row2 = affectedArea.getLastRow();
+		final int col2 = affectedArea.getLastColumn();
+		
+		final Set<Ref> all = new HashSet<Ref>();
+		for (int r = row; r <= row2; ++r) {
+			boolean hidden = false;
 			final List<FilterColumn> fcs = af.getFilterColumns();
 			if (fcs == null)
 				return;
 			for(FilterColumn fc : fcs) {
-				BookHelper.setProperties(fc, null, AutoFilter.FILTEROP_VALUES, null, null); //clear all filter
+				if (shallHide(fc, r, col1)) {
+					hidden = true;
+					break;
+				}
 			}
-			final int row1 = afrng.getFirstRow();
-			final int row = row1 + 1;
-			final int row2 = afrng.getLastRow();
-			final int col1 = afrng.getFirstColumn();
-			final int col2 = afrng.getLastColumn();
-			final Set<Ref> all = new HashSet<Ref>();
-			for (int r = row; r <= row2; ++r) {
+			if (hidden) { //to be hidden
+				final Row rowobj = _sheet.getRow(r);
+				if (rowobj == null || !rowobj.getZeroHeight()) { //a non-hidden row
+					new RangeImpl(r, col1, _sheet, _sheet).getRows().setHidden(true);
+				}
+			} else { //to be shown
 				final Row rowobj = _sheet.getRow(r);
 				if (rowobj != null && rowobj.getZeroHeight()) { //a hidden row
 					final int left = rowobj.getFirstCellNum();
@@ -2129,309 +1913,59 @@ public class RangeImpl implements Range {
 					rng.getRows().setHidden(false); //unhide
 				}
 			}
-	
-			BookHelper.notifyCellChanges(_sheet.getBook(), all); //unhidden row must reevaluate
-			
-			//update button
-			final RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, row1, col1, row1, col2);
-			BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
 		}
-	}
-	
-	@Override
-	public void applyFilter() {
-		synchronized (_sheet) {
-			AutoFilter af = _sheet.getAutoFilter();
-			if (af == null) { //no AutoFilter to apply 
-				return;
-			}
-			final CellRangeAddress affectedArea = af.getRangeAddress();
-			final int row1 = affectedArea.getFirstRow();
-			final int col1 = affectedArea.getFirstColumn(); 
-			final int row = row1 + 1;
-			final int row2 = affectedArea.getLastRow();
-			final int col2 = affectedArea.getLastColumn();
-			
-			final Set<Ref> all = new HashSet<Ref>();
-			for (int r = row; r <= row2; ++r) {
-				boolean hidden = false;
-				final List<FilterColumn> fcs = af.getFilterColumns();
-				if (fcs == null)
-					return;
-				for(FilterColumn fc : fcs) {
-					if (shallHide(fc, r, col1)) {
-						hidden = true;
-						break;
-					}
-				}
-				if (hidden) { //to be hidden
-					final Row rowobj = _sheet.getRow(r);
-					if (rowobj == null || !rowobj.getZeroHeight()) { //a non-hidden row
-						new RangeImpl(r, col1, _sheet, _sheet).getRows().setHidden(true);
-					}
-				} else { //to be shown
-					final Row rowobj = _sheet.getRow(r);
-					if (rowobj != null && rowobj.getZeroHeight()) { //a hidden row
-						final int left = rowobj.getFirstCellNum();
-						final int right = rowobj.getLastCellNum() - 1;
-						final RangeImpl rng = (RangeImpl) new RangeImpl(r, left, r, right, _sheet, _sheet); 
-						all.addAll(rng.getRefs());
-						rng.getRows().setHidden(false); //unhide
-					}
-				}
-			}
-			BookHelper.notifyCellChanges(_sheet.getBook(), all); //unhidden row must reevaluate
-			
-			//update button
-			final RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, row1, col1, row1, col2);
-			BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
-		}
+		BookHelper.notifyCellChanges(_sheet.getBook(), all); //unhidden row must reevaluate
+		
+		//update button
+		final RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, row1, col1, row1, col2);
+		BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
 	}
 
 	@Override
 	public AutoFilter autoFilter(int field, Object criteria1, int filterOp, Object criteria2, Boolean visibleDropDown) {
-		synchronized (_sheet) {
-			AutoFilter af = _sheet.getAutoFilter();
-			if (af == null) {
-				af = autoFilter();
-			}
-			final FilterColumn fc = BookHelper.getOrCreateFilterColumn(af, field-1);
-			BookHelper.setProperties(fc, criteria1, filterOp, criteria2, visibleDropDown);
-			
-			//update rows
-			final CellRangeAddress affectedArea = af.getRangeAddress();
-			final int row1 = affectedArea.getFirstRow();
-			final int col1 = affectedArea.getFirstColumn(); 
-			final int col =  col1 + field - 1;
-			final int row = row1 + 1;
-			final int row2 = affectedArea.getLastRow();
-			final Set cr1 = fc.getCriteria1();
-	
-			final Set<Ref> all = new HashSet<Ref>();
-			for (int r = row; r <= row2; ++r) {
-				final Cell cell = BookHelper.getCell(_sheet, r, col); 
-				final String val = BookHelper.isBlankCell(cell) ? "=" : BookHelper.getCellText(cell); //"=" means blank!
-				if (cr1 != null && !cr1.isEmpty() && !cr1.contains(val)) { //to be hidden
-					final Row rowobj = _sheet.getRow(r);
-					if (rowobj == null || !rowobj.getZeroHeight()) { //a non-hidden row
-						new RangeImpl(r, col, _sheet, _sheet).getRows().setHidden(true);
-					}
-				} else { //candidate to be shown (other FieldColumn might still hide this row!
-					final Row rowobj = _sheet.getRow(r);
-					if (rowobj != null && rowobj.getZeroHeight() && canUnhide(af, fc, r, col1)) { //a hidden row and no other hidden filtering
-						final int left = rowobj.getFirstCellNum();
-						final int right = rowobj.getLastCellNum() - 1;
-						final RangeImpl rng = (RangeImpl) new RangeImpl(r, left, r, right, _sheet, _sheet); 
-						all.addAll(rng.getRefs());
-						rng.getRows().setHidden(false); //unhide
-					}
+		AutoFilter af = _sheet.getAutoFilter();
+		if (af == null) {
+			af = autoFilter();
+		}
+		final FilterColumn fc = BookHelper.getOrCreateFilterColumn(af, field-1);
+		BookHelper.setProperties(fc, criteria1, filterOp, criteria2, visibleDropDown);
+		
+		//update rows
+		final CellRangeAddress affectedArea = af.getRangeAddress();
+		final int row1 = affectedArea.getFirstRow();
+		final int col1 = affectedArea.getFirstColumn(); 
+		final int col =  col1 + field - 1;
+		final int row = row1 + 1;
+		final int row2 = affectedArea.getLastRow();
+		final Set cr1 = fc.getCriteria1();
+
+		final Set<Ref> all = new HashSet<Ref>();
+		for (int r = row; r <= row2; ++r) {
+			final Cell cell = BookHelper.getCell(_sheet, r, col); 
+			final String val = BookHelper.isBlankCell(cell) ? "=" : BookHelper.getCellText(cell); //"=" means blank!
+			if (cr1 != null && !cr1.isEmpty() && !cr1.contains(val)) { //to be hidden
+				final Row rowobj = _sheet.getRow(r);
+				if (rowobj == null || !rowobj.getZeroHeight()) { //a non-hidden row
+					new RangeImpl(r, col, _sheet, _sheet).getRows().setHidden(true);
 				}
-			}
-			
-			BookHelper.notifyCellChanges(_sheet.getBook(), all); //unhidden row must reevaluate
-			
-			//update button
-			final RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, row1, col, row1, col);
-			BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
-			
-			return af;
-		}
-	}
-
-	@Override
-	public Chart addChart(ClientAnchor anchor, ChartData data, ChartType type,
-			ChartGrouping grouping, LegendPosition pos) {
-		synchronized (_sheet) {
-			final DrawingManager dm = ((SheetCtrl)_sheet).getDrawingManager();
-			final XSSFChartX chartX = (XSSFChartX) dm.addChartX(_sheet, anchor, data, type, grouping, pos);
-			final RangeImpl rng = (RangeImpl) Ranges.range(_sheet, anchor.getRow1(), anchor.getCol1(), anchor.getRow2(), anchor.getCol2());
-			final Collection<Ref> refs = rng.getRefs();
-			if (refs != null && !refs.isEmpty()) {
-				final Ref ref = refs.iterator().next();
-				BookHelper.notifyChartAdd(ref, chartX);
-			}
-			return chartX.getChart();
-		}
-	}
-
-	@Override
-	public Picture addPicture(ClientAnchor anchor, byte[] image, int format) {
-		synchronized (_sheet) {
-			DrawingManager dm = ((SheetCtrl)_sheet).getDrawingManager();
-			final Picture picture = dm.addPicture(_sheet, anchor, image, format);
-			final RangeImpl rng = (RangeImpl) Ranges.range(_sheet, anchor.getRow1(), anchor.getCol1(), anchor.getRow2(), anchor.getCol2());
-			final Collection<Ref> refs = rng.getRefs();
-			if (refs != null && !refs.isEmpty()) {
-				final Ref ref = refs.iterator().next();
-				BookHelper.notifyPictureAdd(ref, picture);
-			}
-			return picture;
-		}
-	}
-	
-	@Override
-	public void deletePicture(Picture picture) {
-		synchronized (_sheet) {
-			DrawingManager dm = ((SheetCtrl)_sheet).getDrawingManager();
-			ClientAnchor anchor = picture.getPreferredSize();
-			final RangeImpl rng = (RangeImpl) Ranges.range(_sheet, anchor.getRow1(), anchor.getCol1(), anchor.getRow2(), anchor.getCol2());
-			final Collection<Ref> refs = rng.getRefs();
-			dm.deletePicture(_sheet, picture); //must after getPreferredSize() or anchor is gone!
-			if (refs != null && !refs.isEmpty()) {
-				final Ref ref = refs.iterator().next();
-				BookHelper.notifyPictureDelete(ref, picture);
-			}
-		}
-	}
-
-	@Override
-	public void movePicture(Picture picture, ClientAnchor anchor) {
-		synchronized (_sheet) {
-			DrawingManager dm = ((SheetCtrl)_sheet).getDrawingManager();
-			dm.movePicture(_sheet, picture, anchor);
-			final RangeImpl rng = (RangeImpl) Ranges.range(_sheet, anchor.getRow1(), anchor.getCol1(), anchor.getRow2(), anchor.getCol2());
-			final Collection<Ref> refs = rng.getRefs();
-			if (refs != null && !refs.isEmpty()) {
-				final Ref ref = refs.iterator().next();
-				BookHelper.notifyPictureUpdate(ref, picture);
-			}
-		}
-	}
-
-	@Override
-	public void moveChart(Chart chart, ClientAnchor anchor) {
-		synchronized (_sheet) {
-			DrawingManager dm = ((SheetCtrl)_sheet).getDrawingManager();
-			dm.moveChart(_sheet, chart, anchor);
-			final RangeImpl rng = (RangeImpl) Ranges.range(_sheet, anchor.getRow1(), anchor.getCol1(), anchor.getRow2(), anchor.getCol2());
-			final Collection<Ref> refs = rng.getRefs();
-			if (refs != null && !refs.isEmpty()) {
-				final Ref ref = refs.iterator().next();
-				BookHelper.notifyChartUpdate(ref, chart);
-			}
-		}
-	}
-
-	@Override
-	public void deleteChart(Chart chart) {
-		synchronized (_sheet) {
-			DrawingManager dm = ((SheetCtrl)_sheet).getDrawingManager();
-			ClientAnchor anchor = chart.getPreferredSize();
-			final RangeImpl rng = (RangeImpl) Ranges.range(_sheet, anchor.getRow1(), anchor.getCol1(), anchor.getRow2(), anchor.getCol2());
-			final Collection<Ref> refs = rng.getRefs();
-			dm.deleteChart(_sheet, chart); //must after getPreferredSize() or anchor is gone!
-			if (refs != null && !refs.isEmpty()) {
-				final Ref ref = refs.iterator().next();
-				BookHelper.notifyChartDelete(ref, chart);
-			}
-		}
-	}
-
-	@Override
-	public void notifyMoveFriendFocus(Object token) {
-		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-		if (ref != null) {
-			BookHelper.notifyMoveFriendFocus(ref, token);
-		}
-	}
-
-	@Override
-	public void notifyDeleteFriendFocus(Object token) {
-		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-		if (ref != null) {
-			BookHelper.notifyDeleteFriendFocus(ref, token);
-		}
-	}
-	
-	@Override
-	public void createSheet(String name) {
-		synchronized (_sheet.getBook()) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final Book book = _sheet.getBook();
-				if (book != null) {
-					if (Strings.isBlank(name)) {
-						book.createSheet();
-					} else {
-						book.createSheet(name);
-					}
-					BookHelper.notifyCreateSheet(ref, name);
+			} else { //candidate to be shown (other FieldColumn might still hide this row!
+				final Row rowobj = _sheet.getRow(r);
+				if (rowobj != null && rowobj.getZeroHeight() && canUnhide(af, fc, r, col1)) { //a hidden row and no other hidden filtering
+					final int left = rowobj.getFirstCellNum();
+					final int right = rowobj.getLastCellNum() - 1;
+					final RangeImpl rng = (RangeImpl) new RangeImpl(r, left, r, right, _sheet, _sheet); 
+					all.addAll(rng.getRefs());
+					rng.getRows().setHidden(false); //unhide
 				}
 			}
 		}
-	}
-
-	@Override
-	public void setSheetName(String name) {
-		synchronized (_sheet.getBook()) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final Book book = _sheet.getBook();
-				if (book != null) {
-					if (!Strings.isBlank(name)) {
-						final int pos= book.getSheetIndex(_sheet);
-						if (pos >= 0) {
-							book.setSheetName(pos, name);
-							BookHelper.notifyChangeSheetName(ref, name);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	@Override
-	public void setSheetOrder(int pos) {
-		synchronized (_sheet.getBook()) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final Book book = _sheet.getBook();
-				if (book != null) {
-					final String name = _sheet.getSheetName();
-					if (!Strings.isBlank(name)) {
-						book.setSheetOrder(name, pos);
-						BookHelper.notifyChangeSheetOrder(ref, name);
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public void deleteSheet() {
-		synchronized (_sheet.getBook()) {
-			Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-			if (ref != null) {
-				final Book book = _sheet.getBook();
-				if (book != null) {
-					final int index = book.getSheetIndex(_sheet);
-					if (index != -1) {
-						final int sheetCount = book.getNumberOfSheets();
-						if (sheetCount == 1) {
-							Messagebox.show("A workbook must contain at least one visible worksheet");
-						}
-						final String delSheetName = _sheet.getSheetName(); //must getName before remove
-						book.removeSheetAt(index);
-						final int newIndex =  index < (sheetCount - 1) ? index : (index - 1);
-						final String newSheetName = book.getSheetName(newIndex);
-						BookHelper.notifyDeleteSheet(ref, new Object[] {delSheetName, newSheetName});
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public boolean isCustomHeight() {
-		Ref ref = _refs != null && !_refs.isEmpty() ? _refs.iterator().next() : null;
-		if (ref != null) {
-			final int tRow = ref.getTopRow();
-			final RefSheet refSheet = ref.getOwnerSheet();
-			final Row row = getRow(tRow, refSheet);
-			if (row != null) {
-				return row.isCustomHeight();
-			}
-		}
-		return false;
+		
+		BookHelper.notifyCellChanges(_sheet.getBook(), all); //unhidden row must reevaluate
+		
+		//update button
+		final RangeImpl buttonChange = (RangeImpl) Ranges.range(_sheet, row1, col, row1, col);
+		BookHelper.notifyBtnChanges(new HashSet<Ref>(buttonChange.getRefs()));
+		
+		return af;
 	}
 }

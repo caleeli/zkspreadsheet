@@ -17,6 +17,9 @@ package org.zkoss.zss.app.cell;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.CellStyle;
 import org.zkoss.poi.ss.usermodel.Font;
+import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.Executions;
+import org.zkoss.zss.app.zul.Zssapps;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Range;
 import org.zkoss.zss.model.Ranges;
@@ -76,9 +79,7 @@ public final class CellHelper {
 	public static String getBackgroundHTMLColor(Cell cell) {
 		CellStyle cellStyle = cell.getCellStyle();
 		Book book = (Book)cell.getSheet().getWorkbook();
-		//bug#ZSS-34: cell background color does not show in excel
-		String color = cellStyle.getFillPattern() != CellStyle.NO_FILL ? 
-				BookHelper.colorToHTML(book, cellStyle.getFillForegroundColorColor()) : null;
+		String color = BookHelper.colorToHTML(book, cellStyle.getFillForegroundColorColor());
 		if (color == null || BookHelper.AUTO_COLOR.equals(color))
 			return "#FFFFFF";
 		return color;

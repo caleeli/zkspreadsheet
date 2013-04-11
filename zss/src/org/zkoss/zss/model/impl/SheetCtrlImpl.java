@@ -14,24 +14,17 @@ package org.zkoss.zss.model.impl;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.ClientAnchor;
 import org.zkoss.poi.ss.usermodel.Combo;
 import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotCache;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.usermodel.Row;
-import org.zkoss.poi.ss.usermodel.ZssChartX;
-import org.zkoss.poi.ss.usermodel.charts.ChartData;
-import org.zkoss.poi.ss.usermodel.charts.ChartGrouping;
-import org.zkoss.poi.ss.usermodel.charts.ChartType;
-import org.zkoss.poi.ss.usermodel.charts.LegendPosition;
 import org.zkoss.poi.ss.util.CellRangeAddress;
-import org.zkoss.poi.ss.util.CellReference;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Worksheet;
 
@@ -84,11 +77,6 @@ public class SheetCtrlImpl implements SheetCtrl {
 		return _uuid;
 	}
     private Map<String, CellRangeAddress> _mergedRegions;
-	private Map<String, CellRangeAddress> getMergedRegions() { //ZSS-77: Drag fill "Jan" on new sheet, cause NPE
-		if (_mergedRegions == null)
-			initMerged();
-		return _mergedRegions;
-	}
 	@Override
 	public void initMerged() {
     	final int num = _sheet.getNumMergedRegions();
@@ -102,22 +90,19 @@ public class SheetCtrlImpl implements SheetCtrl {
 	}
 	@Override
 	public CellRangeAddress getMerged(int row, int col) {
-		final Map<String, CellRangeAddress> mergedRegions = getMergedRegions(); 
-		return mergedRegions.get(mergeId(row, col));	
+		return _mergedRegions.get(mergeId(row, col));	
 	}
 	@Override
 	public void addMerged(CellRangeAddress addr) {
 		final int tRow = addr.getFirstRow();
 		final int lCol = addr.getFirstColumn();
-		final Map<String, CellRangeAddress> mergedRegions = getMergedRegions();
-		mergedRegions.put(mergeId(tRow, lCol), addr);
+		_mergedRegions.put(mergeId(tRow, lCol), addr);
 	}
 	@Override
 	public void deleteMerged(CellRangeAddress addr) {
 		final int tRow = addr.getFirstRow();
 		final int lCol = addr.getFirstColumn();
-		final Map<String, CellRangeAddress> mergedRegions = getMergedRegions();
-		mergedRegions.remove(mergeId(tRow, lCol));
+		_mergedRegions.remove(mergeId(tRow, lCol));
 	}
 	private String mergeId(int row, int col) {
 		return row+"_"+col;
@@ -130,9 +115,10 @@ public class SheetCtrlImpl implements SheetCtrl {
 	
 	@Override
 	public DrawingManager getDrawingManager() {
+		// TODO Auto-generated method stub
 		return new DrawingManager() {
 			@Override
-			public List<ZssChartX> getChartXs() {
+			public List<Chart> getCharts() {
 				return Collections.emptyList();
 			}
 
@@ -144,42 +130,6 @@ public class SheetCtrlImpl implements SheetCtrl {
 			@Override
 			public List<Combo> getCombos() {
 				return Collections.emptyList();
-			}
-
-			@Override
-			public ZssChartX addChartX(Worksheet sheet, ClientAnchor anchor,
-					ChartData data, ChartType type, ChartGrouping grouping,
-					LegendPosition pos) {
-				return null;
-			}
-
-			@Override
-			public Picture addPicture(Worksheet sheet, ClientAnchor anchor,
-					byte[] imageData, int format) {
-				return null;
-			}
-
-			@Override
-			public void deletePicture(Worksheet sheet, Picture picture) {
-			}
-
-			@Override
-			public void movePicture(Worksheet sheet, Picture picture,
-					ClientAnchor anchor) {
-			}
-
-			@Override
-			public void moveChart(Worksheet sheet, Chart chart,
-					ClientAnchor anchor) {
-			}
-
-			@Override
-			public List<Chart> getCharts() {
-				return null;
-			}
-
-			@Override
-			public void deleteChart(Worksheet sheet, Chart chart) {
 			}
 		};
 	}

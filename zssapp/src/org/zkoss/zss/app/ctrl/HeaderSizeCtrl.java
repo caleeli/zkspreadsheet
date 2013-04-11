@@ -23,7 +23,6 @@ import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zss.app.zul.Dialog;
 import org.zkoss.zss.app.zul.Zssapp;
 import org.zkoss.zss.app.zul.ctrl.WorkbookCtrl;
-import org.zkoss.zss.ui.Rect;
 import org.zkoss.zul.Button;
 import org.zkoss.zul.Intbox;
 import org.zkoss.zul.Label;
@@ -42,7 +41,6 @@ public class HeaderSizeCtrl extends GenericForwardComposer {
 	
 	/* header original value */
 	private final static String KEY_HEADER_SIZE = "org.zkoss.zss.app.ctrl.HeaderSizeCtrl.headerSize";
-	private static final String KEY_SELECTION = "org.zkoss.zss.app.ctrl.HeaderSizeCtrl.selection";
 	private Integer size;
 	
 	/* header title specify Column width or Row height */
@@ -50,7 +48,6 @@ public class HeaderSizeCtrl extends GenericForwardComposer {
 	
 	/* header size of the target */
 	private Intbox headerSize;
-	private Rect selection;
 	
 	private Button okBtn;
 	
@@ -60,23 +57,24 @@ public class HeaderSizeCtrl extends GenericForwardComposer {
 	 * @param headerSize
 	 * @return
 	 */
-	public static Map newArg(Integer headrType, Integer headerSize, Rect selection) {
+	public static Map newArg(Integer headrType, Integer headerSize) {
 		Map arg = new HashMap();
 		arg.put(HeaderSizeCtrl.KEY_HEADER_TYPE, headrType);
 		arg.put(HeaderSizeCtrl.KEY_HEADER_SIZE, headerSize);
-		arg.put(HeaderSizeCtrl.KEY_SELECTION, selection);
 		return arg;
 	}
 	
 	public void onOpen$_headerSizeDialog(ForwardEvent event) {
 		Map arg = (Map) event.getOrigin().getData();
-		selection = (Rect)arg.get(KEY_SELECTION);
 		headerType = (Integer)arg.get(KEY_HEADER_TYPE);
 		initTitle(headerType);
 		size = (Integer)arg.get(KEY_HEADER_SIZE);
 		headerSize.setValue(size);
 		
-		_headerSizeDialog.setMode(Window.MODAL);
+		try {
+			_headerSizeDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	private void initTitle(int target) {
@@ -101,9 +99,9 @@ public class HeaderSizeCtrl extends GenericForwardComposer {
 	private void setHeaderSize() {
 		WorkbookCtrl bookCtrl = Zssapp.getDesktopWorkbenchContext(self).getWorkbookCtrl();
 		if (headerType ==  WorkbookCtrl.HEADER_TYPE_ROW)
-			bookCtrl.setRowHeightInPx(headerSize.getValue(), selection); 
+			bookCtrl.setRowHeightInPx(headerSize.getValue()); 
 		else
-			bookCtrl.setColumnWidthInPx(headerSize.getValue(), selection);
+			bookCtrl.setColumnWidthInPx(headerSize.getValue());
 		_headerSizeDialog.fireOnClose(null);
 	}
 }

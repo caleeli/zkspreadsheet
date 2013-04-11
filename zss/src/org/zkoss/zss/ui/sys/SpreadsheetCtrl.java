@@ -20,7 +20,6 @@ package org.zkoss.zss.ui.sys;
 
 
 //import org.zkoss.zss.model.Sheet;
-import org.zkoss.json.JSONObject;
 import org.zkoss.zss.model.Worksheet;
 import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Widget;
@@ -38,27 +37,6 @@ public interface SpreadsheetCtrl {
 
 	final public static String CHILD_PASSING_KEY = "zsschildren";
 	
-	public static final int DEFAULT_LOAD_COLUMN_SIZE = 40;
-	public static final int DEFAULT_LOAD_ROW_SIZE = 50;
-	
-	public enum CellAttribute {
-		ALL(1), TEXT(2), STYLE(3), SIZE(5), MERGE(5);
-		
-		int value;
-		CellAttribute(int value) {
-			this.value = value;
-		}
-		
-		public String toString() {
-			return "" + value;
-		}
-	}
-	
-	public enum Header {
-		NONE, ROW, COLUMN, BOTH;
-		
-	}
-	
 	public HeaderPositionHelper getRowPositionHelper(String sheetId);
 	
 	public HeaderPositionHelper getColumnPositionHelper(String sheetId);
@@ -69,15 +47,24 @@ public interface SpreadsheetCtrl {
 	public Rect getSelectionRect();
 	public Rect getFocusRect();
 	public Rect getLoadedRect();
-	public Rect getVisibleRect();
 	
 	public WidgetHandler getWidgetHandler();
 	
-	public JSONObject getRowHeaderAttrs(Worksheet sheet, int rowStart, int rowEnd);
+	public String getCellOuterAttrs(int row,int col);
+
+	public String getCellInnerAttrs(int row,int col);
+
+	public String getRowOuterAttrs(int row);
+
+	public String getTopHeaderOuterAttrs(int col);
 	
-	public JSONObject getColumnHeaderAttrs(Worksheet sheet, int colStart, int colEnd);
+	public String getTopHeaderInnerAttrs(int col);
+
+	public String getLeftHeaderOuterAttrs(int row);
+	public String getLeftHeaderInnerAttrs(int row);
 	
-	public JSONObject getRangeAttrs(Worksheet sheet, Header containsHeader, CellAttribute type, int left, int top, int right, int bottom);
+	public String getDataPanelAttrs();
+	
 	
 	/**
 	 * Add widget to the {@link WidgetHandler} of this spreadsheet, 

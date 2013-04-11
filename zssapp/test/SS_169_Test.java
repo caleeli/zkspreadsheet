@@ -6,14 +6,15 @@ public class SS_169_Test extends SSAbstractTestCase {
     protected void executeTest() {
     	verifyFalse(isWidgetVisible("$_openFileDialog"));
     	
-    	click(jq("$fileMenu"));
+    	click("jq('$fileMenu button.z-menu-btn')");
     	waitResponse();
-    	click(jq("$openFile"));
+    	click("jq('$openFile a.z-menu-item-cnt')");
     	waitResponse();
     	
     	verifyTrue(isWidgetVisible("$_openFileDialog"));
     	
     	doubleClick(jq("$_openFileDialog $filesListbox .z-listcell").first());
-    	verifyEquals(getCellText(0, 3), "Collaboration");
+    	String text = getSpecifiedCell(0, 3).text();
+    	verifyEquals(text, "Collaboration");
     }
 }

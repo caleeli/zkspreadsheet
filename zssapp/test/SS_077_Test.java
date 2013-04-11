@@ -9,8 +9,17 @@ public class SS_077_Test extends SSAbstractTestCase {
         // Select L13:M14
     	selectCells(11, 12, 12, 13);
         
-    	clickDropdownButtonMenu("$fastIconBtn $borderBtn","Inside horizontal borders");
-    	
+        // Click Border icon
+        JQuery borderIcon = jq("$fastIconBtn $borderBtn:visible");
+        mouseOver(borderIcon);
+        waitResponse();
+        clickAt(borderIcon, "30,0");
+        waitResponse();
+        
+        // Click inside horizontal border
+        click(jq(".z-menu-popup:visible .z-menu-item:eq(8)"));
+        waitResponse();
+        
         // Verify
         verifyTrue(ColorVerifingHelper.isEqualColor("#FFFFFF", loadCellL13().parent().css("border-right-color")));
         verifyTrue(ColorVerifingHelper.isEqualColor("#000000", loadCellL13().parent().css("border-bottom-color")));

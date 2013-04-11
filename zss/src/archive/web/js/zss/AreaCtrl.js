@@ -52,9 +52,10 @@ zss.AreaCtrl = zk.$extends(zk.Object, {
 	$init: function (sheet, cmp, range, mode) {
 		this.$supers('$init', arguments);
 		this.id = cmp.id;
+		this.sheetid = sheet.sheetid;
 		cmp.ctrl = this;
 		this.comp = cmp;
-		this.icomp = cmp.firstChild;
+		this.icomp = jq(cmp).children("DIV:first")[0];
 		this.sheet = sheet;
 		this.lastRange = range ? range : new zss.Range(0,0,0,0);
 		this.mode = mode;//null,inner,outer
@@ -104,9 +105,6 @@ zss.AreaCtrl = zk.$extends(zk.Object, {
 		}
 
 		jq(this.comp).css({'width': jq.px0(w), 'height': jq.px0(h), 'left': jq.px(l), 'top': jq.px(t)});
-	},
-	isVisible: function () {
-		return this.comp.style.display == 'block';
 	},
 	/**
 	 * Display selection area
@@ -212,7 +210,7 @@ zss.SelAreaCtrl = zk.$extends(zss.AreaCtrl, {
 		if (elm && elm.tagName.toLowerCase() == 'a') {
 			if (!this._isHyperlinkTimeout(new Date().getTime())) {//not time out yet
 				var href = elm.href,
-					type = elm.getAttribute('z.t');
+					type = jq(elm).attr('z.t');
 				this.sheet._wgt.linkTo(href, type, evt);
 				this.sheet._sendOnHyperlink(row, col, href, type, evt);
 			}

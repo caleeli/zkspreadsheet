@@ -26,5 +26,7 @@ import org.zkoss.zk.au.AuRequest;
  */
 public interface Command {
 	
+	public String getCommand();
+	
 	public void process(AuRequest request);
 }

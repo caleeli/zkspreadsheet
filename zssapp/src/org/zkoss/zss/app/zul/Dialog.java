@@ -24,10 +24,6 @@ import org.zkoss.zul.Window;
  */
 public class Dialog extends Window {
 	
-	public Dialog() {
-		setSclass("zssdialog");
-	}
-	
 	public void onCancel() {
 		setVisible(false);
 	}

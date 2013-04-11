@@ -66,11 +66,12 @@ public class UtilFns {
 	/**
 	 * Gets Cell text by given row and column
 	 */
-	static public String getCelltext(Worksheet sheet, int row,int column){
+	static public String getCelltext(Spreadsheet ss,int row,int column){
 		/*List list = ss.getBook().getSheets();
 		if(list.size()<=ss.getSelectedIndex()){
 			throw new XelException("No such sheet :"+ss.getSelectedIndex());
 		}*/
+		Worksheet sheet = ss.getSelectedSheet();
 		final Cell cell = Utils.getCell(sheet, row, column);
 		String text = "";
 		if (cell != null) {
@@ -92,25 +93,9 @@ public class UtilFns {
 		return text;
 	}
 	
-	static public String getCellFormatText(Worksheet sheet, int row,int column) {
-		final Cell cell = Utils.getCell(sheet, row, column);
-		String text = "";
-		if (cell != null) {
-			final FormatText ft = Utils.getFormatText(cell);
-			if (ft != null) {
-				if (ft.isRichTextString()) {
-					final RichTextString rstr = ft.getRichTextString();
-					text = rstr == null ? "" : rstr.toString();
-				} else if (ft.isCellFormatResult()) {
-					text = ft.getCellFormatResult().text;
-				}
-			}
-		}
-		return text;
-	}
-
 	//Gets Cell edit text by given row and column
-	static public String getEdittext(Worksheet sheet, int row,int column){
+	static public String getEdittext(Spreadsheet ss,int row,int column){
+		Worksheet sheet = ss.getSelectedSheet();
 		final Cell cell = Utils.getCell(sheet, row, column);
 		return cell != null ? Utils.getEditText(cell) : "";
 	}
@@ -128,7 +113,7 @@ public class UtilFns {
 	}
 	static public Integer getColEnd(Spreadsheet ss){
 		int max = ss.getMaxcolumns();
-
+		
 		max = max<=10?max-1:10;
 		
 		int row_top = getRowBegin(ss).intValue();
@@ -156,31 +141,31 @@ public class UtilFns {
 		return Integer.valueOf(max);//Integer.valueOf(ss.getMaxcolumn()-1);
 	}
 	
-//	static public String getRowOuterAttrs(Spreadsheet ss,int row){
-//		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getRowOuterAttrs(row);
-//	}
-//	
-//	static public String getCellOuterAttrs(Spreadsheet ss,int row,int col){
-//		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getCellOuterAttrs(row,col);
-//	}
-//	
-//	static public String getCellInnerAttrs(Spreadsheet ss,int row,int col){
-//		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getCellInnerAttrs(row,col);
-//	}
-//	static public String getTopHeaderOuterAttrs(Spreadsheet ss,int col){
-//		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getTopHeaderOuterAttrs(col);
-//	}
-//	static public String getTopHeaderInnerAttrs(Spreadsheet ss,int col){
-//		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getTopHeaderInnerAttrs(col);
-//	}
-//	
-//	static public String getLeftHeaderOuterAttrs(Spreadsheet ss,int row){
-//		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getLeftHeaderOuterAttrs(row);
-//	}
-//	
-//	static public String getLeftHeaderInnerAttrs(Spreadsheet ss,int row){
-//		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getLeftHeaderInnerAttrs(row);
-//	}
+	static public String getRowOuterAttrs(Spreadsheet ss,int row){
+		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getRowOuterAttrs(row);
+	}
+	
+	static public String getCellOuterAttrs(Spreadsheet ss,int row,int col){
+		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getCellOuterAttrs(row,col);
+	}
+	
+	static public String getCellInnerAttrs(Spreadsheet ss,int row,int col){
+		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getCellInnerAttrs(row,col);
+	}
+	static public String getTopHeaderOuterAttrs(Spreadsheet ss,int col){
+		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getTopHeaderOuterAttrs(col);
+	}
+	static public String getTopHeaderInnerAttrs(Spreadsheet ss,int col){
+		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getTopHeaderInnerAttrs(col);
+	}
+	
+	static public String getLeftHeaderOuterAttrs(Spreadsheet ss,int row){
+		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getLeftHeaderOuterAttrs(row);
+	}
+	
+	static public String getLeftHeaderInnerAttrs(Spreadsheet ss,int row){
+		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getLeftHeaderInnerAttrs(row);
+	}
 	
 	static public Boolean getTopHeaderHiddens(Spreadsheet ss, int col) {
 		return ((SpreadsheetCtrl)ss.getExtraCtrl()).getTopHeaderHiddens(col);

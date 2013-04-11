@@ -20,7 +20,6 @@ import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.IdSpace;
 import org.zkoss.zk.ui.UiException;
-import org.zkoss.zk.ui.WebApps;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zss.app.Consts;
@@ -45,6 +44,8 @@ public class FileMenu extends Menu implements IdSpace {
 	private Menuitem openFile;
 
 	private Menuitem saveFile;
+	//TODO: not implement yet
+	private Menuitem saveFileAs;
 	private Menuitem saveFileAndClose;
 	//TODO: permission control
 	private Menuitem deleteFile;
@@ -52,11 +53,15 @@ public class FileMenu extends Menu implements IdSpace {
 	private Menuitem exportPdf;
 	private boolean _exportToPdfDisabled; /* default false */
 
+	//TODO:Peter, test export to html
 	private Menuitem exportHtml;
 	private boolean _exportToHtmlDisabled; /* default false */
 
 	private Menuitem exportExcel;
 	private boolean _exportToExcelDisabled;
+	
+	private Menuitem fileReversion;
+	private Menuitem print;
 	
 	public FileMenu() {
 		Executions.createComponents(Consts._FileMenu_zul, this, null);
@@ -68,33 +73,9 @@ public class FileMenu extends Menu implements IdSpace {
 		boolean saveDisabled = !FileHelper.hasSavePermission();
 		saveFile.setDisabled(saveDisabled);
 		saveFileAndClose.setDisabled(saveDisabled);
-	}
-	
-	public void setSaveFileDisabled(boolean disabled) {
-		saveFile.setDisabled(true);
-	}
-	
-	public void setSaveFileAndCloseDisabled(boolean disabled) {
-		saveFileAndClose.setDisabled(disabled);
-	}
-	
-	public void setDeleteFileDisabled(boolean disabled) {
-		deleteFile.setDisabled(disabled);
-	}
-	
-	public void setExportPdfDisabled(boolean disabled) {
-		_exportToPdfDisabled = disabled;
-		exportPdf.setDisabled(disabled);
-	}
-
-	public void setExportHtmlDisabled(boolean disabled) {
-		_exportToHtmlDisabled = disabled;
-		exportHtml.setDisabled(disabled);
-	}
-	
-	public void setExportExcelDisabled(boolean disabled) {
-		_exportToExcelDisabled = disabled;
-		exportExcel.setDisabled(disabled);
+		
+		//TODO: save as not implement yet
+		saveFileAs.setDisabled(true);
 	}
 	
 	public void onClick$newFile() {
@@ -149,13 +130,28 @@ public class FileMenu extends Menu implements IdSpace {
 	public void onClick$importFile() {
 		getDesktopWorkbenchContext().getWorkbenchCtrl().openImportFileDialog();
 	}
-	
+
+	public void setExportPdfDisabled(boolean disabled) {
+		_exportToPdfDisabled = disabled;
+		exportPdf.setDisabled(disabled);
+	}
+
+	public void setExportHtmlDisabled(boolean disabled) {
+		_exportToHtmlDisabled = disabled;
+		exportHtml.setDisabled(disabled);
+	}
+
 	public void onClick$exportPdf() {
-		getDesktopWorkbenchContext().getWorkbenchCtrl().openExportPdfDialog(null);
+		getDesktopWorkbenchContext().getWorkbenchCtrl().openExportPdfDialog();
 	}
 
 	public void onClick$exportHtml() {
-		getDesktopWorkbenchContext().getWorkbenchCtrl().openExportHtmlDialog(null);
+		getDesktopWorkbenchContext().getWorkbenchCtrl().openExportHtmlDialog();
+	}
+
+	public void setExportExcelDisabled(boolean disabled) {
+		_exportToExcelDisabled = disabled;
+		exportExcel.setDisabled(disabled);
 	}
 	
 	public void onClick$exportExcel() {
@@ -187,12 +183,13 @@ public class FileMenu extends Menu implements IdSpace {
                 boolean isOpen = workbenchCtrl.getWorkbookCtrl().hasBook();
                 boolean savePermission = FileHelper.hasSavePermission();
                 
+                //TODO: not impl
+    			saveFileAs.setDisabled(true);
     			if (isOpen) {
-    				boolean isPE = WebApps.getFeature("pe");
 	    			deleteFile.setDisabled(false);
-	    			exportPdf.setDisabled(_exportToPdfDisabled | !isPE | false );
-	    			exportHtml.setDisabled(_exportToHtmlDisabled | !isPE | false);
-	    			exportExcel.setDisabled(_exportToExcelDisabled | !isPE | false);
+	    			exportPdf.setDisabled(_exportToPdfDisabled | false);
+	    			exportHtml.setDisabled(_exportToHtmlDisabled | false);
+	    			exportExcel.setDisabled(_exportToExcelDisabled | false);
 	    			saveFile.setDisabled(!savePermission);
 	    			saveFileAndClose.setDisabled(!savePermission);
     			} else {
@@ -203,6 +200,10 @@ public class FileMenu extends Menu implements IdSpace {
 	    			saveFile.setDisabled(true);
 	    			saveFileAndClose.setDisabled(true);
     			}
+    			
+    			//TODO: not implemented yet
+    			fileReversion.setDisabled(true);
+    			print.setDisabled(true);
             }
         });
 	}

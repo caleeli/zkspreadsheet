@@ -27,7 +27,7 @@ public class SS_224_Test extends SSAbstractTestCase {
 		Integer btop = Integer.valueOf(beforeTop.substring(0, 3));
 		Integer atop = Integer.valueOf(afterTop.substring(0, 3));
 		
-		verifyTrue(atop >= btop+cellHeight);
+		verifyTrue(btop+cellHeight >= atop);
 		
 	}
 }

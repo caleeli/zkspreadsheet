@@ -42,7 +42,6 @@ import org.zkoss.poi.ss.util.CellReference;
 import org.zkoss.util.logging.Log;
 import org.zkoss.zk.ui.Execution;
 import org.zkoss.zk.ui.Executions;
-import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zss.engine.RefSheet;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Worksheet;
@@ -53,7 +52,6 @@ import org.zkoss.zss.model.impl.BookHelper;
 import org.zkoss.zss.model.impl.SheetCtrl;
 import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
-import org.zkoss.zul.Messagebox;
 
 /**
  * Internal Use Only. Utility class for {@link Spreadsheet}.
@@ -172,15 +170,7 @@ public class Utils {
 	public static Range pasteSpecial(Worksheet srcSheet, Rect srcRect, Worksheet dstSheet, int tRow, int lCol, int bRow, int rCol, int pasteType, int pasteOp, boolean skipBlanks, boolean transpose) {
 		Range rng = Utils.getRange(srcSheet, srcRect.getTop(), srcRect.getLeft(), srcRect.getBottom(), srcRect.getRight());
 		Range dstRange = Utils.getRange(dstSheet, tRow, lCol, bRow, rCol);
-		Range pasteRange = rng.pasteSpecial(dstRange, pasteType, pasteOp, skipBlanks, transpose);
-		if (pasteRange == null) {
-			showProtectMessage();
-		}
-		return pasteRange;
-	}
-	
-	private static void showProtectMessage() {
-		Messagebox.show("The cell that you are trying to change is protected and locked.", "ZK Spreadsheet", Messagebox.OK, Messagebox.EXCLAMATION);
+		return rng.pasteSpecial(dstRange, pasteType, pasteOp, skipBlanks, transpose);
 	}
 
 	/**
@@ -556,13 +546,6 @@ public class Utils {
 				}
 				CellStyle newCellStyle = book.createCellStyle();
 				newCellStyle.cloneStyleFrom(cs);
-				
-				//bug#ZSS-34: cell background color does not show in excel
-				//20110819, henrichen@zkoss.org: set color to a cell shall change its fillPattern to "solid" automatically
-				final short patternType = cs.getFillPattern();
-				if (patternType == CellStyle.NO_FILL) {
-					newCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
-				}
 				BookHelper.setFillForegroundColor(newCellStyle, bsColor);
 				Range rng = Utils.getRange(sheet, row, col);
 				rng.setStyle(newCellStyle);
@@ -735,10 +718,7 @@ public class Utils {
 	public static void copyCell(Worksheet srcSheet, int srcRow, int srcCol, Worksheet dstSheet, int dstRow, int dstCol) {
 		final Range srcRange = getRange(srcSheet, srcRow, srcCol);
 		final Range dstRange = getRange(dstSheet, dstRow, dstCol);
-		final Range pasteRange = srcRange.copy(dstRange);
-		if(pasteRange == null) {
-			showProtectMessage();
-		}
+		srcRange.copy(dstRange);
 	}
 	
 	public static void copyCell(Cell cell, Worksheet dstSheet, int dstRow, int dstCol) {
@@ -1281,11 +1261,5 @@ public class Utils {
 		}
 	}
 
-	public static boolean setEditTextWithValidation(Spreadsheet ss, Worksheet sheet, int row, int col, String txt, EventListener callback) {
-		if (ss.validate(sheet, row, col, txt, callback)) {
-			setEditText(sheet, row, col, txt);
-			return true;
-		}
-		return false;
-	}
+
 }

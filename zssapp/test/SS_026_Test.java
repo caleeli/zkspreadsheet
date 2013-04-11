@@ -14,14 +14,14 @@ public class SS_026_Test extends SSAbstractTestCase {
         clickCell(cell);
         clickCell(cell);
 
-    	click("$viewMenu");
+    	click("jq('$viewMenu button.z-menu-btn')");
     	waitResponse();
-    	click("$viewFormulaBar");
+    	click("jq('$viewFormulaBar a.z-menu-item-cnt-ck')");
     	waitResponse();
     	verifyFalse(isWidgetVisible("$formulaBar"));
-    	click("$viewMenu");
+    	click("jq('$viewMenu button.z-menu-btn')");
     	waitResponse();
-    	click("$viewFormulaBar a.z-menu-item-cnt-unck");
+    	click("jq('$viewFormulaBar a.z-menu-item-cnt-unck')");
     	waitResponse();
     	verifyTrue(isWidgetVisible("$formulaBar"));
     }

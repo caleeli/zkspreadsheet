@@ -122,7 +122,7 @@ public class FormatMenu extends Menu implements IdSpace {
 	}
 	
 	public void onClick$formatNumber() {
-//		getDesktopWorkbenchContext().getWorkbenchCtrl().openFormatNumberDialog();
+		getDesktopWorkbenchContext().getWorkbenchCtrl().openFormatNumberDialog();
 	}
 	
 	protected DesktopWorkbenchContext getDesktopWorkbenchContext() {
@@ -138,12 +138,12 @@ public class FormatMenu extends Menu implements IdSpace {
 		workbenchCtrl.addEventListener(Consts.ON_WORKBOOK_CHANGED, new EventListener() {
 			public void onEvent(Event event) throws Exception {
 				setDisabled(!workbenchCtrl.getWorkbookCtrl().hasBook());
+				
+				if (WebApps.getFeature("pe"))
+					backgroundColorMenu.setContent("#color=#FFFFFF");
+				else
+					backgroundColorMenu.setContent(null);
 			}
 		});
-		if (WebApps.getFeature("pe"))
-			backgroundColorMenu.setContent("#color=#FFFFFF");
-		else {
-			backgroundColorMenu.detach();
-		}
 	}
 }

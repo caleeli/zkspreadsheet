@@ -12,7 +12,6 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model.impl;
 
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 
 /**

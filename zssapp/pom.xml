@@ -4,7 +4,7 @@
 	<groupId>org.zkoss.zss</groupId>
 	<artifactId>zssapp</artifactId>
 	<properties>
-		<zk.version>6.5.0</zk.version>
+		<zk.version>5.0.7</zk.version>
 		<zkel.version>1.1.0</zkel.version>
 		<commons-lang.version>2.4</commons-lang.version>
 		<bsh.version>2.0b4</bsh.version>
@@ -13,9 +13,21 @@
 		<commons-logging.version>1.1.1</commons-logging.version>
 		<servlet.version>2.4</servlet.version>
 		<jetty.version>6.1.16</jetty.version>
+<!--		
+		<jgroovy.version>1.5.6</jgroovy.version>
+		<jruby.version>1.1.2</jruby.version>
+		<jython.version>2.2.1</jython.version>
+		<js.version>1.7R1</js.version>
+		<jasperreports.version>3.7.0</jasperreports.version>
 		<jfreechart.version>1.0.13</jfreechart.version>
+		<filters.version>2.0.235</filters.version>
+		<ckez.version>3.3.2_50</ckez.version>
+		<timelinez.version>2.3.1_50</timelinez.version>
+		<timeplotz.version>1.1_50</timeplotz.version>
+-->
+		<gmapsz.version>2.0.52.FL.20110504</gmapsz.version>
 	</properties>
-	<version>2.6.0</version>
+	<version>2.1.0</version>
 	<packaging>jar</packaging>
 	<name>ZK Spreadsheet App</name>
 	<url>http://www.zkoss.org/zssapp</url>
@@ -32,12 +44,16 @@
 	</scm>
 	<repositories>
 		<repository>
-			<id>ZK Repository</id>
+			<id>zk repository</id>
 			<url>http://mavensync.zkoss.org/maven2</url>
 		</repository>
 		<repository>
-			<id>ZK Evaluation Repository</id>
-			<url>http://mavensync.zkoss.org/eval/</url>
+			<id>ZSS EE Evaluation</id>
+			<url>http://mavensync.zkoss.org/zss/ee-eval</url>
+		</repository>
+		<repository>
+			<id>ZK EE Evaluation</id>
+			<url>http://mavensync.zkoss.org/zk/ee-eval</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
@@ -63,6 +79,11 @@
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
 			<version>${servlet.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.zkoss.theme</groupId>
+			<artifactId>breeze</artifactId>
+			<version>${zk.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -103,7 +124,14 @@
 			<groupId>org.zkoss.zk</groupId>
 			<artifactId>zkex</artifactId>
 			<version>${zk.version}</version>
-		</dependency>		
+		</dependency>
+<!-- 		
+		<dependency>
+			<groupId>org.zkoss.zk</groupId>
+			<artifactId>zkmax</artifactId>
+			<version>${zk.version}</version>
+		</dependency>
+ -->		
 		<dependency>
 			<groupId>org.zkoss.common</groupId>
 			<artifactId>zcommon</artifactId>
@@ -115,10 +143,9 @@
 			<version>${zk.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.zkoss.common</groupId>
-			<artifactId>zel</artifactId>
-			<version>${zk.version}</version>
-			<optional>true</optional>
+			<groupId>org.zkoss.zkforge.el</groupId>
+			<artifactId>zcommons-el</artifactId>
+			<version>${zkel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -131,16 +158,73 @@
 			<version>${bsh.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+<!--		
 		<dependency>
-			<groupId>org.zkoss.poi</groupId>
-			<artifactId>zpoiex</artifactId>
-			<version>3.8.1</version>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+			<version>${jgroovy.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jruby</groupId>
+			<artifactId>jruby</artifactId>
+			<version>${jruby.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.python</groupId>
+			<artifactId>jython</artifactId>
+			<version>${jython.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>rhino</groupId>
+			<artifactId>js</artifactId>
+			<version>${js.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.jasperreports</groupId>
+			<artifactId>jasperreports</artifactId>
+			<version>${jasperreports.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>jfree</groupId>
+			<artifactId>jfreechart</artifactId>
+			<version>${jfreechart.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.jhlabs</groupId>
+			<artifactId>filters</artifactId>
+			<version>${filters.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.zkoss.zkforge</groupId>
+			<artifactId>ckez</artifactId>
+			<version>${ckez.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.zkoss.zkforge</groupId>
+			<artifactId>timelinez</artifactId>
+			<version>${timelinez.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.zkoss.zkforge</groupId>
+			<artifactId>timeplotz</artifactId>
+			<version>${timeplotz.version}</version>
+		</dependency>
+-->
+		<dependency>
+			<groupId>org.zkoss.zkforge</groupId>
+			<artifactId>gmapsz</artifactId>
+			<version>${gmapsz.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.zkoss.zss</groupId>
 			<artifactId>zss</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+ 		
 		<dependency>
 			<groupId>org.zkoss.zss</groupId>
 			<artifactId>zsspdf</artifactId>
@@ -165,7 +249,7 @@
 			</resource>
 		</resources>
 		<plugins>
-			<!--<plugin>
+			<plugin>
 				<groupId>org.zkoss.maven</groupId>
 				<artifactId>yuicompressor-maven-plugin-zk</artifactId>
 				<version>1.1.4</version>
@@ -176,7 +260,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>-->
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

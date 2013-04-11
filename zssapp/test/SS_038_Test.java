@@ -6,9 +6,9 @@ public class SS_038_Test extends SSAbstractTestCase {
     protected void executeTest() {
     	verifyFalse(isWidgetVisible("$_insertFormulaDialog"));
     	
-    	click(jq("$insertMenu"));
+    	click("jq('$insertMenu button.z-menu-btn')");
     	waitResponse();
-    	click(jq("$insertFormula"));
+    	click("jq('$insertFormula a.z-menu-item-cnt')");
     	waitResponse();
     	
     	verifyTrue(isWidgetVisible("$_insertFormulaDialog"));

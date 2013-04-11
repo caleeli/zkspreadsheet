@@ -2,28 +2,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.zkoss.poi</groupId>
+	<groupId>org.zkoss.zss</groupId>
 	<artifactId>zpoi</artifactId>
 	<properties>
-		<zk.version>6.5.0</zk.version>
+		<zk.version>5.0.7</zk.version>
 		<commons-logging.version>1.1.1</commons-logging.version>
 		<log4j.version>1.2.13</log4j.version>
 		<dom4j.version>1.6.1</dom4j.version>
-		<stax-api.version>1.0.1</stax-api.version>
+		<geronimo-stax-api.version>1.0</geronimo-stax-api.version>
 		<xmlbeans.version>2.3.0</xmlbeans.version>
 		<ooxml-schemas.version>1.1</ooxml-schemas.version>
 		<junit.version>4.8.1</junit.version>
-		<commons-codec.version>1.5</commons-codec.version>
 	</properties>
-	<version>3.8.1</version>
+	<version>2.1.0</version>
 	<packaging>jar</packaging>
 	<name>ZK Spreadsheet POI</name>
 	<url>http://www.zkoss.org/zss</url>
 	<description>Adapted Apache POI library for ZK Spreadsheet</description>
 	<licenses>
 		<license>
-		<name>Apache License, Version 2.0</name>
-		<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+		<name>GNU General Public License, Version 3.0</name>
+		<url>http://www.gnu.org/licenses/gpl.html</url>
 		<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -59,7 +58,6 @@
 			<groupId>org.zkoss.common</groupId>
 			<artifactId>zcommon</artifactId>
 			<version>${zk.version}</version>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -83,9 +81,9 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>stax</groupId>
-  			<artifactId>stax-api</artifactId>
-  			<version>${stax-api.version}</version>
+			<groupId>org.apache.geronimo.specs</groupId>
+			<artifactId>geronimo-stax-api_1.0_spec</artifactId>
+			<version>${geronimo-stax-api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xmlbeans</groupId>
@@ -103,11 +101,6 @@
 			<version>${junit.version}</version>
 			<scope>test</scope>
 			<optional>true</optional>
-		</dependency>
-		<dependency>
-		   <groupId>commons-codec</groupId>
-		   <artifactId>commons-codec</artifactId>
-		   <version>${commons-codec.version}</version>
 		</dependency>
 	</dependencies>
 </project> 

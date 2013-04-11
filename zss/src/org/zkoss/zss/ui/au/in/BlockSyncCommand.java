@@ -35,6 +35,7 @@ import org.zkoss.zss.ui.sys.SpreadsheetInCtrl;
  *
  */
 public class BlockSyncCommand implements Command{
+	final static String Command = "onZSSSyncBlock";
 
 	public void process(AuRequest request) {
 		final Component comp = request.getComponent();
@@ -65,12 +66,15 @@ public class BlockSyncCommand implements Command{
 		int fetchWidth = (Integer) data.get("fetchWidth");
 		int fetchHeight = (Integer) data.get("fetchHeight");
 
-		int rangeLeft = (Integer) data.get("rangeLeft");// active range
+		int rangeLeft = (Integer) data.get("rangeLeft");// visible range
 		int rangeTop = (Integer) data.get("rangeTop");
 		int rangeRight = (Integer) data.get("rangeRight");
 		int rangeBottom = (Integer) data.get("rangeBottom");
 		
-		ctrl.setLoadedRect(rangeLeft, rangeTop, rangeRight, rangeBottom);	
-		ctrl.setVisibleRect(blockLeft, blockTop, blockRight, blockBottom);
+		ctrl.setLoadedRect(blockLeft, blockTop, blockRight, blockBottom);	
+	}
+
+	public String getCommand() {
+		return Command;
 	}
 }

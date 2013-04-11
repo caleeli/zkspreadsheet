@@ -17,12 +17,10 @@ package org.zkoss.zss.app.zul.ctrl;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
-import org.zkoss.image.AImage;
 import org.zkoss.poi.ss.usermodel.Cell;
-import org.zkoss.poi.ss.usermodel.charts.ChartType;
+import org.zkoss.util.media.Media;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zss.app.file.SpreadSheetMetaInfo;
-import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Worksheet;
 import org.zkoss.zss.ui.Position;
 import org.zkoss.zss.ui.Rect;
@@ -54,13 +52,12 @@ public interface WorkbookCtrl {
 	/**
 	 * Add and move other editor's focus
 	 * 
-	 * @param id
 	 * @param name
 	 * @param color
 	 * @param row
 	 * @param col
 	 */
-	public void moveEditorFocus(String id, String name, String color, int row ,int col);
+	public void moveEditorFocus(String name, String color, int row ,int col);
 	
 	/**
 	 * Remove editor's focus on specified name
@@ -102,10 +99,17 @@ public interface WorkbookCtrl {
 	
 	public void insertSheet();
 	
-	public void addImage(int row, int col, AImage image);
+	public void insertImage(Media media);
 	
 	public void insertFormula(int rowIdx, int colIdx, String formula);
-		
+	
+	//TODO: use clip board interface, return  
+	public void cutSelection();
+	
+	public void copySelection();
+	
+	public void pasteSelection();
+	
 	public void clearSelectionContent();
 	
 	public void clearSelectionStyle();
@@ -171,8 +175,6 @@ public interface WorkbookCtrl {
 	 * @param src
 	 */
 	public void setBookSrc(String src);
-	
-	public void setBook(Book book);
 	
 	/**
 	 * Returns whether current sheet is protected or not
@@ -252,13 +254,13 @@ public interface WorkbookCtrl {
 	 * Sets column width of selected columns
 	 * @param width
 	 */
-	public void setColumnWidthInPx(int width, Rect selection);
+	public void setColumnWidthInPx(int width);
 
 	/**
 	 * Sets row height of selected rows
 	 * @param height
 	 */
-	public void setRowHeightInPx(int height, Rect selection);
+	public void setRowHeightInPx(int height);
 	
 	public int getDefaultCharWidth();
 	
@@ -278,18 +280,8 @@ public interface WorkbookCtrl {
 	
 	/**
 	 * Deletes current selected sheet, returns next sheet index
-	 * <p> Returns -1 if delete sheet fail
+	 * <> Returns -1 if delete sheet fail
 	 * @return index
 	 */
 	public int deleteSheet();
-	
-	public void addChart(int row, int col, ChartType type);
-	
-	public String getColumnTitle(int col);
-	
-	public String getRowTitle(int row);
-
-	public Rect getVisibleRect();
-	
-	public boolean setEditTextWithValidation(Worksheet sheet, int row, int col, String txt, EventListener callback);
 }

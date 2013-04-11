@@ -15,10 +15,6 @@ it will be useful, but WITHOUT ANY WARRANTY.
 
 //B12:G16, custom sort, has headers, sort by column B
 public class SS_199_Test extends SSAbstractTestCase {
-	
-	/**
-	 * Custom sort with "My data has headers"
-	 */
 	@Override
 	protected void executeTest() {
 		rightClickCells(1,11,7,15);
@@ -37,19 +33,19 @@ public class SS_199_Test extends SSAbstractTestCase {
 		click(jq("@comboitem[label=\"Column B\"] td.z-comboitem-text"));
 		waitResponse();
 		
-		click("$okBtn:visible td.z-button-cm");
+		click(jq("$okBtn td.z-button-cm"));
 		waitResponse();
 		
 		//verify
-		String b13value = getCellText(1,12);
-		String b14value = getCellText(1,13);
-		String b15value = getCellText(1,14);
-		String b16value = getCellText(1,15);
+		String b13value = getSpecifiedCell(1,12).text();
+		String b14value = getSpecifiedCell(1,13).text();
+		String b15value = getSpecifiedCell(1,14).text();
+		String b16value = getSpecifiedCell(1,15).text();
 
-		String f13value = getCellText(5,12);
-		String f14value = getCellText(5,13);
-		String f15value = getCellText(5,14);
-		String f16value = getCellText(5,15);
+		String f13value = getSpecifiedCell(5,12).text();
+		String f14value = getSpecifiedCell(5,13).text();
+		String f15value = getSpecifiedCell(5,14).text();
+		String f16value = getSpecifiedCell(5,15).text();
 
 		verifyEquals(b13value,"Average\u00A0total\u00A0assets");
 		verifyEquals(b14value,"Current\u00A0assets");
