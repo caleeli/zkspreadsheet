@@ -54,7 +54,6 @@ import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.DataValidationConstraint;
 import org.zkoss.poi.ss.usermodel.DataValidationHelper;
 import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.usermodel.Row;
 import org.zkoss.poi.ss.usermodel.DataValidationConstraint.ValidationType;
 import org.zkoss.poi.ss.util.CellRangeAddress;
@@ -1246,12 +1245,6 @@ public class HSSFSheetImpl extends HSSFSheet implements SheetCtrl, Worksheet {
 	public List<Chart> getCharts() {
 		DrawingManager dm = getDrawingManager();
 		return dm.getCharts();
-	}
-	
-	@Override
-	public List<PivotTable> getPivotTables() {
-		// TODO Auto-generated method stub
-		return null;
 	}
     
     //--SheetCtrl--//

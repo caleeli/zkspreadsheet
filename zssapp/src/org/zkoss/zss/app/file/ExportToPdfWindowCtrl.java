@@ -91,7 +91,10 @@ public class ExportToPdfWindowCtrl extends GenericForwardComposer {
 		selection = (Rect) event.getOrigin().getData();
 		currSelection.setDisabled(selection == null);
 		noHeader.setChecked(true);
-		_exportToPdfDialog.setMode(Window.MODAL);
+		try {
+			_exportToPdfDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	@Override

@@ -142,17 +142,13 @@ zss.Cell = zk.$extends(zk.Widget, {
 		this.c = col;
 		this.src = src;
 		
-		var	data = src.getRow(row).getCell(col),
-			colHeader = src.columnHeaders[col],
-			rowHeader = src.rowHeaders[row];
+		var	data = src.getRow(row).getCell(col);
 		this.text = data.text || '';
-		if (colHeader && rowHeader) {
-			this.ref = colHeader.t + rowHeader.t;
-		}
+		this.ref = data.ref;
 		this.edit = data.editText ? data.editText : '';
 		this.hastxt = !!this.text;
-		this.zsw = src.getColumnWidthId(col);
-		this.zsh = src.getRowHeightId(row);
+		this.zsw = data.widthId;
+		this.zsh = data.heightId;
 		this.lock = data.lock;
 		this.cellType = data.cellType;
 		
@@ -171,6 +167,8 @@ zss.Cell = zk.$extends(zk.Widget, {
 			this.mergeCls = data.mergeCls;
 		}
 		this.wrap = data.wrap;
+		this.heightId = data.heightId;
+		this.widthId = data.widthId;
 		this.overflow = data.overflow;
 		this.maxOverflowCol = data.maxOverflowCol;
 		
@@ -259,8 +257,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 			overflow = data.overflow,
 			maxOverflowCol = data.maxOverflowCol,
 			cellType = data.cellType,
-			txt = data.text,
-			txtChd = txt != this.text,
+			txtChd = data.text != this.text,
 			wrapChd = this.wrap != data.wrap,
 			processWrap = data.wrap || wrapChd || (this.wrap && this.getText() != data.text),
 			cave = this.$n('cave'),
@@ -283,7 +280,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 		this.edit = data.editText;
 		
 		this._updateListenOverflow(overflow);
-		this.setText(txt, false, wrapChd); //when wrap changed, shall re-process overflow
+		this.setText(data.text, false, wrapChd); //when wrap changed, shall re-process overflow
 		if (this.overflow != overflow 
 			|| this.maxOverflowCol != maxOverflowCol
 			|| this.overflow && txtChd) {
@@ -306,8 +303,6 @@ zss.Cell = zk.$extends(zk.Widget, {
 		}
 		this.cellType = cellType;
 		
-		if (txtChd && processWrap)
-			this._txtHgh = jq(this.getTextNode()).height();//cache txt height
 		//merged cell won't change row height automatically
 		if (this.cellType == STR_CELL && !this.merid && processWrap) {//must process wrap after set text
 			this.parent.processWrapCell(this, true);
@@ -354,8 +349,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 * @return int height
 	 */
 	getTextHeight: function () {
-		var h = this._txtHgh;
-		return h != undefined ? h : this._txtHgh = jq(this.getTextNode()).height();
+		return jq(this.getTextNode()).height();
 	},
 	_updateVerticalAlign: zk.ie6_ || zk.ie7_ ? function () {
 		var	v = this.valign,
@@ -465,9 +459,6 @@ zss.Cell = zk.$extends(zk.Widget, {
 		var	rBorder = this.rborder,
 			n = this.$n(),
 			$n = jq(this.$n());
-		if ($n.width() >= jq(this.getTextNode()).width()) {//text node width is smaller then cell width, no need to overflow 
-			return;
-		}
 		if (max == -1) {//unlimited overflow width
 			$n
 			.removeClass(rBorder ? "zscell-over" : "zscell-over-b")
@@ -521,7 +512,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 		var n = this.comp = this.$n(),
 			sheet = this.sheet;
 		n.ctrl = this;
-		this.cave = n.firstChild;
+		this.txtcomp = this.getTextNode();
 		if (this.cellType == BLANK_CELL) {//no need to process overflow and wrap
 			return;
 		}
@@ -545,7 +536,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 		this._updateListenOverflow(false);
 		this._updateListenRowHeightChanged(false);
 		
-		this.comp = this.comp.ctrl = this.cave = this.sheet = this.overlapBy = this._listenRowHeightChanged =
+		this.comp = this.comp.ctrl = this.txtcomp = this.sheet = this.overlapBy = this._listenRowHeightChanged =
 		this.block = this.lock = null;
 		
 		this.$supers(zss.Cell, 'unbind_', arguments);
@@ -597,8 +588,8 @@ zss.Cell = zk.$extends(zk.Widget, {
 	//super//
 	getZclass: function () {
 		var cls = 'zscell',
-			hId = this.zsh,
-			wId = this.zsw,
+			hId = this.heightId,
+			wId = this.widthId,
 			mCls = this.mergeCls;
 		if (hId)
 			cls += (' zshi' + hId);
@@ -610,8 +601,8 @@ zss.Cell = zk.$extends(zk.Widget, {
 	},
 	_getInnerClass: function () {
 		var cls = 'zscelltxt',
-			hId = this.zsh,
-			wId = this.zsw;
+			hId = this.heightId,
+			wId = this.widthId;
 		if (hId)
 			cls += (' zshi' + hId);
 		if (wId)
@@ -626,7 +617,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 		if (zsw) {
 			this.zsw = zsw;
 			jq(this.comp).addClass("zsw" + zsw);
-			jq(this.cave).addClass("zswi" + zsw);
+			jq(this.txtcomp).addClass("zswi" + zsw);
 		}
 	},
 	/**
@@ -637,7 +628,7 @@ zss.Cell = zk.$extends(zk.Widget, {
 		if (zsh) {
 			this.zsh = zsh;
 			jq(this.comp).addClass("zshi" + zsh);
-			jq(this.cave).addClass("zshi" + zsh);	
+			jq(this.txtcomp).addClass("zshi" + zsh);	
 		}
 	},
 	/**
@@ -645,8 +636,6 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 * @param int column index
 	 */
 	resetColumnIndex: function (newcol) {
-		var	src = this.src;
-		this.ref = src.columnHeaders[newcol].t + src.rowHeaders[this.r].t;
 		this.c = newcol;
 	},
 	/**
@@ -654,8 +643,6 @@ zss.Cell = zk.$extends(zk.Widget, {
 	 * @param int row index
 	 */
 	resetRowIndex: function (newrow) {
-		var	src = this.src;
-		this.ref = src.columnHeaders[this.c].t + src.rowHeaders[newrow].t;
 		this.r = newrow;
 	}
 });

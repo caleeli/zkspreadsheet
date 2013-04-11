@@ -15,9 +15,8 @@ package org.zkoss.zss.model;
 import java.util.List;
 
 import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotTable;
+import org.zkoss.poi.ss.usermodel.DataValidation;
 
 /**
  * ZK Spreadsheet sheet.
@@ -48,10 +47,4 @@ public interface Worksheet extends org.zkoss.poi.ss.usermodel.Sheet {
      * @return validations in this ZK Spreadsheet sheet.
      */
     public List<DataValidation> getDataValidations();
-    
-    /**
-     * Returns 
-     * @return
-     */
-    public List<PivotTable> getPivotTables();
 }

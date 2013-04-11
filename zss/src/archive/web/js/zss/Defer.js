@@ -17,7 +17,8 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
 (function () {
 
 /**
- * Preload extra cells data from server
+ * Preload extra cells data from server when Spreadsheet is free 
+ * (no scrolling, Au processing etc..)
  */
 zss.DeferLoader = zk.$extends(zk.Object, {
 	_deferTime: 500,
@@ -39,7 +40,7 @@ zss.DeferLoader = zk.$extends(zk.Object, {
 	/**
 	 * Default load column size if Spreadsheet's preload column size not defined
 	 */
-	_loadCol: 40,
+	_loadCol: 20,
 	$init: function (sheet) {
 		this.sheet = sheet;
 		this._wgt = sheet._wgt;
@@ -165,20 +166,19 @@ zss.DeferLoader = zk.$extends(zk.Object, {
 	/**
 	 * Decide whether shall load extra data now or not
 	 * 
+	 * When not scrolling, editing, Au processing
+	 * 
 	 * @return boolean
 	 */
 	shallLoadNow: function () {
-		return this.sheet.activeBlock.loadstate == zss.MainBlockCtrl.IDLE;
-		/*
 		if (zAu.processing())
 			return false;
-		
+			
 		var sheet = this.sheet,
 			activeBlock = sheet.activeBlock,
 			shtState = sheet.state,
 			notEditing = shtState == zss.SSheetCtrl.FOCUSED || shtState == zss.SSheetCtrl.NOFOCUS;
 		return notEditing && activeBlock.loadstate == zss.MainBlockCtrl.IDLE;
-		*/
 	}
 });
 })();

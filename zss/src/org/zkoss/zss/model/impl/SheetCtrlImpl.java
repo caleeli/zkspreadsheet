@@ -14,24 +14,23 @@ package org.zkoss.zss.model.impl;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.Chart;
 import org.zkoss.poi.ss.usermodel.ClientAnchor;
+import org.zkoss.poi.ss.usermodel.ZssChartX;
 import org.zkoss.poi.ss.usermodel.Combo;
 import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotCache;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.usermodel.Row;
-import org.zkoss.poi.ss.usermodel.ZssChartX;
 import org.zkoss.poi.ss.usermodel.charts.ChartData;
 import org.zkoss.poi.ss.usermodel.charts.ChartGrouping;
 import org.zkoss.poi.ss.usermodel.charts.ChartType;
 import org.zkoss.poi.ss.usermodel.charts.LegendPosition;
 import org.zkoss.poi.ss.util.CellRangeAddress;
-import org.zkoss.poi.ss.util.CellReference;
 import org.zkoss.zss.model.Book;
 import org.zkoss.zss.model.Worksheet;
 
@@ -130,6 +129,7 @@ public class SheetCtrlImpl implements SheetCtrl {
 	
 	@Override
 	public DrawingManager getDrawingManager() {
+		// TODO Auto-generated method stub
 		return new DrawingManager() {
 			@Override
 			public List<ZssChartX> getChartXs() {

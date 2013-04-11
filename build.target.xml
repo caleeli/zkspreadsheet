@@ -20,7 +20,7 @@ Copyright (C) 2002-2006 Potix Corporation. All Rights Reserved.
 		<arg value="${bin.dir}/genprop"/>
 		<arg value="-x"/>
 		<arg value="${src.mesg.dir}"/>
-		<arg value="${src.dir}"/>
+		<arg value="${codegen.dir}"/>
 	</exec>
 </target>
 
@@ -28,10 +28,6 @@ Copyright (C) 2002-2006 Potix Corporation. All Rights Reserved.
 <!-- COMPILE -->
 <!-- ======= -->
 <target name="compile" depends="codegen.mesg" if="compile.required">
-	<!--copy cmllib/zkex.jar to /dist/jar-->
-	<copy todir="${dist.lib.dir}" preservelastmodified="yes" failonerror="false" quiet="true">
-		<fileset dir="../cmllib" includes="*.jar"/>
-	</copy>
 	<mkdir dir="${out.dir}"/>
 	<available file="srcdpc" property="srcdpc.dir" value="srcdpc"/>
 	<property name="srcdpc.dir" value=""/>
@@ -185,7 +181,7 @@ if="deploy.jboss.required">
 		<fileset dir="srcpv" includes="zssPublicCert.store"/>
 		<fileset dir="srcpv" includes="**/Resources.properties"/>
 	</copy>
-
+	
 	<jar jarfile="${out.dir}/${jar.name}" manifest="${manifest.mf}">
 		<fileset dir="${out.dir}" excludes="${exclude.list}"/>
 		<fileset dir="${src.archive.dir}" includes="**"
@@ -205,6 +201,7 @@ if="deploy.jboss.required">
 		<fileset dir="srcpv" includes="zssPublicCert.store"/>
 		<fileset dir="srcpv" includes="**/Resources.properties"/>
 	</copy>
+	
 	<jar jarfile="${out.dir}/${jar2.name}" manifest="${manifest.mf}">
 		<fileset dir="${out.dir}" excludes="${exclude.list}"/>
 		<fileset dir="${src.archive.dir}" includes="**"

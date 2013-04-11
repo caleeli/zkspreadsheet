@@ -12,8 +12,6 @@ Copyright (C) 2010 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,10 +19,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTComment;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCommentList;
@@ -36,6 +34,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STPaneState;
 import org.zkoss.lang.Classes;
 import org.zkoss.lang.Library;
 import org.zkoss.poi.POIXMLDocumentPart;
+import org.zkoss.poi.ss.formula.ptg.Ptg;
 import org.zkoss.poi.openxml4j.opc.PackagePart;
 import org.zkoss.poi.openxml4j.opc.PackageRelationship;
 import org.zkoss.poi.ss.SpreadsheetVersion;
@@ -43,18 +42,18 @@ import org.zkoss.poi.ss.formula.FormulaParser;
 import org.zkoss.poi.ss.formula.FormulaRenderer;
 import org.zkoss.poi.ss.formula.FormulaType;
 import org.zkoss.poi.ss.formula.PtgShifter;
-import org.zkoss.poi.ss.formula.ptg.Ptg;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.CellStyle;
 import org.zkoss.poi.ss.usermodel.Chart;
 import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.usermodel.Row;
+import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 import org.zkoss.poi.ss.util.CellReference;
 import org.zkoss.poi.xssf.model.CommentsTable;
 import org.zkoss.poi.xssf.usermodel.XSSFCell;
 import org.zkoss.poi.xssf.usermodel.XSSFCellHelper;
+import org.zkoss.poi.xssf.usermodel.XSSFDataValidation;
 import org.zkoss.poi.xssf.usermodel.XSSFDrawing;
 import org.zkoss.poi.xssf.usermodel.XSSFEvaluationWorkbook;
 import org.zkoss.poi.xssf.usermodel.XSSFName;
@@ -63,8 +62,8 @@ import org.zkoss.poi.xssf.usermodel.XSSFRowHelper;
 import org.zkoss.poi.xssf.usermodel.XSSFSheet;
 import org.zkoss.poi.xssf.usermodel.XSSFWorkbook;
 import org.zkoss.zss.model.Book;
-import org.zkoss.zss.model.Range;
 import org.zkoss.zss.model.Worksheet;
+import org.zkoss.zss.model.Range;
 
 /**
  * Implementation of {@link Worksheet} based on XSSFSheet.
@@ -77,7 +76,7 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
         super();
     }
 
-	/**
+    /**
      * Creates an XSSFSheet representing the given package part and relationship.
      * Should only be called by XSSFWorkbook when reading in an exisiting file.
      *
@@ -273,13 +272,10 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
             String formula = name.getRefersToFormula();
             int sheetIndex = name.getSheetIndex();
 
-            // 20120904 samchuang@zkoss.org: ZSS-153, user define formula name range doesn't need to adjust range
-            if (formula != null) {
-                Ptg[] ptgs = FormulaParser.parse(formula, fpb, FormulaType.NAMEDRANGE, sheetIndex);
-                if (shifter.adjustFormula(ptgs, sheetIndex)) {
-                    String shiftedFmla = FormulaRenderer.toFormulaString(fpb, ptgs);
-                    name.setRefersToFormula(shiftedFmla);
-                }	
+            Ptg[] ptgs = FormulaParser.parse(formula, fpb, FormulaType.NAMEDRANGE, sheetIndex);
+            if (shifter.adjustFormula(ptgs, sheetIndex)) {
+                String shiftedFmla = FormulaRenderer.toFormulaString(fpb, ptgs);
+                name.setRefersToFormula(shiftedFmla);
             }
         }
     }
@@ -1224,6 +1220,7 @@ public class XSSFSheetImpl extends XSSFSheet implements SheetCtrl, Worksheet {
 	public DrawingManager getDrawingManager() {
 		return getSheetCtrl().getDrawingManager();
 	}
+
 	@Override
 	public void whenRenameSheet(String oldname, String newname) {
 		getSheetCtrl().whenRenameSheet(oldname, newname);

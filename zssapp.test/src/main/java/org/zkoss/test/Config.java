@@ -26,7 +26,7 @@ import java.util.Properties;
 public class Config {
 	
 	public enum Browser {
-		FIREFOX, CHROME, IE, OPERA;
+		FIREFOX, CHROME, IE;
 	}
 	
 //	@Inject
@@ -45,7 +45,7 @@ public class Config {
 //			throw new IllegalStateException("Config shall invoke Config.init() first");
 //		}
 //		return Browser.FIREFOX;
-		return Browser.CHROME;
-//		return Browser.IE;
+//		return Browser.CHROME;
+		return Browser.IE;
 	}
 }

@@ -18,7 +18,6 @@ package org.zkoss.test.zss.cases;
 
 import junit.framework.Assert;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.openqa.selenium.WebDriver;
@@ -76,11 +75,6 @@ public class SS_052_Test {
 	
 	JQuery jq(String selector) {
 		return jqFactory.create("'" + selector + "'");
-	}
-	
-	@Before
-	public void setUp() {
-		timeBlocker.waitResponse();
 	}
 	
 	@Test

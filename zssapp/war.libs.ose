@@ -1,10 +1,13 @@
+breeze.jar
 zcommon.jar
-zel.jar
 zweb.jar
 zk.jar
 zul.jar
 zhtml.jar
 zkplus.jar
+ckez.jar
+gmapsz.jar
+zcommons-el.jar
 bsh.jar
 commons-fileupload.jar
 commons-io.jar
@@ -15,7 +18,7 @@ jasperreports.jar
 commons-collections.jar
 commons-logging.jar
 commons-digester.jar
-itext-2.1.7.jar
+iText-5.0.3.jar
 zpoi.jar
 zss.jar
 opencsv.jar

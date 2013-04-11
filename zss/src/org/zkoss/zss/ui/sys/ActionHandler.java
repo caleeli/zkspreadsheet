@@ -67,11 +67,9 @@ import org.zkoss.zss.model.Range;
 import org.zkoss.zss.model.Ranges;
 import org.zkoss.zss.model.Worksheet;
 import org.zkoss.zss.model.impl.BookHelper;
-import org.zkoss.zss.model.impl.SheetCtrl;
 import org.zkoss.zss.ui.Action;
 import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
-import org.zkoss.zss.ui.Spreadsheet.HelperContainer;
 import org.zkoss.zss.ui.event.Events;
 import org.zkoss.zss.ui.event.KeyEvent;
 import org.zkoss.zss.ui.impl.CellVisitor;
@@ -82,7 +80,6 @@ import org.zkoss.zss.ui.impl.MergedRect;
 import org.zkoss.zss.ui.impl.Upload;
 import org.zkoss.zss.ui.impl.Uploader;
 import org.zkoss.zss.ui.impl.Utils;
-import org.zkoss.zul.Messagebox;
 
 /**
  * @author sam
@@ -92,7 +89,6 @@ public abstract class ActionHandler {
 	
 	protected Spreadsheet _spreadsheet;
 	protected Uploader _insertPicture;
-	protected Upload _upload;
 	protected Rect _insertPictureSelection;
 	protected Book _book;
 	protected Clipboard _clipboard;
@@ -132,50 +128,6 @@ public abstract class ActionHandler {
 			Action.OTHER_CHART,
 			Action.HYPERLINK
 	};
-	//TODO the disable action information should get from worksheet, not hard coded
-	private static Action[] _defaultDisabledActionOnSheetProtected = new Action[]{
-			Action.FONT_FAMILY,
-			Action.FONT_SIZE,
-			Action.FONT_BOLD,
-			Action.FONT_ITALIC,
-			Action.FONT_UNDERLINE,
-			Action.FONT_STRIKE,
-			Action.BORDER,
-			Action.FONT_COLOR,
-			Action.FILL_COLOR,
-			Action.VERTICAL_ALIGN,
-			Action.HORIZONTAL_ALIGN,
-			Action.WRAP_TEXT,
-			Action.MERGE_AND_CENTER,
-			Action.INSERT,
-			Action.INSERT_SHIFT_CELL_RIGHT,
-			Action.INSERT_SHIFT_CELL_DOWN,
-			Action.INSERT_SHEET_ROW,
-			Action.INSERT_SHEET_COLUMN,
-			Action.DELETE,
-			Action.DELETE_SHIFT_CELL_LEFT,
-			Action.DELETE_SHIFT_CELL_UP,
-			Action.DELETE_SHEET_ROW,
-			Action.DELETE_SHEET_COLUMN,
-			Action.CLEAR,
-			Action.CLEAR_CONTENT,
-			Action.FORMAT_CELL,
-			Action.SORT_ASCENDING,
-			Action.SORT_DESCENDING,
-			Action.CUSTOM_SORT,
-			Action.FILTER,
-			Action.SORT_AND_FILTER,
-			Action.INSERT_PICTURE,
-			Action.COLUMN_CHART,
-			Action.LINE_CHART,
-			Action.PIE_CHART,
-			Action.BAR_CHART,
-			Action.AREA_CHART,
-			Action.SCATTER_CHART,
-			Action.OTHER_CHART,
-			Action.HYPERLINK
-	};
-	
 	protected EventListener _bookListener = new EventListener() {
 
 		@Override
@@ -184,30 +136,6 @@ public abstract class ActionHandler {
 			if (evt.getName().equals(SSDataEvent.ON_BTN_CHANGE)) {
 				syncAutoFilter();
 			}
-		}
-	};
-	
-	protected EventListener _doSelectSheetListener = new EventListener() {
-		
-		@Override
-		public void onEvent(Event event) throws Exception {
-			doSheetSelect();
-		}
-	};
-	
-	protected EventListener _doCtrlKeyListener = new EventListener() {
-		
-		@Override
-		public void onEvent(Event event) throws Exception {
-			doCtrlKey((KeyEvent) event);
-		}
-	};
-	
-	protected EventListener _doClearClipboard = new EventListener() {
-
-		@Override
-		public void onEvent(Event event) throws Exception {
-			clearClipboard();
 		}
 	};
 	
@@ -447,14 +375,10 @@ public abstract class ActionHandler {
 	public void doHideRow(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.getRows()
-				.setHidden(true);	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.getRows()
+			.setHidden(true);
 		}
 	}
 	/**
@@ -463,14 +387,10 @@ public abstract class ActionHandler {
 	public void doUnhideRow(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.getRows()
-				.setHidden(false);	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.getRows()
+			.setHidden(false);	
 		}
 	}
 	/**
@@ -479,14 +399,10 @@ public abstract class ActionHandler {
 	public void doUnhideColumn(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.getColumns()
-				.setHidden(false);	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.getColumns()
+			.setHidden(false);	
 		}
 	}
 	/**
@@ -495,14 +411,10 @@ public abstract class ActionHandler {
 	public void doHideColumn(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.getColumns()
-				.setHidden(true);	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.getColumns()
+			.setHidden(true);	
 		}
 	}
 	/**
@@ -530,12 +442,6 @@ public abstract class ActionHandler {
 		for (Action action : toggleAction) {
 			_spreadsheet.setActionDisabled(false, action);
 		}
-		
-		//TODO: read protect information from worksheet
-		boolean protect = _spreadsheet.getSelectedSheet().getProtect();
-		for (Action action : _defaultDisabledActionOnSheetProtected) {
-			_spreadsheet.setActionDisabled(protect, action);
-		}
 	}
 	
 	public void toggleActionOnBookClosed() {
@@ -556,7 +462,7 @@ public abstract class ActionHandler {
 	
 	public void doCloseBook() {
 		_spreadsheet.setSrc(null);
-		_clipboard = null;
+		clearClipboard();
 		_insertPictureSelection = null;
 		
 		toggleActionOnBookClosed();
@@ -567,20 +473,13 @@ public abstract class ActionHandler {
 			return;
 		}
 		
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null) {
-			if (!sheet.getProtect()) {
-				final Media media = evt.getMedia();
-				if (media instanceof AImage) {
-					AImage image = (AImage)media;
-					Ranges
-					.range(_spreadsheet.getSelectedSheet())
-					.addPicture(getClientAnchor(_insertPictureSelection.getTop(), _insertPictureSelection.getLeft(), 
-							image.getWidth(), image.getHeight()), image.getByteData(), getImageFormat(image));
-				}	
-			} else {
-				showProtectMessage();
-			}
+		final Media media = evt.getMedia();
+		if (media instanceof AImage) {
+			AImage image = (AImage)media;
+			Ranges
+			.range(_spreadsheet.getSelectedSheet())
+			.addPicture(getClientAnchor(_insertPictureSelection.getTop(), _insertPictureSelection.getLeft(), 
+					image.getWidth(), image.getHeight()), image.getByteData(), getImageFormat(image));
 		}
 	}
 	
@@ -612,42 +511,34 @@ public abstract class ActionHandler {
 	protected void setVerticalAlign(final short alignment, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.visitCells(sheet, selection, new CellVisitor(){
-					@Override
-					public void handle(CellVisitorContext context) {
-						final short srcAlign = context.getVerticalAlignment();
+			Utils.visitCells(sheet, selection, new CellVisitor(){
+				@Override
+				public void handle(CellVisitorContext context) {
+					final short srcAlign = context.getVerticalAlignment();
 
-						if (srcAlign != alignment) {
-							CellStyle newStyle = context.cloneCellStyle();
-							newStyle.setVerticalAlignment(alignment);
-							context.getRange().setStyle(newStyle);
-						}
-					}});	
-			} else {
-				showProtectMessage();
-			}
+					if (srcAlign != alignment) {
+						CellStyle newStyle = context.cloneCellStyle();
+						newStyle.setVerticalAlignment(alignment);
+						context.getRange().setStyle(newStyle);
+					}
+				}});
 		}
 	}
 	
 	protected void setHorizontalAlign(final short alignment, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.visitCells(sheet, selection, new CellVisitor(){
-					@Override
-					public void handle(CellVisitorContext context) {
-						final short srcAlign = context.getAlignment();
+			Utils.visitCells(sheet, selection, new CellVisitor(){
+				@Override
+				public void handle(CellVisitorContext context) {
+					final short srcAlign = context.getAlignment();
 
-						if (srcAlign != alignment) {
-							CellStyle newStyle = context.cloneCellStyle();
-							newStyle.setAlignment(alignment);
-							context.getRange().setStyle(newStyle);
-						}
-					}});	
-			} else {
-				showProtectMessage();
-			}
+					if (srcAlign != alignment) {
+						CellStyle newStyle = context.cloneCellStyle();
+						newStyle.setAlignment(alignment);
+						context.getRange().setStyle(newStyle);
+					}
+				}});
 		}
 	}
 	
@@ -656,9 +547,7 @@ public abstract class ActionHandler {
 		int bRow = (Integer) data.get("bRow");
 		int lCol = (Integer) data.get("lCol");
 		int rCol = (Integer) data.get("rCol");
-		Integer action = (Integer) data.get("action");
-		Rect r = action != null ? 
-				new Rect(action, lCol, tRow, rCol, bRow) : new Rect(lCol, tRow, rCol, bRow);
+		Rect r = new Rect(lCol, tRow, rCol, bRow);
 		return r;
 	}
 	
@@ -666,11 +555,12 @@ public abstract class ActionHandler {
 		if (_clipboard != null) {
 			final Book srcBook = _clipboard.book;
 			if (!srcBook.equals(_spreadsheet.getBook())) {
-				_clipboard = null;
+				clearClipboard();
 			} else {
 				final Worksheet srcSheet = _clipboard.sourceSheet;
 				boolean validSheet = srcBook.getSheetIndex(srcSheet) >= 0;
 				if (!validSheet) {
+					_spreadsheet.setHighlight(null);
 					clearClipboard();
 				} else if (!srcSheet.equals(_spreadsheet.getSelectedSheet())) {
 					_spreadsheet.setHighlight(null);
@@ -712,24 +602,34 @@ public abstract class ActionHandler {
 	}
 	
 	private void init() {
-		_spreadsheet.addEventListener(Events.ON_SHEET_SELECT, _doSelectSheetListener);
-		_spreadsheet.addEventListener(Events.ON_CTRL_KEY, _doCtrlKeyListener);
+		_spreadsheet.addEventListener(Events.ON_SHEET_SELECT, new EventListener() {
+			
+			@Override
+			public void onEvent(Event event) throws Exception {
+				doSheetSelect();
+			}
+		});
+		_spreadsheet.addEventListener(Events.ON_CTRL_KEY, new EventListener() {
+
+			@Override
+			public void onEvent(Event event) throws Exception {
+				KeyEvent evt = (KeyEvent) event;
+				doCtrlKey((KeyEvent) event);
+			}
+		});
 		
-		_spreadsheet.addEventListener(Events.ON_CELL_DOUBLE_CLICK, _doClearClipboard);
-		_spreadsheet.addEventListener(Events.ON_START_EDITING, _doClearClipboard);
+		Upload upload = new Upload();
+		upload.appendChild(_insertPicture = new Uploader());
+		_insertPicture.setId(Action.INSERT_PICTURE.toString());
 		
-		if (_upload == null) {
-			_upload = new Upload();
-			_upload.appendChild(_insertPicture = new Uploader());
-			_insertPicture.addEventListener(org.zkoss.zk.ui.event.Events.ON_UPLOAD, new EventListener() {
-				
-				@Override
-				public void onEvent(Event event) throws Exception {
-					doInsertPicture((UploadEvent)event);
-				}
-			});
-		}
-		_upload.setParent(_spreadsheet);
+		_insertPicture.addEventListener(org.zkoss.zk.ui.event.Events.ON_UPLOAD, new EventListener() {
+			
+			@Override
+			public void onEvent(Event event) throws Exception {
+				doInsertPicture((UploadEvent)event);
+			}
+		});
+		_spreadsheet.appendChild(upload);
 		
 		initToggleAction();
 	}
@@ -764,8 +664,6 @@ public abstract class ActionHandler {
 			doCopy(selection);
 			break;
 		case 'V':
-			if (_clipboard != null)
-				_spreadsheet.smartUpdate("doPasteFromServer", true);
 			doPaste(selection);
 			break;
 		case 'D':
@@ -792,20 +690,6 @@ public abstract class ActionHandler {
 		if (_spreadsheet != spreadsheet) {
 			_spreadsheet = spreadsheet;
 			init();	
-		}
-	}
-	
-	/**
-	 * Unbind the handler's target
-	 */
-	public void unbind() {
-		if (_spreadsheet != null) {
-			if (_upload.getParent() == _spreadsheet) {
-				_spreadsheet.removeChild(_upload);
-			}
-			
-			_spreadsheet.removeEventListener(Events.ON_SHEET_SELECT, _doSelectSheetListener);
-			_spreadsheet.removeEventListener(Events.ON_CTRL_KEY, _doCtrlKeyListener);
 		}
 	}
 	
@@ -865,8 +749,6 @@ public abstract class ActionHandler {
 	
 	public void clearClipboard() {
 		_clipboard = null;
-		_spreadsheet.setHighlight(null);
-		//TODO: shall also clear client side clipboard if possible
 	}
 	
 	/**
@@ -932,46 +814,12 @@ public abstract class ActionHandler {
 			&& selection.getBottom() >= 0 && selection.getRight() >= 0;
 	}
 	
-	protected boolean isProtected(int tRow, int lCol, int bRow, int rCol, Worksheet sheet) {
-		boolean shtProtect = sheet.getProtect();
-		if (!shtProtect)
-			return false;
-		
-		//FIXME: missing information: if whole column/row set locked=false
-		// cannot get this information since the row/cell instance may be null, the default value for null cell is locked=true
-		for (int r = tRow; r <= bRow; r++) {
-			Row row = sheet.getRow(r);
-			if (row != null) {
-				for (int c = lCol; c <= rCol; c++) {
-					Cell cell = row.getCell(c);
-					if (shtProtect && cell != null && cell.getCellStyle().getLocked()) {
-						return true;
-					} else if (shtProtect && cell == null) {//default cell is lock
-						return true;
-					}
-				}	
-			} else if (shtProtect && row == null) {//default cell is lock
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	protected void showProtectMessage() {
-		Messagebox.show("The cell that you are trying to change is protected and locked.", "ZK Spreadsheet", Messagebox.OK, Messagebox.EXCLAMATION);
-	}
-	
 	/**
 	 * Execute when user click paste 
 	 */
 	public void doPaste(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && _clipboard != null && isValidSelection(selection)) {
-			if (!isProtected(selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight(), sheet)) {
-				doPasteImpl(selection, Range.PASTE_ALL, Range.PASTEOP_NONE, false, false);
-			} else {
-				showProtectMessage();
-			}
+		if (_clipboard != null && isValidSelection(selection)) {
+			doPasteImpl(selection, Range.PASTE_ALL, Range.PASTEOP_NONE, false, false);
 		}
 	}
 	
@@ -980,13 +828,8 @@ public abstract class ActionHandler {
 	 * Execute when user click paste formula
 	 */
 	public void doPasteFormula(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && _clipboard != null && isValidSelection(selection)) {
-			if (!isProtected(selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight(), sheet)) {
-				doPasteImpl(selection, Range.PASTE_FORMULAS, Range.PASTEOP_NONE, false, false);
-			} else {
-				showProtectMessage();
-			}
+		if (_clipboard != null && isValidSelection(selection)) {
+			doPasteImpl(selection, Range.PASTE_FORMULAS, Range.PASTEOP_NONE, false, false);
 		}
 	}
 	
@@ -994,13 +837,8 @@ public abstract class ActionHandler {
 	 *  Execute when user click paste value
 	 */
 	public void doPasteValue(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && _clipboard != null && isValidSelection(selection)) {
-			if (!isProtected(selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight(), sheet)) {
-				doPasteImpl(selection, Range.PASTE_VALUES, Range.PASTEOP_NONE, false, false);
-			} else {
-				showProtectMessage();
-			}
+		if (_clipboard != null && isValidSelection(selection)) {
+			doPasteImpl(selection, Range.PASTE_VALUES, Range.PASTEOP_NONE, false, false);
 		}
 	}
 	
@@ -1008,13 +846,8 @@ public abstract class ActionHandler {
 	 * Execute when user click paste all except border
 	 */
 	public void doPasteAllExceptBorder(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && _clipboard != null && isValidSelection(selection)) {
-			if (!isProtected(selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight(), _spreadsheet.getSelectedSheet())) {
-				doPasteImpl(selection, Range.PASTE_ALL_EXCEPT_BORDERS, Range.PASTEOP_NONE, false, false);
-			} else {
-				showProtectMessage();
-			}
+		if (_clipboard != null && isValidSelection(selection)) {
+			doPasteImpl(selection, Range.PASTE_ALL_EXCEPT_BORDERS, Range.PASTEOP_NONE, false, false);
 		}
 	}
 	
@@ -1022,13 +855,8 @@ public abstract class ActionHandler {
 	 * Execute when user click paste transpose
 	 */
 	public void doPasteTranspose(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && _clipboard != null && isValidSelection(selection)) {
-			if (!isProtected(selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight(), sheet)) {
-				doPasteImpl(selection, Range.PASTE_ALL, Range.PASTEOP_NONE, false, true);
-			} else {
-				showProtectMessage();
-			}
+		if (_clipboard != null && isValidSelection(selection)) {
+			doPasteImpl(selection, Range.PASTE_ALL, Range.PASTEOP_NONE, false, true);
 		}
 	}
 	
@@ -1043,12 +871,8 @@ public abstract class ActionHandler {
 	public void doCut(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!isProtected(selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight(), sheet)) {
-				_clipboard = new Clipboard(Clipboard.Type.CUT, selection, sheet, _spreadsheet.getBook());
-				_spreadsheet.setHighlight(selection);
-			} else {
-				showProtectMessage();
-			}
+			_clipboard = new Clipboard(Clipboard.Type.CUT, selection, sheet, _spreadsheet.getBook());
+			_spreadsheet.setHighlight(selection);
 		}
 	}
 	
@@ -1060,11 +884,7 @@ public abstract class ActionHandler {
 	public void doFontFamily(String fontFamily, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setFontFamily(sheet, selection, fontFamily);	
-			} else {
-				showProtectMessage();
-			}
+			Utils.setFontFamily(sheet, selection, fontFamily);	
 		}
 	}
 	
@@ -1076,12 +896,8 @@ public abstract class ActionHandler {
 	public void doFontSize(int fontSize, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				short fontHeightInPoint = (short)(fontSize * 20);
-				Utils.setFontHeight(sheet, selection, fontHeightInPoint);		
-			} else {
-				showProtectMessage();
-			}	
+			short fontHeightInPoint = (short)(fontSize * 20);
+			Utils.setFontHeight(sheet, selection, fontHeightInPoint);		
 		}
 	}
 	
@@ -1099,14 +915,10 @@ public abstract class ActionHandler {
 	public void doFontBold(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				boolean fontBold = Font.BOLDWEIGHT_BOLD ==  getCellFont(row, col).getBoldweight();
-				Utils.setFontBold(sheet, selection, !fontBold);		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			boolean fontBold = Font.BOLDWEIGHT_BOLD ==  getCellFont(row, col).getBoldweight();
+			Utils.setFontBold(sheet, selection, !fontBold);	
 		}
 	}
 	
@@ -1118,13 +930,9 @@ public abstract class ActionHandler {
 	public void doFontItalic(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				Utils.setFontItalic(sheet, selection, !getCellFont(row, col).getItalic());		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			Utils.setFontItalic(sheet, selection, !getCellFont(row, col).getItalic());	
 		}
 	}
 	
@@ -1136,13 +944,9 @@ public abstract class ActionHandler {
 	public void doFontStrikeout(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				Utils.setFontStrikeout(sheet, selection, !getCellFont(row, col).getStrikeout());		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			Utils.setFontStrikeout(sheet, selection, !getCellFont(row, col).getStrikeout());	
 		}
 	}
 	
@@ -1154,14 +958,10 @@ public abstract class ActionHandler {
 	public void doFontUnderline(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				boolean underline = Font.U_SINGLE == getCellFont(row, col).getUnderline();
-				Utils.setFontUnderline(sheet, selection, underline ? Font.U_NONE : Font.U_SINGLE);		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			boolean underline = Font.U_SINGLE == getCellFont(row, col).getUnderline();
+			Utils.setFontUnderline(sheet, selection, underline ? Font.U_NONE : Font.U_SINGLE);	
 		}
 	}
 	
@@ -1190,12 +990,8 @@ public abstract class ActionHandler {
 	public void doBorderBottom(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_EDGE_BOTTOM, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_EDGE_BOTTOM, BorderStyle.MEDIUM, color);
 		}
 	}
 	
@@ -1207,12 +1003,8 @@ public abstract class ActionHandler {
 	public void doBoderTop(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_EDGE_TOP, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_EDGE_TOP, BorderStyle.MEDIUM, color);	
 		}
 	}
 	
@@ -1224,12 +1016,8 @@ public abstract class ActionHandler {
 	public void doBorderLeft(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_EDGE_LEFT, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_EDGE_LEFT, BorderStyle.MEDIUM, color);
 		}
 	}
 	
@@ -1241,12 +1029,8 @@ public abstract class ActionHandler {
 	public void doBorderRight(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_EDGE_RIGHT, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_EDGE_RIGHT, BorderStyle.MEDIUM, color);	
 		}
 	}
 	
@@ -1258,12 +1042,8 @@ public abstract class ActionHandler {
 	public void doBorderNo(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_FULL, BorderStyle.NONE, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_FULL, BorderStyle.NONE, color);	
 		}
 	}
 	
@@ -1275,12 +1055,8 @@ public abstract class ActionHandler {
 	public void doBorderAll(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_FULL, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_FULL, BorderStyle.MEDIUM, color);	
 		}
 	}
 	
@@ -1292,12 +1068,8 @@ public abstract class ActionHandler {
 	public void doBorderOutside(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_OUTLINE, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_OUTLINE, BorderStyle.MEDIUM, color);	
 		}
 	}
 	
@@ -1309,12 +1081,8 @@ public abstract class ActionHandler {
 	public void doBorderInside(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_INSIDE, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_INSIDE, BorderStyle.MEDIUM, color);	
 		}
 	}
 	
@@ -1326,12 +1094,8 @@ public abstract class ActionHandler {
 	public void doBorderInsideHorizontal(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_INSIDE_HORIZONTAL, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}	
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_INSIDE_HORIZONTAL, BorderStyle.MEDIUM, color);	
 		}
 	}
 	
@@ -1343,12 +1107,8 @@ public abstract class ActionHandler {
 	public void doBorderInsideVertical(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBorder(sheet, selection, 
-						BookHelper.BORDER_INSIDE_VERTICAL, BorderStyle.MEDIUM, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBorder(sheet, selection, 
+					BookHelper.BORDER_INSIDE_VERTICAL, BorderStyle.MEDIUM, color);	
 		}
 	}
 	
@@ -1361,11 +1121,7 @@ public abstract class ActionHandler {
 	public void doFontColor(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setFontColor(sheet, selection, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setFontColor(sheet, selection, color);	
 		}
 	}
 	
@@ -1378,11 +1134,7 @@ public abstract class ActionHandler {
 	public void doFillColor(String color, Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.setBackgroundColor(sheet, selection, color);
-			} else {
-				showProtectMessage();
-			}
+			Utils.setBackgroundColor(sheet, selection, color);	
 		}
 	}
 	
@@ -1392,14 +1144,7 @@ public abstract class ActionHandler {
 	 * @param selection
 	 */
 	public void doVerticalAlignTop(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				setVerticalAlign(CellStyle.VERTICAL_TOP, selection);
-			} else {
-				showProtectMessage();
-			}
-		}
+		setVerticalAlign(CellStyle.VERTICAL_TOP, selection);
 	}
 	
 	/**
@@ -1408,14 +1153,7 @@ public abstract class ActionHandler {
 	 * @param selection
 	 */
 	public void doVerticalAlignMiddle(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				setVerticalAlign(CellStyle.VERTICAL_CENTER, selection);
-			} else {
-				showProtectMessage();
-			}
-		}
+		setVerticalAlign(CellStyle.VERTICAL_CENTER, selection);
 	}
 
 	/**
@@ -1424,56 +1162,28 @@ public abstract class ActionHandler {
 	 * @param selection
 	 */
 	public void doVerticalAlignBottom(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				setVerticalAlign(CellStyle.VERTICAL_BOTTOM, selection);
-			} else {
-				showProtectMessage();
-			}
-		}
+		setVerticalAlign(CellStyle.VERTICAL_BOTTOM, selection);
 	}
 	
 	/**
 	 * @param selection
 	 */
 	public void doHorizontalAlignLeft(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				setHorizontalAlign(CellStyle.ALIGN_LEFT, selection);
-			} else {
-				showProtectMessage();
-			}
-		}
+		setHorizontalAlign(CellStyle.ALIGN_LEFT, selection);
 	}
 	
 	/**
 	 * @param selection
 	 */
 	public void doHorizontalAlignCenter(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				setHorizontalAlign(CellStyle.ALIGN_CENTER, selection);
-			} else {
-				showProtectMessage();
-			}
-		}
+		setHorizontalAlign(CellStyle.ALIGN_CENTER, selection);
 	}
 	
 	/**
 	 * @param selection
 	 */
 	public void doHorizontalAlignRight(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				setHorizontalAlign(CellStyle.ALIGN_RIGHT, selection);
-			} else {
-				showProtectMessage();
-			}
-		}
+		setHorizontalAlign(CellStyle.ALIGN_RIGHT, selection);
 	}
 	
 	/**
@@ -1482,14 +1192,10 @@ public abstract class ActionHandler {
 	public void doWrapText(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				final boolean wrapText = !Utils.getOrCreateCell(sheet, row, col).getCellStyle().getWrapText();
-				Utils.setWrapText(sheet, selection, wrapText);		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			final boolean wrapText = !Utils.getOrCreateCell(sheet, row, col).getCellStyle().getWrapText();
+			Utils.setWrapText(sheet, selection, wrapText);	
 		}
 	}
 	
@@ -1499,33 +1205,29 @@ public abstract class ActionHandler {
 	public void doMergeAndCenter(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int tRow = selection.getTop();
-				int lCol = selection.getLeft();
-				int bRow = selection.getBottom();
-				int rCol = selection.getRight();
-				
-				boolean merged = false;
-				MergeMatrixHelper mergeHelper = _spreadsheet.getMergeMatrixHelper(sheet);
-				for (int r = tRow; r <= bRow; r++) {
-					for (int c = lCol; c <= rCol; c++) {
-						MergedRect rect = mergeHelper.getMergeRange(r, c);
-						if (rect != null) {
-							merged = true;
-							break;
-						}
+			int tRow = selection.getTop();
+			int lCol = selection.getLeft();
+			int bRow = selection.getBottom();
+			int rCol = selection.getRight();
+			
+			boolean merged = false;
+			MergeMatrixHelper mergeHelper = _spreadsheet.getMergeMatrixHelper(sheet);
+			for (int r = tRow; r <= bRow; r++) {
+				for (int c = lCol; c <= rCol; c++) {
+					MergedRect rect = mergeHelper.getMergeRange(r, c);
+					if (rect != null) {
+						merged = true;
+						break;
 					}
 				}
-				
-				Range range = Ranges.range(sheet, tRow, lCol, bRow, rCol);
-				if (merged) {
-					range.unMerge();
-				} else {
-					range.merge(false);
-					doHorizontalAlignCenter(selection);	
-				}
+			}
+			
+			Range range = Ranges.range(sheet, tRow, lCol, bRow, rCol);
+			if (merged) {
+				range.unMerge();
 			} else {
-				showProtectMessage();
+				range.merge(false);
+				doHorizontalAlignCenter(selection);	
 			}
 		}
 	}
@@ -1536,13 +1238,9 @@ public abstract class ActionHandler {
 	public void doMergeAcross(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.merge(true);	
-			} else {
-				showProtectMessage();
-			}	
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.merge(true);	
 		}
 	}
 	
@@ -1552,15 +1250,9 @@ public abstract class ActionHandler {
 	public void doMergeCell(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.merge(false);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.merge(false);	
 		}
 	}
 	
@@ -1570,15 +1262,9 @@ public abstract class ActionHandler {
 	public void doUnmergeCell(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.unMerge();
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.unMerge();	
 		}
 	}
 	
@@ -1588,15 +1274,9 @@ public abstract class ActionHandler {
 	public void doShiftCellRight(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.insert(Range.SHIFT_RIGHT, Range.FORMAT_RIGHTBELOW);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.insert(Range.SHIFT_RIGHT, Range.FORMAT_RIGHTBELOW);	
 		}
 	}
 	
@@ -1606,15 +1286,9 @@ public abstract class ActionHandler {
 	public void doShiftCellDown(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.insert(Range.SHIFT_DOWN, Range.FORMAT_LEFTABOVE);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.insert(Range.SHIFT_DOWN, Range.FORMAT_LEFTABOVE);	
 		}
 	}
 	
@@ -1624,16 +1298,10 @@ public abstract class ActionHandler {
 	public void doInsertSheetRow(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.getRows()
-				.insert(Range.SHIFT_DOWN, Range.FORMAT_LEFTABOVE);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.getRows()
+			.insert(Range.SHIFT_DOWN, Range.FORMAT_LEFTABOVE);	
 		}
 	}
 	
@@ -1643,16 +1311,10 @@ public abstract class ActionHandler {
 	public void doInsertSheetColumn(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.getColumns()
-				.insert(Range.SHIFT_RIGHT, Range.FORMAT_RIGHTBELOW);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.getColumns()
+			.insert(Range.SHIFT_RIGHT, Range.FORMAT_RIGHTBELOW);	
 		}
 	}
 	
@@ -1662,15 +1324,9 @@ public abstract class ActionHandler {
 	public void doShiftCellLeft(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.delete(Range.SHIFT_LEFT);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.delete(Range.SHIFT_LEFT);	
 		}
 	}
 	
@@ -1680,15 +1336,9 @@ public abstract class ActionHandler {
 	public void doShiftCellUp(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.delete(Range.SHIFT_UP);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.delete(Range.SHIFT_UP);	
 		}
 	}
 	
@@ -1698,16 +1348,10 @@ public abstract class ActionHandler {
 	public void doDeleteSheetRow(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), 0, selection.getBottom(), 0)
-				.getRows()
-				.delete(Range.SHIFT_UP);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), 0, selection.getBottom(), 0)
+			.getRows()
+			.delete(Range.SHIFT_UP);	
 		}
 	}
 	
@@ -1717,16 +1361,10 @@ public abstract class ActionHandler {
 	public void doDeleteSheetColumn(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, 0, selection.getLeft(), 0, selection.getRight())
-				.getColumns()
-				.delete(Range.SHIFT_LEFT);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, 0, selection.getLeft(), 0, selection.getRight())
+			.getColumns()
+			.delete(Range.SHIFT_LEFT);	
 		}
 	}
 
@@ -1743,13 +1381,7 @@ public abstract class ActionHandler {
 	public void doClearStyle(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				clearStyleImp(selection, sheet);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			clearStyleImp(selection, sheet);	
 		}
 	}
 	
@@ -1759,15 +1391,9 @@ public abstract class ActionHandler {
 	public void doClearContent(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Ranges
-				.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
-				.clearContents();
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.clearContents();	
 		}
 	}
 	
@@ -1775,15 +1401,8 @@ public abstract class ActionHandler {
 	 * Execute when user click clear all
 	 */
 	public void doClearAll(Rect selection) {
-		Worksheet sheet = _spreadsheet.getSelectedSheet();
-		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				doClearContent(selection);
-				doClearStyle(selection);
-			} else {
-				showProtectMessage();
-			}
-		}
+		doClearContent(selection);
+		doClearStyle(selection);
 	}
 	
 	/**
@@ -1792,14 +1411,8 @@ public abstract class ActionHandler {
 	public void doSortAscending(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.sort(sheet, selection,
-						null, null, null, false, false, false);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Utils.sort(sheet, selection,
+					null, null, null, false, false, false);	
 		}
 	}
 	
@@ -1809,14 +1422,8 @@ public abstract class ActionHandler {
 	public void doSortDescending(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Utils.sort(sheet, selection,
-						null, new boolean[] { true }, null, false, false, false);
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Utils.sort(sheet, selection,
+					null, new boolean[] { true }, null, false, false, false);	
 		}
 	}
 	
@@ -1831,22 +1438,9 @@ public abstract class ActionHandler {
 	public void doFilter(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				Range range = Ranges.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight());
-				//ZSS-199
-				switch (selection.getSelectionType()) {
-				case Rect.SELECT_ROW:
-					range.getRows().autoFilter();
-					break;
-				default:
-					range.autoFilter();
-					break;
-				}
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges
+			.range(sheet, selection.getTop(), selection.getLeft(), selection.getBottom(), selection.getRight())
+			.autoFilter();	
 		}
 	}
 	
@@ -1856,13 +1450,7 @@ public abstract class ActionHandler {
 	public void doClearFilter() {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null) {
-			if (!sheet.getProtect()) {
-				Ranges.range(sheet).showAllData();
-				
-				clearClipboard();
-			} else {
-				showProtectMessage();
-			}
+			Ranges.range(sheet).showAllData();	
 		}
 	}
 	
@@ -1872,13 +1460,7 @@ public abstract class ActionHandler {
 	public void doReapplyFilter() {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null) {
-			if (!sheet.getProtect()) {
-				Ranges.range(sheet).applyFilter();
-				
-				clearClipboard();	
-			} else {
-				showProtectMessage();
-			}
+			Ranges.range(sheet).applyFilter();	
 		}
 	}
 	
@@ -1888,13 +1470,7 @@ public abstract class ActionHandler {
 	public void doProtectSheet() {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null) {
-			Ranges.range(sheet).protectSheet(sheet.getProtect() ? null : "");
-			
-			//TODO: disable information from worksheet
-			boolean protect = sheet.getProtect();
-			for (Action action : _defaultDisabledActionOnSheetProtected) {
-				_spreadsheet.setActionDisabled(protect, action);
-			}
+			Ranges.range(sheet).protectSheet(sheet.getProtect() ? null : "");	
 		}
 	}
 	
@@ -1914,16 +1490,12 @@ public abstract class ActionHandler {
 	public void doColumnChart(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFColumnChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Column, ChartGrouping.STANDARD, LegendPosition.RIGHT);		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFColumnChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Column, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	
@@ -1933,16 +1505,12 @@ public abstract class ActionHandler {
 	public void doColumnChart3D(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFColumn3DChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Column3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFColumn3DChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Column3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -1951,16 +1519,12 @@ public abstract class ActionHandler {
 	public void doLineChart(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFLineChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Line, ChartGrouping.STANDARD, LegendPosition.RIGHT);		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFLineChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Line, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -1969,16 +1533,12 @@ public abstract class ActionHandler {
 	public void doLineChart3D(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFLine3DChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Line3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);		
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFLine3DChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Line3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -1987,16 +1547,12 @@ public abstract class ActionHandler {
 	public void doPieChart(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFPieChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Pie, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFPieChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Pie, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -2005,16 +1561,12 @@ public abstract class ActionHandler {
 	public void doPieChart3D(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFPie3DChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Pie3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFPie3DChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Pie3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -2023,16 +1575,12 @@ public abstract class ActionHandler {
 	public void doBarChart(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFBarChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Bar, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFBarChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Bar, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -2041,16 +1589,12 @@ public abstract class ActionHandler {
 	public void doBarChart3D(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFBar3DChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Bar3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFBar3DChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Bar3D, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -2059,16 +1603,12 @@ public abstract class ActionHandler {
 	public void doAreaChart(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFAreaChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Area, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFAreaChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Area, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -2077,16 +1617,12 @@ public abstract class ActionHandler {
 	public void doScatterChart(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillXYData(new XSSFScatChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Scatter, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillXYData(new XSSFScatChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Scatter, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	/**
@@ -2095,16 +1631,12 @@ public abstract class ActionHandler {
 	public void doDoughnutChart(Rect selection) {
 		Worksheet sheet = _spreadsheet.getSelectedSheet();
 		if (sheet != null && isValidSelection(selection)) {
-			if (!sheet.getProtect()) {
-				int row = selection.getTop();
-				int col = selection.getLeft();
-				ChartData data = fillCategoryData(new XSSFDoughnutChartData(), selection);
-				
-				Ranges.range(sheet)
-				.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Doughnut, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
-			} else {
-				showProtectMessage();
-			}
+			int row = selection.getTop();
+			int col = selection.getLeft();
+			ChartData data = fillCategoryData(new XSSFDoughnutChartData(), selection);
+			
+			Ranges.range(sheet)
+			.addChart(getClientAnchor(row, col, 600, 300), data, ChartType.Doughnut, ChartGrouping.STANDARD, LegendPosition.RIGHT);	
 		}
 	}
 	
@@ -2290,9 +1822,8 @@ public abstract class ActionHandler {
 	}
 	
 	protected ClientAnchor getClientAnchor(int row, int col, int widgetWidth, int widgetHeight) {
-		final String sid = ((SheetCtrl)_spreadsheet.getSelectedSheet()).getUuid();
-		HeaderPositionHelper rowSizeHelper = ((HelperContainer<HeaderPositionHelper>) _spreadsheet.getAttribute("_rowCellSize")).getHelper(sid);
-		HeaderPositionHelper colSizeHelper = ((HelperContainer<HeaderPositionHelper>) _spreadsheet.getAttribute("_colCellSize")).getHelper(sid);
+		HeaderPositionHelper rowSizeHelper = (HeaderPositionHelper) _spreadsheet.getAttribute("_rowCellSize");
+		HeaderPositionHelper colSizeHelper = (HeaderPositionHelper) _spreadsheet.getAttribute("_colCellSize");
 		
 		int lCol = col;
 		int tRow = row;

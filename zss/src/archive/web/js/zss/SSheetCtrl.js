@@ -144,6 +144,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
  *  
  */
 zss.SSheetCtrl = zk.$extends(zk.Widget, {	
+	widgetName: 'SSheetCtrl',
 	$o: zk.$void, //no need to invoke _addIdSpaceDown, no fellows relationship
 	/**
 	 * Editing formula info
@@ -388,17 +389,15 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	},
 	bind_: function (desktop, skipper, after) {
 		this.$supers(zss.SSheetCtrl, 'bind_', arguments);
-		//ZSS 125: already process wrap on row.bind_
-		delete this._wrapRange;
 		
 		zss.SSheetCtrl._initInnerComp(this, this._wgt._autoFilter ? this._wgt._autoFilter.range.top : null);
-		this.listen({onContentsChanged: this, onRowHeightChanged: this});
+		this.listen({onContentsChanged: this});
 		
 		var n = this.comp = this.$n();
 		n.ctrl = this;
 	},
 	unbind_: function () { 
-		this.unlisten({onContentsChanged: this, onRowHeightChanged: this});
+		this.unlisten({onContentsChanged: this});
 		this.animateHighlight(false);
 		this.invalid = true;
 
@@ -514,12 +513,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			this._selectionRange = null;
 		}
 	},
-	onRowHeightChanged: function () {
-		var h = this.hlArea;
-		if (h.show) {
-			h.relocate();
-		}
-	},
 	addEditorFocus : function(id, name, color){
 		var x = this.focusmarkcmp,
 			div = x.cloneNode(true);
@@ -630,7 +623,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		}
 		queu.urgent = 0;
 	},
-	_cmdCellUpdate: function (shtId, result) {
+	_cmdCellUpdate: function (result) {
 		var type = result.type,
 			row = result.r,
 			col = result.c,
@@ -643,22 +636,16 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		case "udcell":
 			var wgt = this._wgt,
 				data = result,
-				cCtl = this._wgt._cacheCtrl,
-				cacheSheet = cCtl.getSheetBy(shtId),
-				selSheet = cCtl.getSelectedSheet();
-			if (cacheSheet) {
-				cacheSheet.update(data);
-				if (cacheSheet.id == selSheet.id) {//update current sheet
-					this.update_(data.t, data.l, data.b, data.r);
-					wgt._triggerContentsChanged = true;
-				}
+				ar = this._wgt._cacheCtrl.getSelectedSheet();
+			if (ar) {
+				ar.update(data);
+				this.update_(data.t, data.l, data.b, data.r);
+				wgt._triggerContentsChanged = true;
 			}
 			break;
 		case "startedit":
 			var editType = result.et,
 				dp = this.dp;
-			//ZSS 171
-			this._skipInsertCellRef = true;
 			if ('inlineEditing' == editType) {
 				if (!dp._moveFocus(row, col, true, true)) {
 					//TODO, if cell not initial, i should skip or put to delay batch? 
@@ -678,12 +665,13 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			break;
 		}
 	},
-	_cmdBlockUpdate: function (type, dir, tRow, lCol, bRow, rCol) {
+	_cmdBlockUpdate: function (type, dir, tRow, lCol, bRow, rCol, leftFrozen, topFrozen) {
 		switch (type) {
 		case 'neighbor': //move to a neighbor block
-			this.activeBlock.loadForVisible();
+			this.activeBlock.create_(dir, tRow, lCol, bRow, rCol, leftFrozen, topFrozen);
 			if (zk.ie) {
 				//TODO: test if set display none could speedup or not when switch cache  
+				
 				//ie have some display error(cell overlap) when scroll up(neighbor north)
 				//same issue when scroll right
 				var dp = this.dp.comp,
@@ -702,13 +690,13 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			var oldBlock = this.activeBlock,
 				wgt = this._wgt,
 				data = wgt._cacheCtrl.getSelectedSheet();
-			oldBlock.replaceWidget(this.activeBlock = new zss.MainBlockCtrl(this, tRow, lCol, bRow, rCol, data));
+			oldBlock.replaceWidget(this.activeBlock = new zss.MainBlockCtrl(this, tRow, lCol, bRow, rCol, data), leftFrozen, topFrozen);
 			this.dp._fixSize(this.activeBlock);
-			this.activeBlock.loadForVisible();
 			break;
 		case 'error': //fetch cell with exception
 			break;
 		}
+		
 		this.showMask(false);
 		
 		//bug 1951423 IE : row is broken when scroll down, st time to do ss initiallater
@@ -723,7 +711,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 				size = result.size,
 				headers = result.hs,
 				ar = this._wgt._cacheCtrl.getSelectedSheet();
-			ar.insertNewColumn(col, size, headers);
+			ar.insertColumns(col, size, headers);
 			this._insertNewColumn(col, size, toHeaderTitleArray(headers.hs));
 			//update positionHelper
 			this.custColWidth.shiftMeta(col, size);
@@ -750,7 +738,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 				size = result.size,
 				headers = result.hs,
 				ar = this._wgt._cacheCtrl.getSelectedSheet();
-			ar.insertNewRow(row, size, headers);
+			ar.insertRows(row, size, headers);
 			this._insertNewRow(row, size, toHeaderTitleArray(headers.hs));
 			
 			//update positionHelper
@@ -772,7 +760,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			if (row < block.range.top)// insert before current block, then jump
 				block.reloadBlock("south");
 		}
-		
+
 		dp._fixSize(this.activeBlock);
 		this._fixSize();
 		this.sendSyncblock();
@@ -783,10 +771,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		
 		var self = this;
 		setTimeout(function () {
-			var h = self.hlArea;
-			if (h.show) {
-				h.relocate();
-			}
 			self._doSSInitLater();//after creating cell need to invoke init later
 		},0);
 	},
@@ -857,7 +841,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			}
 			this._syncRowFocusAndSelection(row, row + size - 1);
 		}
-		
+
 		dp._fixSize(this.activeBlock);
 		this._fixSize();		
 		this.sendSyncblock();
@@ -879,10 +863,6 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		
 		var self = this;
 		setTimeout(function () {
-			var h = self.hlArea;
-			if (h.show) {
-				h.relocate();
-			}
 			self._doSSInitLater();//after creating cell need to invoke init later
 		}, 0);
 	},
@@ -902,7 +882,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			dp._fixSize(this.activeBlock);
 			this._fixSize();
 			
-			this.activeBlock.loadForVisible();
+			this.activeBlock.loadForVisible()
 		} else if (maxcol < this.maxCols) {
 			var result = {};
 			result.type = "column";
@@ -930,7 +910,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			dp._fixSize(this.activeBlock);
 			this._fixSize();
 			
-			this.activeBlock.loadForVisible();
+			this.activeBlock.loadForVisible()
 		} else if (maxrow < this.maxRows) {
 			var result = {};
 			result.type = "row";
@@ -1280,9 +1260,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	getStyleMenupopup: function () {
 		var p = this._styleMenupopup;
 		if (!p) {
-			var wgt = this._wgt;
-			p = this._styleMenupopup = new zss.MenupopupFactory(wgt).style();
-			p.setDisabled(wgt.getActionDisabled());
+			p = this._styleMenupopup = new zss.MenupopupFactory(this._wgt).style();
 			this.appendChild(p);
 		}
 		return p;
@@ -1290,9 +1268,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	getRowHeaderMenupopup: function () {
 		var p = this._rowHeaderMenupopup;
 		if (!p) {
-			var wgt = this._wgt;
-			p = this._rowHeaderMenupopup = new zss.MenupopupFactory(wgt).rowHeader();
-			p.setDisabled(wgt.getActionDisabled());
+			p = this._rowHeaderMenupopup = new zss.MenupopupFactory(this._wgt).rowHeader();
 			this.appendChild(p);
 		}
 		return p;
@@ -1300,18 +1276,15 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	showRowHeaderMenu: function (pageX, pageY) {
 		var show = this._wgt.isShowContextMenu();
 		if (show) {
-			var x = pageX + 5,
-				menu = this.getRowHeaderMenupopup();
-			menu.open(null, [x, pageY]);
-			this.openStyleMenupopup(x, menu);
+			var y = pageY - 70;
+			this.getStyleMenupopup().open(null, [pageX + 5, y < 0 ? 0 : y]);
+			this.getRowHeaderMenupopup().open(null, [pageX, pageY]);	
 		}
 	},
 	getColumnHeaderMenupopup: function () {
 		var p = this._columnHeaderMenupopup;
 		if (!p) {
-			var wgt = this._wgt;
 			p = this._columnHeaderMenupopup = new zss.MenupopupFactory(this._wgt).columnHeader();
-			p.setDisabled(wgt.getActionDisabled());
 			this.appendChild(p);
 		}
 		return p;
@@ -1319,18 +1292,15 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	showColumnHeaderMenu: function (pageX, pageY) {
 		var show = this._wgt.isShowContextMenu();
 		if (show) {
-			var x = pageX + 5,
-				menu = this.getColumnHeaderMenupopup();
-			menu.open(null, [x, pageY]);
-			this.openStyleMenupopup(x, menu);
+			var y = pageY - 70;
+			this.getStyleMenupopup().open(null, [pageX + 5, y < 0 ? 0 : y]);
+			this.getColumnHeaderMenupopup().open(null, [pageX, pageY]);	
 		}
 	},
 	getCellMenupopup: function () {
 		var p = this._cellMenupopup;
 		if (!p) {
-			var wgt = this._wgt;
-			p = this._cellMenupopup = new zss.MenupopupFactory(wgt).cell();
-			p.setDisabled(wgt.getActionDisabled());
+			p = this._cellMenupopup = new zss.MenupopupFactory(this._wgt).cell();
 			this.appendChild(p);
 		}
 		return p;
@@ -1338,36 +1308,10 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 	showCellContextMenu: function (pageX, pageY) {
 		var show = this._wgt.isShowContextMenu();
 		if (show) {
-			var x = pageX + 5,
-				menu = this.getCellMenupopup();
-			menu.open(null, [x, pageY]);
-			this.openStyleMenupopup(x, menu);
+			var y = pageY - 70;
+			this.getStyleMenupopup().open(null, [pageX + 5, y < 0 ? 0 : y]);
+			this.getCellMenupopup().open(null, [pageX + 5, pageY]);	
 		}
-	},
-	setActionDisabled: function (actions) {
-		var show = this._wgt.isShowContextMenu();
-		if (show && actions) {
-			var cellPopup = this.getCellMenupopup();
-			if (cellPopup) {
-				cellPopup.setDisabled(actions);
-			}
-			var rowPopup = this.getRowHeaderMenupopup();
-			if (rowPopup) {
-				rowPopup.setDisabled(actions);
-			}
-			var colPopup = this.getColumnHeaderMenupopup();
-			if (colPopup) {
-				colPopup.setDisabled(actions);
-			}
-			var stylePopup = this.getStyleMenupopup();
-			if (stylePopup) {
-				stylePopup.setDisabled(actions);
-			}
-		}
-	},
-	openStyleMenupopup: function (x, refPop) {
-		var y = zk.parseInt(jq(refPop.$n()).css('top')) - 70;//70: space between menupopup
-		this.getStyleMenupopup().open(null, [x, y < 0 ? 0 : y]);
 	},
 	runAfterMouseClick: function (fn) {
 		var fns = this._afterMouseClick;
@@ -1512,8 +1456,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			}
 			mdstr = "h_" + row + "_" + col;
 			if (this._lastmdstr == mdstr) {
-				
-				this['show' + (headercmp.ctrl.type == 'V' ? 'Row' : 'Column') + 'HeaderMenu'](mx, my);
+				this['show' + (row > 0 ? 'Row' : 'Column') + 'HeaderMenu'](mx, my);
 				wgt.fireHeaderEvt(type, shx, shy, md1[2], row, col, mx, my);
 			}
 		}
@@ -1597,19 +1540,19 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			var info = this.editingFormulaInfo;
 			if((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveHome(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 37: //Left
 			var info = this.editingFormulaInfo;
 			if((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveLeft(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 38: //Up
 			var info = this.editingFormulaInfo;
 			if((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveUp(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 9://tab;
 			if (this.state == zss.SSheetCtrl.EDITING){
@@ -1631,13 +1574,13 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			var info = this.editingFormulaInfo;
 			if ((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveRight(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 40: //Down
 			var info = this.editingFormulaInfo;
 			if ((!info || (info && !info.moveCell)) && this.state != zss.SSheetCtrl.FOCUSED) break;//editing
 			this.dp.moveDown(evt);
-			//evt.stop(); //ZSS-181
+			evt.stop();
 			break;
 		case 113: //F2
 			if(this.state == zss.SSheetCtrl.FOCUSED)
@@ -1679,27 +1622,10 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		//if(this._skipress) delete this._skipress;
 		//check CTRL-V and do the copy on the sheet!
 		if (evt.ctrlKey && evt.keyCode == 86) {
-			var wgt = this._wgt,
-				sl = this,
-				//ZSS-169
-				fn = function () {
-					if (!wgt._doPasteFromServer) {//do paste from client when server doesn't do it
-						var focustag = sl.dp.focustag,
-							value = jq(focustag).val(),
-							pos = sl.dp._speedCopy(value);
-						
-						//Note. _speedCopy will fire edit cmd to server, set selection after response
-						if (pos)
-							wgt._onResponseCallback.push(function () {
-								sl._doCellSelection(pos.left, pos.top, pos.right, pos.bottom);
-							});
-					}	
-				};
-			if (wgt._sendAu) {//flag that indicate ZK send Au request. (cannot use zAu.processing(), it may be null since ZK use timeout to send request) 
-				wgt._onResponseCallback.push(fn); 
-			} else {
-				fn();
-			}
+			var focustag = this.dp.focustag,
+				value = jq(focustag).val(),
+				pos = this.dp._speedCopy(value);
+			this._doCellSelection(pos.left, pos.top, pos.right, pos.bottom);
 		}
 	},
 	/**
@@ -1914,6 +1840,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 
 			//update datapanel padding
 			dp._fixSize(this.activeBlock);
+			
+			if(loadvis) this.activeBlock.loadForVisible();
 		
 			var self = this;
 			setTimeout(function(){
@@ -1930,10 +1858,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		if (fireevent) {
 			this._wgt.fire('onZSSHeaderModif', 
 					{sheetId: this.serverSheetId, type: "top", event: "size", index: col, newsize: width, id: zsw, hidden: hidden},
-					{toServer: true, sendAhead: true}, 25);//ZSS-180
+					{toServer: true}, 25);
 		}
-		//ZSS-180
-		if(col < this.maxCols && loadvis) this.activeBlock.loadForVisible();
 	},
 	_syncColFocusAndSelection: function(left, right) {
 		var focPos = this.getLastFocus(),
@@ -2071,6 +1997,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			}
 	
 			dp._fixSize(this.activeBlock);
+			
+			if (loadvis) this.activeBlock.loadForVisible();
 		
 			var local = this;
 			setTimeout(function () {
@@ -2086,10 +2014,9 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		if (fireevent) {
 			this._wgt.fire('onZSSHeaderModif', 
 					{sheetId: this.serverSheetId, type: "left", event: "size", index: row, newsize: height, id: zsh, hidden: hidden},
-					{toServer: true, sendAhead: true}, 25);//ZSS-180
+					{toServer: true}, 25);
 		}
-		//ZSS-180
-		if (row < this.maxRows && loadvis) this.activeBlock.loadForVisible();
+
 	},
 	_updateText: function (result) {
 		var cell = this.activeBlock.getCell(result.r, result.c);
@@ -2111,13 +2038,11 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		if (lb)
 			lb.update_(tRow, lCol, bRow, rCol);
 		
-		/* ZSS-169: prepare client side paste src when user set selection by drag cells 
 		//feature #26: Support copy/paste value to local Excel		
 		var ls = this.getLastSelection();
-		if (tRow >= ls.top && bRow <= ls.bottom && lCol >= ls.left && rCol <= ls.right) {
-			this._prepareCopy(debug);
-		}
-		*/
+		if (tRow >= ls.top && bRow <= ls.bottom && lCol >= ls.left && rCol <= ls.right)
+			//this._wgt._prepareCopy = true; //prepareCopy onResponse. Timeing issue: do prepare copy at response will too late
+			this._prepareCopy();
 	},
 	_updateHeaderSelectionCss: function (range, remove) {
 		var top = range.top,
@@ -2149,9 +2074,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 			clearTimeout(id);
 		}
 		this._fireCellSelectionId = setTimeout(function () {
-			self.fire('onCellSelection', {left: left, top: top, right: right, bottom: bottom});
-			//ZSS 171
-			self._skipInsertCellRef = false;
+			self.fire('onCellSelection', {left: left, top: top, right: right, bottom: bottom});		
 		}, 50);
 	},
 	/**
@@ -2206,8 +2129,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		}
 		
 		var selRange = new zss.Range(left, top, right, bottom);
-		this.state == zss.SSheetCtrl.START_EDIT ? 
-				this.fire('onCellSelection', {left: left, top: top, right: right, bottom: bottom}) : this.deferFireCellSelection(left, top, right, bottom);
+		this.deferFireCellSelection(left, top, right, bottom);
 		this.selArea.relocate(selRange);
 		
 		if (show) {
@@ -2911,7 +2833,8 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 				'<div id="', uuid, '-selchg" class="zsselchg" zs.t="SSelChg"><div id="', uuid, '-selchgi" class="zsselchgi"></div></div>',
 				'<div id="', uuid, '-focmark" class="zsfocmark" zs.t="SFocus"><div id="', uuid, '-focmarki" class="zsfocmarki"></div></div>',
 				'<div id="', uuid, '-highlight" class="zshighlight" zs.t="SHighlight"><div id="', uuid, '-highlighti" ,class="zshighlighti" zs.t="SHlInner"></div></div>',
-				'</div><div id="', uuid, '-wp" class="zswidgetpanel" zs.t="SWidgetpanel"></div><div id="', uuid, '-pp" class="zspopuppanel"></div></div>');
+				'</div>' + this.inlineEditor.redrawHTML_(),
+				'<div id="', uuid, '-wp" class="zswidgetpanel" zs.t="SWidgetpanel"></div><div id="', uuid, '-pp" class="zspopuppanel"></div></div>');
 		
 		if (topPanel)
 			topPanel.redraw(out);
@@ -2919,7 +2842,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		if (leftPanel)
 			leftPanel.redraw(out);
 		
-		out.push(this.inlineEditor.redrawHTML_() + '<span id="', uuid, '-sinfo" class="zsscrollinfo"><span class="zsscrollinfoinner"></span></span>',
+		out.push('<span id="', uuid, '-sinfo" class="zsscrollinfo"><span class="zsscrollinfoinner"></span></span>',
 				'<span id="', uuid, '-info" class="zsinfo"><span class="zsinfoinner"></span></span>');
 		
 		if (cornerPanel)
@@ -2972,8 +2895,7 @@ zss.SSheetCtrl = zk.$extends(zk.Widget, {
 		sheet.info = new zss.Info(sheet, sheet.infocmp);
 	},
 	_getVisibleRange: function (sheet) {
-		var //scrollSize = zss.Spreadsheet.scrollWidth, 
-			sp = sheet.sp,
+		var sp = sheet.sp,
 			spcmp = sp.comp,
 			scrollLeft = spcmp.scrollLeft,
 			scrollTop = spcmp.scrollTop,

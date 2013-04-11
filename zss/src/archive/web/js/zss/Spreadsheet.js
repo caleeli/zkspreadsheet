@@ -23,8 +23,8 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 		if(zkS.t(zss.Spreadsheet.scrollWidth)) return;
 	    // scroll scrolling div
 		var body = document.body,
-			scr = jq('<div style="position:absolute;top:0px;left:0px;width:80px;height:50px;overflow:auto;"></div>')[0],
-			inn = jq('<div style="width:100px;height:100px;overflow: scroll;"></div>')[0]; //scroll content div
+			scr = jq('<div style="position:absolute;top:0px;left:0px;width:50px;height:50px;overflow:auto;"></div>')[0],
+			inn = jq('<div style="width:100px;height:100px;"></div>')[0]; //scroll content div
 	    // Put the scrolli div in the scrolling div
 	    scr.appendChild(inn);
 
@@ -39,12 +39,60 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 		return;
 	}
 	
-	function doUpdate(wgt, shtId, data, token) {
+	function doUpdate(wgt, data, token) {
 		wgt.sheetCtrl._skipMove = data.sk; //whether to skip moving the focus/selection after update
-		wgt.sheetCtrl._cmdCellUpdate(shtId, data);
+		wgt.sheetCtrl._cmdCellUpdate(data);
 		if (token)
 			zkS.doCallback(token);
 		delete wgt.sheetCtrl._skipMove; //reset to don't skip
+	}
+	
+	function copyRow(lCol, rCol, srcRow) {
+		var row = {
+			r: srcRow.r,
+			heightId: srcRow.heightId,
+			cells: {},
+			update: srcRow.update,
+			getCell: srcRow.getCell
+		}
+		copyCells(lCol, rCol, srcRow, row);
+		return row;
+	}
+	
+	function copyCells(lCol, rCol, srcRow, dstRow) {
+		var srcCells = srcRow.cells,
+			dstCells = dstRow.cells;
+		for (var c = lCol; c <= rCol; c++) {
+			dstCells[c] = cloneCell(srcCells[c]);
+		}
+	}
+	
+	function cloneCell(cell) {
+		var c = {};
+		for (var p in cell) {
+			c[p] = cell[p];
+		}
+		return c;
+	}
+	
+	/**
+	 * Sync frozen range heightId with main range, 
+	 * the heightId may exist in client side only when row contains wrap cell
+	 */
+	function syncHeightId(srcRange, dstRange) {
+		var srcRows = srcRange.rows,
+			dstRows = dstRange.rows,
+			dstRowHeaders = dstRange.rowHeaders;
+		for (var rowNum in dstRows) {
+			var row = dstRows[rowNum],
+				srcRow = srcRows[rowNum];
+			if (srcRow) {
+				var hId = srcRow.heightId;
+				if (hId && !row.heightId) {
+					dstRange.updateRowHeightId(rowNum, hId);	
+				}
+			}
+		}
 	}
 
 	function doBlockUpdate(wgt, json, token) {
@@ -55,9 +103,84 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 				tRow = json.top,
 				lCol = json.left,
 				bRow = tRow + json.height - 1,
-				rCol = lCol + json.width - 1;
+				rCol = lCol + json.width - 1,
+				leftFrozen = json.leftFrozen,
+				topFrozen = json.topFrozen;
+			
 			ar.update(d);
-			wgt.sheetCtrl._cmdBlockUpdate(tp, d.dir, tRow, lCol, bRow, rCol);
+			if (leftFrozen) {
+				ar.leftFrozen = new zss.ActiveRange(leftFrozen.data);
+				//TODO: fine-tune the following code
+				var	srcRows = ar.rows,
+					f = ar.leftFrozen,
+					fRect = f.rect,
+					fRows = f.rows,
+					fTop = fRect.top,
+					fBtm = fRect.bottom,
+					fRight = fRect.right;
+				if (ar.rect.top < fTop) {
+					//copy top rows
+					for (var r = ar.rect.top; r < fTop; r++) {
+						var srcRow = srcRows[r];
+						if (srcRow) {
+							fRows[r] = copyRow(0, fRight, srcRow);
+						}
+					}
+					fRect.top = ar.rect.top;
+				}
+				if (fBtm < ar.rect.bottom) {
+					//copy bottom rows
+					for (var r = fRect.bottom + 1; r <= ar.rect.bottom; r++) {
+						var srcRow = srcRows[r];
+						if (srcRow) {
+							fRows[r] = copyRow(0, fRight, srcRow);	
+						}
+					}
+					fRect.bottom = ar.rect.bottom;
+				}
+				//row contains wrap cell may have height Id on client side
+				syncHeightId(ar, ar.leftFrozen);
+			}
+			if (topFrozen) {
+				ar.topFrozen = new zss.ActiveRange(topFrozen.data);
+				//TODO: fine-tune the following code
+				var left = ar.rect.left,
+					right = ar.rect.right,
+					srcRows = ar.rows,
+					f = ar.topFrozen,
+					fRect = f.rect,
+					fLeft = fRect.left,
+					fRight = fRect.right;
+				if (left < fLeft) {
+					//copy left cells
+					var fRows = f.rows,
+						fTop = fRect.top,
+						fBtm = fRect.bottom;
+					for (r = fTop; r <= fBtm; r++) {
+						var srcRow = srcRows[r],
+							dstRow = fRows[r];
+						if (srcRow) {
+							copyCells(left, fLeft - 1, srcRow, dstRow);	
+						}
+					}
+				}
+				if (fRight < right) {
+					//copy right cells
+					var fRows = f.rows,
+						fTop = fRect.top,
+						fBtm = fRect.bottom;
+					for (r = fTop; r <= fBtm; r++) {
+						var srcRow = srcRows[r],
+							dstRow = fRows[r];
+						if (srcRow) {
+							copyCells(fRect.right + 1, right, srcRow, dstRow);
+						}
+					}
+				}
+				//row contains wrap cell may have height Id on client side
+				syncHeightId(ar, ar.topFrozen);
+			}
+			wgt.sheetCtrl._cmdBlockUpdate(tp, d.dir, tRow, lCol, bRow, rCol, leftFrozen, topFrozen);
 		}
 		if (token)
 			zkS.doCallback(token);
@@ -234,8 +357,6 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 		this.appendChild(this.cave = new zul.layout.Borderlayout({
 			vflex: true, sclass: 'zscave'
 		}));//contains zss.SSheetCtrl
-		
-		this._onResponseCallback = [];
 	},
 	$define: {
 		/**
@@ -264,6 +385,7 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 			if (!sheet) return;
 			var token = v[0],
 				json = jq.evalJSON(v[2]);
+			
 			if (sheet._initiated) {
 				doBlockUpdate(this, json, token);
 			} else {
@@ -284,13 +406,12 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 			var sheet = this.sheetCtrl;
 			if (!sheet)	return;
 			var token = v[0],
-				shtId = v[1],
 				data = v[2];
 			
 			if (sheet._initiated) {
-				doUpdate(this, shtId, data, token);
+				doUpdate(this, data, token);
 			} else {
-				sheet.addSSInitLater(doUpdate, this, shtId, data, token);
+				sheet.addSSInitLater(doUpdate, this, data, token);
 			}
 		},
 		dataUpdateStart: _updateCell,
@@ -632,15 +753,9 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 			}
 		},
 		actionDisabled: function (v) {
-			var tb = this._toolbar
+			var tb = this._toolbar;
 			if (tb)
 				tb.setDisabled(v);
-			if (this.getShowContextMenu()) {
-				var shtCtrl = this.sheetCtrl;
-				if (shtCtrl) {
-					shtCtrl.setActionDisabled(v);
-				}
-			}
 		},
 		/**
 		 * Sets whether show formula bar or not
@@ -691,15 +806,7 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 				sheetBar.getSheetSelector().setSheetLabels(v);
 			}
 		},
-		copysrc: null, //flag to show whether a copy source has set
-		//flag that indicate server has done paste operation, no need to do paste at client,
-		//Note. this flag will clear by doKeyUp()
-		doPasteFromServer: null
-	},
-	clearCachedSize_: function () {
-		this.getTopPanel().clearCachedSize_();
-		this.cave.clearCachedSize_();
-		this.$supers(zss.Spreadsheet, 'clearCachedSize_', arguments);
+		copysrc: null //flag to show whether a copy source has set
 	},
 	getTopPanel: function () {
 		var tp = this._topPanel;
@@ -869,23 +976,12 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 		var sheet = this.sheetCtrl;
 		if (!sheet) return;
 		
-		var sf = this,
-			//ZSS-169
-			fn = function () {
-			if (sf._ctrlPasteDown) {//set selection after keyup
-				sf._afterKeyUpCallback = function () {
-					sheet._cmdSelection(v);
-				};
-			} else {
-				sheet._cmdSelection(v);
-			}
-		};
 		if (this.isSheetCSSReady()) {
-			fn();
+			sheet._cmdSelection(v);
 		} else {
 			//set selection after CSS ready
 			sheet.addSSInitLater(function () {
-				fn();
+				sheet._cmdSelection(v);
 			});
 		}
 	},
@@ -1010,7 +1106,6 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 	 */
 	fetchActiveRange: function (top, left, right, bottom) {
 		if (!this._fetchActiveRange) {
-			this.sheetCtrl.activeBlock.loadstate = zss.MainBlockCtrl.LOADING;
 			this.fire('onZSSFetchActiveRange', 
 				{sheetId: this.getSheetId(), top: top, left: left, right: right, bottom: bottom}, {toServer: true});
 			this._fetchActiveRange = true;
@@ -1023,7 +1118,6 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 		this._fetchActiveRange = null;
 		var cacheCtrl = this._cacheCtrl;
 		if (cacheCtrl) {
-			this.sheetCtrl.activeBlock.loadstate = zss.MainBlockCtrl.IDLE;
 			cacheCtrl.getSelectedSheet().fetchUpdate(v);
 			this.sheetCtrl.sendSyncblock();
 		}
@@ -1092,13 +1186,6 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 			this.sheetCtrl.fire('onContentsChanged');
 			delete this._triggerContentsChanged;
 		}
-
-		var fns = this._onResponseCallback,
-			fn = null;
-		while (fn = fns.shift()) {
-			fn();
-		}
-		this._sendAu = false;
 	},
 	domClass_: function (no) {
 		return 'zssheet';
@@ -1171,15 +1258,6 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 		if (dragHandler)
 			dragHandler.doMousemove(evt);
 	},
-	sendAU_: function (evt, timeout, opts) {
-		if (evt.name == 'onCtrlKey') {
-			//client side need to know whether server do paste action at server side or not
-			//if server side doesn't perform paste action, client side will do paste at doKeyUp_()
-			timeout = 0;
-		}
-		this._sendAu = true;//a flag that indicat au processing
-		this.$supers('sendAU_', arguments);
-	},
 	doKeyDown_: function (evt) {
 		var sheet = this.sheetCtrl;
 		if (sheet) {
@@ -1226,26 +1304,11 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 	//feature#161: Support copy&paste from clipboard to a cell
 	doKeyUp_: function (evt) {
 		this.$supers('doKeyUp_', arguments);
-		var sl = this,
-			sheet = this.sheetCtrl,
-			clearFn = function () {
-				sl._doPasteFromServer = false;
-			};
+		var sheet = this.sheetCtrl;
 		if (sheet && sheet.state == zss.SSheetCtrl.FOCUSED) {
 			sheet._doKeyup(evt);
-			//ZSS-169
-			var fn = this._afterKeyUpCallback;
-			if (fn) {
-				fn();
-				delete this._afterKeyUpCallback;
-			}
 		}
 		this._ctrlPasteDown = false;
-		if (this._sendAu) {//au processing, reset _doPasteFromServer on after response
-			this._onResponseCallback.push(clearFn);
-		} else {
-			clearFn();
-		}
 	},
 	linkTo: function (href, type, evt) {
 		//1: LINK_URL

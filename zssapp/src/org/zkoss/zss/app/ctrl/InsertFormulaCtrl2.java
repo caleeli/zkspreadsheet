@@ -93,12 +93,6 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 				item.setLabel(info.getFunction());
 				item.setValue(info);
 			}
-
-			@Override
-			public void render(Listitem item, Object data, int index)
-					throws Exception {
-				render(item, data);
-			}
 		});
 		functionListbox.addEventListener(Events.ON_DOUBLE_CLICK, new EventListener() {
 			public void onEvent(Event event) throws Exception {
@@ -111,7 +105,10 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 		
 		Rect selection = (Rect) evt.getOrigin().getData();
 		
-		_insertFormulaDialog.setMode(Window.MODAL);
+		try {
+			_insertFormulaDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 		searchTextbox.setText(null);
 		initFunctionListbox();
 		searchTextbox.focus();
@@ -153,8 +150,11 @@ public class InsertFormulaCtrl2 extends GenericForwardComposer {
 	private void openComposeFormulaDialog() {
 		Listitem item = (Listitem)functionListbox.getSelectedItem();
 		if (item == null) {
-			Messagebox.show("Select a function");
-			return;
+			try {
+				Messagebox.show("Select a function");
+				return;
+			} catch (InterruptedException e) {
+			}
 		}	
 		
 		FormulaMetaInfo info = (FormulaMetaInfo) item.getValue();

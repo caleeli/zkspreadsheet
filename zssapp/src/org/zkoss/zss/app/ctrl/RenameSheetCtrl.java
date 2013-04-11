@@ -53,7 +53,10 @@ public class RenameSheetCtrl extends GenericForwardComposer {
 		Map arg = (Map) event.getOrigin().getData();
 		sheetNameTB.setText((String)arg.get(KEY_ARG_SHEET_NAME));
 		sheetNameTB.focus();
-		_renameSheetDialog.setMode(Window.MODAL);
+		try {
+			_renameSheetDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	public void onOK$sheetNameTB() {
@@ -67,7 +70,10 @@ public class RenameSheetCtrl extends GenericForwardComposer {
 	private void rename() {
 		String sheetName = sheetNameTB.getText();
 		if (sheetName == null || sheetName == "") {
-			Messagebox.show("invalid sheet name");
+			try {
+				Messagebox.show("invalid sheet name");
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		DesktopWorkbenchContext bookContent = Zssapp.getDesktopWorkbenchContext(self);

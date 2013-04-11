@@ -19,7 +19,9 @@ import static org.zkoss.zss.app.base.Preconditions.checkNotNull;
 import java.util.HashMap;
 
 import org.zkoss.poi.ss.usermodel.CellStyle;
+import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
+import org.zkoss.zss.app.cell.EditHelper;
 import org.zkoss.zss.app.zul.Dialog;
 import org.zkoss.zss.app.zul.Zssapps;
 import org.zkoss.zss.model.Range;
@@ -72,7 +74,10 @@ public class PasteSpecialWindowCtrl extends GenericForwardComposer {
 	public PasteSpecialWindowCtrl () {
 		ss = checkNotNull(Zssapps.getSpreadsheetFromArg(), "Spreadsheet is null");
 		if (ss.getHighlight() == null) {
-			Messagebox.show("Spreadsheet must has highlight area as paste source, please set spreadsheet's highlight area");
+			try {
+				Messagebox.show("Spreadsheet must has highlight area as paste source, please set spreadsheet's highlight area");
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 	
@@ -87,7 +92,10 @@ public class PasteSpecialWindowCtrl extends GenericForwardComposer {
 	
 	public void onOpen$_pasteSpecialDialog() {
 		init();
-		_pasteSpecialDialog.setMode(Window.MODAL);
+		try {
+			_pasteSpecialDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 
 	public void onClick$okBtn() {
@@ -107,8 +115,8 @@ public class PasteSpecialWindowCtrl extends GenericForwardComposer {
 					dst.getLeft(),
 					dst.getBottom(),
 					dst.getRight(),
-					getPasteType(pasteSelector.getSelectedItem().getValue().toString()), 
-					getPasteOperation(operationSelector.getSelectedItem().getValue().toString()), 
+					getPasteType(pasteSelector.getSelectedItem().getValue()), 
+					getPasteOperation(operationSelector.getSelectedItem().getValue()), 
 					skipBlanks.isChecked(), transpose.isChecked());
 			
 			

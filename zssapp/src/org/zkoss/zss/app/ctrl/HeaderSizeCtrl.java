@@ -76,7 +76,10 @@ public class HeaderSizeCtrl extends GenericForwardComposer {
 		size = (Integer)arg.get(KEY_HEADER_SIZE);
 		headerSize.setValue(size);
 		
-		_headerSizeDialog.setMode(Window.MODAL);
+		try {
+			_headerSizeDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	private void initTitle(int target) {
