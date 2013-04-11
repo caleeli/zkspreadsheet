@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+//import org.zkoss.zss.model.Sheet;
+import org.zkoss.poi.ss.usermodel.Sheet;
 import org.zkoss.zss.ui.Rect;
 
 
@@ -41,7 +43,7 @@ public class MergeMatrixHelper {
 	
 	private Map _leftTopIndex = new HashMap(5);
 	private Map _mergeByIndex = new HashMap(20);
-	private List<MergedRect> _mergeRanges = new LinkedList<MergedRect>();
+	private List _mergeRanges = new LinkedList();
 	
 	private int _frozenRow;
 	private int _frozenCol;//don't care this for now.
@@ -117,21 +119,6 @@ public class MergeMatrixHelper {
 	 */
 	public List getRanges(){
 		return _mergeRanges;
-	}
-	
-	/**
-	 * Returns {@link MergedRect} MergedRect by id
-	 * 
-	 * @param id
-	 * @return MergedRect
-	 */
-	public MergedRect getMergedRect(int id) {
-		for (MergedRect r : _mergeRanges) {
-			if (r.getId() == id) {
-				return r;
-			}
-		}
-		return null;
 	}
 	
 	/**

@@ -27,8 +27,12 @@ import org.zkoss.zk.ui.Component;
  *
  */
 public class AuSelection extends AuResponse {
-	
-	public AuSelection(Component comp, Object data) {
+
+	public AuSelection(Component comp, String data) {
+		/**
+		 * rename zssselection -> selection
+		 */
+		//super("zssselection", comp, new String[] {comp.getUuid(),data});
 		super("setAttr", comp, new Object[] {comp.getUuid(), "selection", data});
 	}
 }

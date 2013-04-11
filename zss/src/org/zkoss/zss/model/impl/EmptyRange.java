@@ -15,21 +15,12 @@ package org.zkoss.zss.model.impl;
 import org.zkoss.poi.ss.usermodel.AutoFilter;
 import org.zkoss.poi.ss.usermodel.BorderStyle;
 import org.zkoss.poi.ss.usermodel.CellStyle;
-import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.ClientAnchor;
-import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.Hyperlink;
-import org.zkoss.poi.ss.usermodel.Picture;
 import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.poi.ss.usermodel.Sheet;
-import org.zkoss.poi.ss.usermodel.charts.ChartData;
-import org.zkoss.poi.ss.usermodel.charts.ChartGrouping;
-import org.zkoss.poi.ss.usermodel.charts.ChartType;
-import org.zkoss.poi.ss.usermodel.charts.LegendPosition;
 import org.zkoss.zss.model.Areas;
 import org.zkoss.zss.model.FormatText;
 import org.zkoss.zss.model.Range;
-import org.zkoss.zss.model.Worksheet;
 
 /**
  * Class to represent an empty Range.
@@ -115,7 +106,7 @@ public class EmptyRange implements Range {
 	}
 
 	@Override
-	public Worksheet getSheet() {
+	public Sheet getSheet() {
 		return null;
 	}
 
@@ -280,90 +271,5 @@ public class EmptyRange implements Range {
 
 	@Override
 	public void showAllData() {
-	}
-
-	@Override
-	public Chart addChart(ClientAnchor anchor, ChartData data, ChartType type,
-			ChartGrouping grouping, LegendPosition pos) {
-		return null;
-	}
-
-	@Override
-	public Picture addPicture(ClientAnchor anchor, byte[] image, int format) {
-		return null;
-	}
-
-	@Override
-	public void deletePicture(Picture picture) {
-	}
-
-	@Override
-	public void movePicture(Picture picture, ClientAnchor anchor) {
-	}
-
-	@Override
-	public void moveChart(Chart chart, ClientAnchor anchor) {
-	}
-
-	@Override
-	public void deleteChart(Chart chart) {
-	}
-
-	@Override
-	public DataValidation validate(String txt) {
-		return null;
-	}
-
-	@Override
-	public boolean isAnyCellProtected() {
-		return true;
-	}
-
-	@Override
-	public void notifyMoveFriendFocus(Object token) {
-	}
-
-	@Override
-	public void notifyDeleteFriendFocus(Object token) {
-	}
-
-	@Override
-	public void deleteSheet() {
-	}
-
-	@Override
-	public void setRowHeight(int points, boolean customHeight) {
-	}
-
-	@Override
-	public boolean isCustomHeight() {
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.zkoss.zss.model.Range#createSheet(java.lang.String)
-	 */
-	@Override
-	public void createSheet(String name) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see org.zkoss.zss.model.Range#setSheetName(java.lang.String)
-	 */
-	@Override
-	public void setSheetName(String name) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see org.zkoss.zss.model.Range#setSheetOrder(int)
-	 */
-	@Override
-	public void setSheetOrder(int pos) {
-		// TODO Auto-generated method stub
-		
 	}
 }

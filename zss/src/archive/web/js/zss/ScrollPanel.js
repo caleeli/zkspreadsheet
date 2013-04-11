@@ -21,16 +21,14 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
  * ScrollPanel is used to handle spreadsheet scroll moving event,  
  */
 zss.ScrollPanel = zk.$extends(zk.Object, {
-	/**
-	 * Scroll direction
-	 */
-	dir: 'south',
 	$init: function (sheet) {
-		this.$supers('$init', []);
-		var wgt = sheet._wgt,
-			scrollPanel = sheet.$n('sp');
+		this.$supers('$init', arguments);
+		var local = this,
+			wgt = sheet._wgt,
+			scrollPanel = wgt.$n('sp');
 		
 		this.id = scrollPanel.id;
+		this.sheetid = sheet.sheetid;
 		this.sheet = sheet;
 		this.comp = scrollPanel;
 		this.currentTop = this.currentLeft = this.timerCount = 0;
@@ -39,45 +37,25 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 		this.timerRunning = false;//is timer for scroll running.
 		this.lastMove = "";//the last move of scrolling,
 		scrollPanel.ctrl = this;
+
 		
-		var dtcmp = this.sheet.dp.comp,//zkSDatapanelCtrl._currcmp(self);
-			sccmp = this.comp;
-		this.minLeft = this._getMaxScrollLeft(dtcmp, sccmp);
-		this.minTop = this._getMaxScrollTop(dtcmp, sccmp);
-		this.minHeight = dtcmp.offsetHeight;
-		this.minWidth = dtcmp.offsetWidth;
-		wgt.domListen_(scrollPanel, 'onScroll', this.proxy(this._doScrolling))
-			.domListen_(scrollPanel, 'onMouseDown', this.proxy(this._doMousedown));
-	},
-	/**
-	 * Returns the direction that scroll to
-	 * 
-	 * <ul>
-	 * 	<li>north</li>
-	 * 	<li>west</li>
-	 * 	<li>east</li>
-	 * 	<li>south</li>
-	 * </ul>
-	 * 
-	 * @return string direction
-	 */
-	getDirection: function () {
-		return this.dir;
-	},
-	reset: function (top, left) {
-		var n = this.comp;
-		n.scrollLeft = left;
-		n.scrollTop = top;
-		this.currentTop = top;
-		this.currentLeft = left;
+		sheet.insertSSInitLater(function() {//datapanel doesn't ready when cell initialing, so invoke later.
+			var dtcmp = local.sheet.dp.comp,//zkSDatapanelCtrl._currcmp(local);
+				sccmp = local.comp;
+			local.minLeft = local._getMaxScrollLeft(dtcmp, sccmp);
+			local.minTop = local._getMaxScrollTop(dtcmp, sccmp);
+			local.minHeight = dtcmp.offsetHeight;
+			local.minWidth = dtcmp.offsetWidth;
+
+			wgt.domListen_(scrollPanel, 'onScroll', '_doScrollPanelScrolling');
+			wgt.domListen_(scrollPanel, 'onMouseDown', '_doScrollPanelMouseDown');
+		}, false);
 	},
 	cleanup: function () {
-		var sheet = this.sheet,
-			wgt = sheet._wgt,
-			n = sheet.$n('sp');
-		
-		wgt.domUnlisten_(n, 'onScroll', this.proxy(this._doScrolling))
-			.domUnlisten_(n, 'onMouseDown', this.proxy(this._doMousedown));
+		var wgt = this.sheet._wgt,
+			n = wgt.$n('sp');
+		wgt.domUnlisten_(n, 'onScroll', '_doScrollPanelScrolling');
+		wgt.domUnlisten_(n, 'onMouseDown', '_doScrollPanelMouseDown');
 		
 		this.invalid = true;
 		if(this.comp) this.comp.ctrl = null;
@@ -107,11 +85,6 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 			moveLeft = scleft < this.currentLeft,
 			moveTop = sctop < this.currentTop;
 		
-		if (moveHorizontal) {
-			this.dir = moveLeft ? 'west' : 'east';
-		} else {
-			this.dir = moveTop ? 'north' : 'south';
-		}
 		this.currentLeft = scleft;
 		this.currentTop = sctop;
 		sheet.tp._updateLeftPos(-this.currentLeft);
@@ -147,21 +120,11 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 	_hscrollTimeoutId: null,
 	_fireOnVScroll: function (time) {
 		clearTimeout(this._vscrollTimeoutId);
-		
-		//this._vscrollTimeoutId = setTimeout(this.proxy(this._doVScroll), time >= 0 ? time : zk.gecko ? 200 : 60);
-		var self = this;
-		this._vscrollTimeoutId = setTimeout(function () {
-			self._doVScroll();
-		}, time >= 0 ? time : 60);
+		this._vscrollTimeoutId = setTimeout(this.proxy(this._doVScroll), time >= 0 ? time : zk.gecko ? 200 : 60);
 	},
 	_fireOnHScroll: function (time) {
 		clearTimeout(this._hscrollTimeoutId);
-		
-		//this._hscrollTimeoutId = setTimeout(this.proxy(this._doHScroll), time >= 0 ? time : zk.gecko ? 200 : 60);
-		var self = this;
-		this._vscrollTimeoutId = setTimeout(function () {
-			self._doHScroll();
-		}, time >= 0 ? time : 60);
+		this._hscrollTimeoutId = setTimeout(this.proxy(this._doHScroll), time >= 0 ? time : zk.gecko ? 200 : 60);
 	},
 	_doVScroll: function () {
 		this._doScroll(true);
@@ -199,6 +162,7 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 		}
 		
 		var cellcmp = cell.comp,
+			local = this,
 			spcmp = this.comp,
 			block = sheet.activeBlock,
 			w = cellcmp.offsetWidth, // component width

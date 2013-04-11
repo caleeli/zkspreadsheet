@@ -16,18 +16,9 @@ package org.zkoss.zss.model;
 import org.zkoss.poi.ss.usermodel.AutoFilter;
 import org.zkoss.poi.ss.usermodel.BorderStyle;
 import org.zkoss.poi.ss.usermodel.CellStyle;
-import org.zkoss.poi.ss.usermodel.Chart;
-import org.zkoss.poi.ss.usermodel.ClientAnchor;
-import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.Hyperlink;
-import org.zkoss.poi.ss.usermodel.Picture;
 import org.zkoss.poi.ss.usermodel.RichTextString;
 import org.zkoss.poi.ss.usermodel.Sheet;
-import org.zkoss.poi.ss.usermodel.Workbook;
-import org.zkoss.poi.ss.usermodel.charts.ChartData;
-import org.zkoss.poi.ss.usermodel.charts.ChartGrouping;
-import org.zkoss.poi.ss.usermodel.charts.ChartType;
-import org.zkoss.poi.ss.usermodel.charts.LegendPosition;
 import org.zkoss.zss.model.impl.BookHelper;
 
 /**
@@ -277,28 +268,16 @@ public interface Range {
 	public void setColumnWidth(int char256);
 	
 	/**
-	 * Sets row height in points and always set customHeight flag to true.
+	 * Sets row height in points.
 	 * @param points new row height in points.
 	 */
 	public void setRowHeight(int points);
 
 	/**
-	 * Sets row height in points with customHeight flag.
-	 * @param points new row height in points
-	 * @param customHeight true if manually set by user. 
+	 * Returns associate sheet of this range.
+	 * @return associate sheet of this range.
 	 */
-	public void setRowHeight(int points, boolean customHeight);
-	
-	/**
-	 * Returns Whether the row with customHeight. 
-	 */
-	public boolean isCustomHeight();
-	
-	/**
-	 * Returns associate {@link Worksheet} of this range.
-	 * @return associate {@link Worksheet} of this range.
-	 */
-	public Worksheet getSheet();
+	public Sheet getSheet();
 	
 	/**
 	 * Return the range that contains the cell specified in row, col (relative to this Range).
@@ -509,104 +488,4 @@ public interface Range {
 	 * Clear all application of the current {@link AutoFilter}. 
 	 */
 	public void showAllData();
-
-	/**
-	 * Add a chart into the sheet of this Range 
-	 * @param anchor
-	 * @return the created chart 
-	 */
-	public Chart addChart(ClientAnchor anchor, ChartData data, ChartType type, ChartGrouping grouping, LegendPosition pos);
-
-	/**
-	 * Insert a picture into the sheet of this Range
-	 * @param anchor picture anchor
-	 * @param image image data
-	 * @param format image format
-	 * @see Workbook#PICTURE_TYPE_EMF
-     * @see Workbook#PICTURE_TYPE_WMF
-     * @see Workbook#PICTURE_TYPE_PICT
-     * @see Workbook#PICTURE_TYPE_JPEG
-     * @see Workbook#PICTURE_TYPE_PNG
-     * @see Workbook#PICTURE_TYPE_DIB
-     * @return the created picture
-	 */
-	public Picture addPicture(ClientAnchor anchor, byte[] image, int format);
-
-
-	/**
-	 * Delete an existing picture from the sheet of this Range.
-	 * @param picture the picture to be deleted
-	 */
-	public void deletePicture(Picture picture);
-	
-	/**
-	 * Update picture anchor.
-	 * @param picture the picture to change anchor
-	 * @param anchor the new anchor
-	 */
-	public void movePicture(Picture picture, ClientAnchor anchor);
-
-	/**
-	 * Update chart anchor.
-	 * @param chart the chart to change anchor
-	 * @param anchor the new anchor
-	 */
-	public void moveChart(Chart chart, ClientAnchor anchor);
-	
-	/**
-	 * Delete an existing chart from the sheet of this Range.
-	 * @param chart the chart to be deleted
-	 */
-	public void deleteChart(Chart chart);
-	
-	/**
-	 * Returns whether the plain text input by the end user is valid or not;
-	 * note the validation only applies to the left-top cell of this Range.
-	 * @param txt the string input by the end user.
-	 * @return null if a valid input to the specified range; otherwise, the DataValidation
-	 */
-	public DataValidation validate(String txt);
-	
-	/**
-	 * Returns whether any cell is protected and locked in this Range.
-	 * @return true if any cell is protected and locked in this Range.
-	 */
-	public boolean isAnyCellProtected();
-
-	/**
-	 * Move focus of the sheet of this Range(used for book collaboration).
-	 * @param token the token to identify the focus
-	 */
-	public void notifyMoveFriendFocus(Object token);
-	
-	/**
-	 * Delete focus of the sheet of this Range(used for book collaboration). 
-	 * @param token the token to identify the registration
-	 */
-	public void notifyDeleteFriendFocus(Object token);
-	
-	/**
-	 * Delete sheet of this Range.
-	 */
-	public void deleteSheet();
-	
-	/**
-	 * Create sheet of this book as specified in this Range.
-	 * @param name the name of the new created sheet; null would use default 
-	 * "SheetX" name where X is the next sheet number.
-	 */
-	public void createSheet(String name);
-	
-	/**
-     * Set(Rename) the name of the sheet as specified in this Range.
-	 * @param name
-	 */
-	public void setSheetName(String name);
-	
-    /**
-     * Sets the order of the sheet as specified in this Range.
-     *
-     * @param pos the position that we want to insert the sheet into (0 based)
-     */
-	public void setSheetOrder(int pos);
 }

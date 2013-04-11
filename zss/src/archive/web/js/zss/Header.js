@@ -23,7 +23,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 		var ctrl = dg.control;
 		ctrl.draging = true;
 		
-		ctrl.sheet.dp.stopEditing("refocus");
+		zss.SSheetCtrl._curr(ctrl).dp.stopEditing("refocus");
 		var pt0 = pt[0] - (dg._unhide && ctrl.type == zss.Header.HOR ? 6 : 0),
 			pt1 = pt[1] - (dg._unhide && ctrl.type != zss.Header.HOR ? 6 : 0);
 		
@@ -119,6 +119,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 			
 			last = off >= maxoff ? [dg.start[0] - maxoff, 0] : [pt[0], 0];
 			dg.last = [last[0], last[1]];
+				
 			if (zk.opera) {//In opera , i must add head position to get correct left position
 				var bcmp = ctrl.bcomp;
 				last[0] += (bcmp.offsetLeft+bcmp.offsetWidth);
@@ -131,8 +132,8 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 				ow = wi = w = ctrl.orgsize + offset;
 				if(w < ctrl.minHWidth) w = ctrl.minHWidth;
 				
-				//for firefox -moz-box-size, offsetWidth is the width
-				cmp.removeAttribute('style');
+				//for firfox -moz-box-size, offsetWidth is the width
+				jq(cmp).removeAttr('style');
 				if (ow < 5) {
 					jq(cmp).css('padding', 0);
 					if (ow <= 0)
@@ -146,7 +147,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 				jq(cmp).css('width', jq.px0(w));
 				jq(icmp).css('width', jq.px0(wi));
 				if (cousin) {
-					cousin.comp.removeAttribute('style');
+					jq(cousin.comp).removeAttr('style');
 					if (ow < 5) {
 						jq(cousin.comp).css('padding', 0);
 						if (ow <= 0)
@@ -175,7 +176,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 				oh = h = ctrl.orgsize + offset;
 				if (h < ctrl.minVHeight) h= ctrl.minVHeight;
 
-				cmp.removeAttribute('style');
+				jq(cmp).removeAttr('style');
 				if (oh < 5) {
 					jq(cmp).css('padding', 0);
 					if (oh <= 0)
@@ -184,7 +185,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 				jq(cmp).css({'height': jq.px0(h - 1), 'line-height': jq.px0(h - 1)});
 				jq(icmp).css({'height': jq.px0(h - 1), 'line-height': jq.px0(h - 1)});
 				if (cousin) {
-					cousin.comp.removeAttribute('style');
+					jq(cousin.comp).removeAttr('style');
 					if (oh < 5) {
 						jq(cousin.comp).css('padding', 0);
 						if (oh <= 0)
@@ -212,7 +213,7 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 			width = zk.ie ? 2 : 3,
 			top = ofs[1] + bcmph,
 			left = ofs[0] + bcmpw,
-			spcomp = ctrl.sheet.sp.comp;
+			spcomp = zss.SSheetCtrl._curr(ctrl).sp.comp;
 
 		if (ctrl.type == zss.Header.HOR) {
 			var w = zk(spcomp).offsetWidth(),
@@ -235,108 +236,65 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 		
 		return ctrl.element = jq('#zk_sghost')[0];
 	}
-
 /**
  * Header represent row/column header of the spreadsheet.
  */
-var TopHeader = "H";
-zss.Header = zk.$extends(zk.Widget, {
-	widgetName: 'Header',
+zss.Header = zk.$extends(zk.Object, {
 	draging: false,
-	minHWidth: 0,
-	minVHeight: 0,
-	$init: function (sheet, type, data, cousin) {
-		this.$supers(zss.Header, '$init', []);
+	$init: function (sheet, header, boundary, index, type, cousin) {
+		this.$supers('$init', arguments);
+		this.id = header.id;
+		this.sheetid = sheet.id;
 		this.sheet = sheet;
-		this.index = data.i; //header index
-		this._pId = data.p; //css position index
-		this.title = data.t || ''; //header title
-		this.type = type;
+		//cornerPanel Header link to sheet cousin Header if any
 		if (cousin) {
 			this.cousin = cousin;
 			cousin.cousin = this;
 		}
-	},
-	//super
-	getZclass: function () {
-		var id = this._pId;
-		return this.type == TopHeader ? 
-				'zstopcell' + (id ? ' zsw' + id : '') : 'zsleftcell zsrow' + (id ? ' zslh' + id : '');
-	},
-	_getInnerClass: function () {
-		var id = this._pId;
-		return this.type == TopHeader ? 
-				'zstopcelltxt' + (id ? ' zsw' + id : '') : 'zsleftcelltxt' + (id ? ' zslh' + id : '');
-	},
-	redraw: function (out) {
-		out.push(this.getHtml());
-	},
-	getHtml: function () {
-		return this.getHtmlPrologHalf() + this.getHtmlEpilogHalf();
-	},
-	getHtmlPrologHalf: function () {
-		var uid = this.uuid,
-			isTop = this.type == TopHeader;
-		return '<div id="' + uid + '" zs.t="' + (isTop ? "STheader" : "SLheader") + '" class="' + this.getZclass() + 
-			'"><div class="' + this._getInnerClass() + '">' + this.title + '</div></div>';
-	},
-	getHtmlEpilogHalf: function () {
-		var uid = this.uuid,
-			isTop = this.type == TopHeader;
-		return '<div id="' + uid + '-boun" class="' + (isTop ? 'zshboun' : 'zsvboun') + 
-			'"><div zs.t="SBoun" class="' + (isTop ? 'zshbouni' : 'zsvbouni') + '"></div></div>';
-	},
-	bind_: function () {
-		this.$supers(zss.Header, 'bind_', arguments);
-
-		var header = this.$n(),
-			boundary = this.$n("boun");
 		
-		this.comp = header;
 		header.ctrl = this;
+		this.comp = header;
+		this.minHWidth = this.minVHeight = 0;
+		this.type = type;
+		this.index = index;
+		this.orgsize = null;
 		
+		if (type == zss.Header.HOR) {
+			this.zsw = header.getAttribute('z.zsw');
+			if (this.zsw)
+				this.zsw = zk.parseInt(this.zsw);
+		} else {
+			this.zsh = header.getAttribute('z.zsh');
+			if (this.zsh) 
+				this.zsh = zk.parseInt(this.zsh);
+		}
+		
+		boundary.ctrlref = this;
 		this.bcomp = boundary;
-		this.bcomp.ctrlref = this;
-		
 		this.ibcomp = boundary.firstChild;
 		this.ibcomp2 = boundary.lastChild;
 		if (this.ibcomp2 == this.ibcomp) 
 			delete this.ibcomp2;
-		
 		this.icomp = header.firstChild;
 	},
-	unbind_: function () {		
+	/**
+	 * Returns the header node
+	 * @return DOMElement
+	 */
+	getHeaderNode: function () {
+		return this.comp;
+	},
+	cleanup: function () {
+		if (this.comp) this.comp.ctrl = null;
+
 		if (this.drag) {
 			this.drag.destroy();
 			this.drag = null;
 		}
-		
-		this.comp = this.comp.ctrl = this.bcomp = this.bcomp.ctrlref = 
-		this.ibcomp = this.ibcomp2 = this.icomp = this.sheet = this.cousin = null;
-		this.$supers(zss.Header, 'unbind_', arguments);
-	},
-	detach: function () {
-		var b = this.bcomp;
-		if (b)
-			b.parentNode.removeChild(b);
-		this.$supers(zss.Header, 'detach', arguments);
-	},
-	doTooltipOver_: zk.$void,
-	doTooltipOut_: zk.$void,
-	doClick_: function (evt) {
-		this.sheet._doMouseleftclick(evt);
-	},
-	doMouseDown_: function (evt) {
-		this.sheet._doMousedown(evt);
-	},
-	doMouseUp_: function (evt) {
-		this.sheet._doMouseup(evt);
-	},
-	doRightClick_: function (evt) {
-		this.sheet._doMouserightclick(evt);
-	},
-	doDoubleClick_: function (evt) {
-		this.sheet._doMousedblclick(evt);
+		this.cousin = this.cells = this.comp = this.bcomp.ctrlref = this.bcomp = 
+			this.ibcomp = this.icomp = this.sheet = null;
+		if (this.ibcomp2)
+			delete this.ibcomp2;
 	},
 	/**
 	 * Setup column header per the new width or whether unhide the column header
@@ -361,6 +319,7 @@ zss.Header = zk.$extends(zk.Widget, {
 			delete this.ibcomp2;
 		}
 	},
+	
 	/**
 	 * Setup row header per the new height or whether unhide the row header
 	 */
@@ -390,8 +349,9 @@ zss.Header = zk.$extends(zk.Widget, {
 	 * @param int the width position index
 	 */
 	appendZSW: function (zsw) {
-		this._pId = zsw;
-		jq(this.comp).addClass("zsw" + zsw);
+		this.zsw = zsw;
+
+		jq(this.comp).attr("z.zsw", zsw).addClass("zsw" + zsw);
 		jq(this.icomp).addClass("zswi" + zsw);
 	},
 	/**
@@ -399,8 +359,9 @@ zss.Header = zk.$extends(zk.Widget, {
 	 * @param int the height position index
 	 */
 	appendZSH: function (zsh) {
-		this._pId = zsh;
-		jq(this.comp).addClass("zslh" + zsh);
+		this.zsh = zsh;
+
+		jq(this.comp).attr("z.zsh", zsh).addClass("zslh" + zsh);
 		jq(this.icomp).addClass("zslh" + zsh);
 	},
 	/**
@@ -411,10 +372,10 @@ zss.Header = zk.$extends(zk.Widget, {
 	resetInfo: function (newindex, newnm) {
 		this.index = newindex;
 		if (this.type == zss.Header.HOR) {
-			this.c = newindex;
+			this.comp.setAttribute("z.c", newindex);
 			jq(this.icomp).text(newnm);
 		} else {
-			this.r = newindex;
+			this.comp.setAttribute("z.r", newindex);
 			jq(this.icomp).text(newnm);
 		}
 	},
@@ -450,6 +411,45 @@ zss.Header = zk.$extends(zk.Widget, {
 	}
 }, {
 	HOR: "H",
-	VER: "V"
+	VER: "V",
+	/**
+	 * Create header node
+	 */
+	createComp: function (sheet, parm) {
+		var type = parm.type,
+			index = parm.ix,
+			name = parm.nm,
+			zsw = parm.zsw,
+			zsh = parm.zsh,
+			hidden = parm.hn;
+		if (type == zss.Header.HOR) {
+			//create column
+			var uuid = sheet._wgt.uuid,
+				html = ['<div z.c="', index,'" zs.t="STheader" class="zstopcell', zsw ? ' zsw' + zsw : '', '" ',
+					zkS.t(zsw) ? 'z.zsw="' + zsw + '"' : '' ,'><div class="', 'zstopcelltxt ', zsw ? ' zswi' + zsw : '', '"',
+					'>', name, '</div></div><div  class="zshboun"><div class="zshbouni" zs.t="SBoun"></div>'];
+			if (hidden)
+				html.push('<div class="zshbounw" zs.t="SBoun2"></div>');
+			html.push('</div>');
+			var $n = jq(html.join('')),
+				cmp = $n[0],
+				bcmp = $n[1];
+			return new zss.Header(sheet, cmp, bcmp, index, type);
+			
+		} else if (type == zss.Header.VER) {
+			//create row
+			var html = ['<div z.r="', index, '" zs.t="SLheader" class="zsleftcell zsrow',
+			            (zsh ? " zslh" + zsh : ''), '"', zkS.t(zsh) ? ' z.zsh="' + zsh + '"' : '', '><div class="zsleftcelltxt', 
+			            (zsh ? " zslh" + zsh : ''), '">', name,'</div></div><div class="zsvboun"><div class="zsvbouni" zs.t="SBoun"></div>'];
+			if (hidden)
+				html.push('<div class="zsvbounw" zs.t="SBoun2"></div>');
+			html.push('</div>');
+			var $n = jq(html.join('')),
+			    cmp = $n[0],
+			    bcmp = $n[1];
+
+			return new zss.Header(sheet, cmp, bcmp, index, type);
+		}
+	}
 });
 })();

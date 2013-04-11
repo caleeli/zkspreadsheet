@@ -28,28 +28,26 @@ import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
-import org.zkoss.zk.ui.event.ForwardEvent;
 import org.zkoss.zk.ui.event.InputEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zss.app.Consts;
 import org.zkoss.zss.app.zul.Dialog;
 import org.zkoss.zss.app.zul.Zssapps;
 import org.zkoss.zss.model.Book;
-import org.zkoss.zss.ui.Rect;
 import org.zkoss.zss.ui.Spreadsheet;
 import org.zkoss.zss.ui.impl.SheetVisitor;
 import org.zkoss.zss.ui.impl.Utils;
 import org.zkoss.zul.Button;
 import org.zkoss.zul.Combobox;
-import org.zkoss.zul.Comboitem;
-import org.zkoss.zul.DefaultTreeModel;
-import org.zkoss.zul.DefaultTreeNode;
 import org.zkoss.zul.Include;
 import org.zkoss.zul.Messagebox;
+import org.zkoss.zul.SimpleTreeModel;
+import org.zkoss.zul.SimpleTreeNode;
 import org.zkoss.zul.Textbox;
 import org.zkoss.zul.Tree;
 import org.zkoss.zul.Treeitem;
 import org.zkoss.zul.Window;
+import org.zkoss.zul.api.Comboitem;
 
 /**
  * @author Sam
@@ -77,7 +75,7 @@ public class InsertHyperlinkWindowCtrl extends GenericForwardComposer {
 	private Include content;
 	
 	private Spreadsheet ss;
-	private Rect selection;
+	
 	private boolean isCellHasDisplayString;
 	
 	public void doAfterCompose(Component comp) throws Exception {
@@ -91,14 +89,16 @@ public class InsertHyperlinkWindowCtrl extends GenericForwardComposer {
 		setLinkType(webBtn);
 	}
 	
-	public void onOpen$_insertHyperlinkDialog(ForwardEvent event) {
-		selection = (Rect) event.getOrigin().getData();
+	public void onOpen$_insertHyperlinkDialog() {
 		init();
-		_insertHyperlinkDialog.setMode(Window.MODAL);
+		try {
+			_insertHyperlinkDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	private void init() {
-		String display = Utils.getRange(ss.getSelectedSheet(), selection.getTop(), selection.getLeft()).getEditText();
+		String display = Utils.getRange(ss.getSelectedSheet(), ss.getSelection().getTop(), ss.getSelection().getLeft()).getEditText();
 		isCellHasDisplayString = !"".equals(display);
 		if (isCellHasDisplayString)
 			displayHyperlink.setValue(display);
@@ -119,11 +119,14 @@ public class InsertHyperlinkWindowCtrl extends GenericForwardComposer {
 	public void onClick$okBtn() {
 		String addr = getAddress();
 		if ("".equals(addr)) {
-			Messagebox.show("Please input address");
+			try {
+				Messagebox.show("Please input address");
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		
-		Utils.setHyperlink(ss.getSelectedSheet(), selection.getTop(), selection.getLeft(), 
+		Utils.setHyperlink(ss.getSelectedSheet(), ss.getSelection().getTop(), ss.getSelection().getLeft(), 
 				getLinkTarget(), addr, getDisplay());
 
 		_insertHyperlinkDialog.fireOnClose(null);
@@ -227,7 +230,7 @@ public class InsertHyperlinkWindowCtrl extends GenericForwardComposer {
 			
 			@Override
 			public void onEvent(Event evt) throws Exception {
-				Comboitem seld = (Comboitem)addr.getSelectedItem();
+				Comboitem seld = addr.getSelectedItem();
 				if (seld != null)
 					displayHyperlink.setValue(seld.getLabel());
 			}
@@ -296,18 +299,18 @@ public class InsertHyperlinkWindowCtrl extends GenericForwardComposer {
 			if (book == null) {
 				return;
 			}
-			final ArrayList<DefaultTreeNode> nodes = new ArrayList<DefaultTreeNode>();
+			final ArrayList<SimpleTreeNode> nodes = new ArrayList<SimpleTreeNode>();
 			Utils.visitSheets(book, new SheetVisitor(){
 				@Override
 				public void handle(Sheet sheet) {
-					nodes.add(new DefaultTreeNode(sheet.getSheetName(), Collections.EMPTY_LIST));
+					nodes.add(new SimpleTreeNode(sheet.getSheetName(), Collections.EMPTY_LIST));
 				}});
 			
 			/**
 			 * TODO: use i-18n instead hardcode
 			 */
-			DefaultTreeNode root = new DefaultTreeNode("Cell Reference", nodes);
-			DefaultTreeModel model = new DefaultTreeModel(root);
+			SimpleTreeNode root = new SimpleTreeNode("Cell Reference", nodes);
+			SimpleTreeModel model = new SimpleTreeModel(root);
 			tree.setModel(model);
 			
 			tree.addEventListener(Events.ON_SELECT, new EventListener() {

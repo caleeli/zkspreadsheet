@@ -49,12 +49,9 @@ import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.formula.PtgShifter;
 import org.zkoss.poi.ss.usermodel.Cell;
 import org.zkoss.poi.ss.usermodel.CellStyle;
-import org.zkoss.poi.ss.usermodel.Chart;
 import org.zkoss.poi.ss.usermodel.DataValidation;
 import org.zkoss.poi.ss.usermodel.DataValidationConstraint;
 import org.zkoss.poi.ss.usermodel.DataValidationHelper;
-import org.zkoss.poi.ss.usermodel.Picture;
-import org.zkoss.poi.ss.usermodel.PivotTable;
 import org.zkoss.poi.ss.usermodel.Row;
 import org.zkoss.poi.ss.usermodel.DataValidationConstraint.ValidationType;
 import org.zkoss.poi.ss.util.CellRangeAddress;
@@ -1230,30 +1227,10 @@ public class HSSFSheetImpl extends HSSFSheet implements SheetCtrl, Worksheet {
     	super.removeMergedRegion(index);
     }
 
-    //--Worksheet--//
-    @Override
+    //--Sheet--//
     public Book getBook() {
     	return (Book) getWorkbook();
     }
-    
-	@Override
-	public List<Picture> getPictures() {
-		DrawingManager dm = getDrawingManager();
-		return new ArrayList<Picture>(dm.getPictures());
-	}
-    
-	@Override
-	public List<Chart> getCharts() {
-		DrawingManager dm = getDrawingManager();
-		return dm.getCharts();
-	}
-	
-	@Override
-	public List<PivotTable> getPivotTables() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-    
     //--SheetCtrl--//
     private volatile SheetCtrl _sheetCtrl = null;
     private SheetCtrl getSheetCtrl() {

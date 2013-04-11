@@ -70,7 +70,6 @@ public class SSRectCellStyle implements org.zkoss.zss.app.zul.ctrl.CellStyle {
 	private short getFontHeight(int size) {
 		return (short)(size * 20);
 	}
-	
 	private void setProperRowHeightByFontSize(Worksheet sheet, Rect rect, int size) {	
 		int tRow = rect.getTop();
 		int bRow = rect.getBottom();
@@ -78,6 +77,8 @@ public class SSRectCellStyle implements org.zkoss.zss.app.zul.ctrl.CellStyle {
 		
 		for (int i = tRow; i <= bRow; i++) {
 			//Note. add extra padding height: 4
+			//this implement doesn't suit for wrap text, don't know the height in client side,
+			//the better solution shall provide by client side, not server side
 			if ((size + 4) > (Utils.pxToPoint(Utils.twipToPx(BookHelper.getRowHeight(sheet, i))))) {
 				Ranges.range(sheet, i, col).setRowHeight(size + 4);
 			}

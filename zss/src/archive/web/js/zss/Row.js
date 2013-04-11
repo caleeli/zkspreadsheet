@@ -21,184 +21,34 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
  * 
  * Row represent a row of the spreadsheet, it also be container that contains cells of the row
  */
-zss.Row = zk.$extends(zk.Widget, {
-	widgetName: 'Row',
-	$o: zk.$void, //owner, fellows relationship no needed
-	$init: function (sheet, block, row, src) {
-		this.$supers(zss.Row, '$init', []); //DO NOT pass "arguments" or all fields will be copied into this Object. 
-		
+zss.Row = zk.$extends(zk.Object, {
+	$init: function (sheet, block, cmp) {
+		this.$supers('$init', arguments);
 		this.sheet = sheet;
+		this.sheetid = sheet.id;
 		this.block = block;
-		this.src = src;
-		this.r = row;
-		
-		this.zsh = src.getRowHeightId(row);
+		this.comp= cmp;
+		this.r = zk.parseInt(cmp.getAttribute("z.r"));
+		this.zsh = cmp.getAttribute("z.zsh");
+		if (this.zsh)
+			this.zsh = zk.parseInt(this.zsh);
 		this.cells = [];
-		this.wrapedCells = [];
+		cmp.ctrl = this;
 	},
-	bind_: function (desktop, skipper, after) {
-		this.$supers(zss.Row, 'bind_', arguments);//after bind cells, may need to process wrap height
-		var sf = this,
-			sheet = this.sheet,
-			wgt = sheet._wgt,
-			wrapCells = this.wrapedCells;
-		if (wrapCells.length) {
-			if (wgt.isSheetCSSReady())
-				this._updateWrapRowHeight();
-			else
-				sheet.addSSInitLater(function () {
-					sf._updateWrapRowHeight();
-				});
-			this._listenProcessWrap(true);
+	cleanup: function (){
+		this.invalid = true;
+
+		if (this.comp) this.comp.ctrl = null;
+		this.comp = this.sheet = this.block = null;
+
+		var size = this.cells.length,
+			i = 0;
+		for (i = 0; i < size; i++) {
+			this.cells[i].cleanup();
+			this.cells[i] = null;
 		}
-		if (zk.ie6_) {
-			this.sheet.listen({onRowHeightChanged: this.proxy(this._onRowHeightChanged)});
-		}
-	},
-	unbind_: function () {
-		if (zk.ie6_) {
-			this.sheet.unlisten({onRowHeightChanged: this.proxy(this._onRowHeightChanged)});
-		}
-		delete this.cells;
-		this.r = this.zsh = null;
-		this.$supers(zss.Row, 'unbind_', arguments);
-	},
-	_listenProcessWrap: function (b) {
-		var curr = !!this._processWrap;
-		if (curr != b) {
-			this.sheet[b ? 'listen' : 'unlisten']({onProcessWrap: this.proxy(this._onProcessWrap)});
-			this._processWrap = b;
-		}
-	},
-	_onProcessWrap: function (evt) {
-		var d = evt.data,
-			r = this.r,
-			tRow = d.tRow,
-			bRow = d.bRow;
-		if (tRow != undefined && bRow != undefined && r >= tRow && r <= bRow) {
-			this._updateWrapRowHeight();
-		}
-	},
-	_updateWrapRowHeight: function () {
-		var row = this.r,
-			custRowHeight = this.sheet.custRowHeight,
-			meta = custRowHeight.getMeta(row),
-			orgHgh = custRowHeight._getCustomizedSize(row),
-			hgh = orgHgh,
-			cells = this.wrapedCells,
-			i = cells.length;
-		while (i--) {
-			var c = cells[i];
-			if (c) {
-				hgh = Math.max(hgh, c.getTextHeight());
-			}
-		}
-		
-		if (jq(this.$n()).height() == hgh)
-			return;//correct row height, no need to set CSS row height
-		
-		var sheet = this.sheet,
-			wgt = sheet._wgt,
-			zsh = this.zsh,
-			cssId = wgt.getSheetCSSId(),
-			pf = wgt.getSelectorPrefix(),
-			h2 = (hgh > 0) ? hgh - 1 : 0;
-		if (!zsh) {
-			zsh = meta ? meta[2] : custRowHeight.ids.next();
-			custRowHeight.setCustomizedSize(row, hgh, zsh, false, true);
-			sheet._appendZSH(row, zsh); //this doesn't work correctly ?? seems works, TEST it
-			sheet._wgt._cacheCtrl.getSelectedSheet().updateRowHeightId(row, zsh);
-		} else {
-			custRowHeight.setCustomizedSize(row, hgh, zsh, false, true);
-		}
-		
-		zcss.setRule(pf + " .zsh" + zsh, "height", hgh + "px", true, cssId);
-		zcss.setRule(pf + " .zshi" + zsh, "height", h2 + "px", true, cssId);
-		zcss.setRule(pf + " .zslh" + zsh, ["display", "height", "line-height"], ["", h2 + "px", h2 + "px"], true, cssId);
-		
-		//TODO: update focus shall handle by FocusMarkCtrl by listen onRowHeightChanged evt
-		var fPos = sheet.getLastFocus(),
-			sPos = sheet.getLastSelection();
-		if (fPos && sPos) {
-			sheet.moveCellFocus(fPos.row, fPos.column, true);
-			sheet.moveCellSelection(sPos.left, sPos.top, sPos.right, sPos.bottom, false, true);	
-		}
-		sheet.fire('onRowHeightChanged', {row: row});
-	},
-	processWrapCell: function (cell, ignoreUpdateNow) {
-		if (this.sheet.custRowHeight.isDefaultSize(cell.r)) {
-			var wrapedCells = this.wrapedCells;
-			if (cell.wrap) {
-				if (!wrapedCells.$contains(cell)) {
-					wrapedCells.push(cell);
-				}
-				if (!ignoreUpdateNow)
-					this._updateWrapRowHeight();
-			} else {
-				if (wrapedCells.$remove(cell)) {
-					//if there's no wrap cell to process, shall restore row height by invoke updateWrapRowHeight
-					if (!ignoreUpdateNow ||
-						!wrapedCells.length) {
-						this._updateWrapRowHeight();
-					}
-				}
-			}
-			
-			this._listenProcessWrap(!!wrapedCells.length);
-			if (ignoreUpdateNow) //process wrap on sheet onContentChange
-				this.sheet.triggerWrap(this.r);
-		} 
-	},
-	//IE6 only
-	_onRowHeightChanged: function (evt) {
-		if (this.r >= evt.data.row) {
-			zk(this.$n()).redoCSS();
-		}
-	},
-	/**
-	 * Append zss.Cell at the end of the row
-	 * 
-	 * @param zss.Cell
-	 * @param boolean ignoreDom
-	 */
-	appendCell: function (cell, ignoreDom) {
-		this.appendChild(cell, ignoreDom);
-		this.cells.push(cell);
-	},
-	/**
-	 * Insert zss.Cell
-	 * 
-	 * @param int index
-	 * @param zss.Cell
-	 * @param boolean ignoreDom
-	 */
-	insertCell: function (index, cell, ignoreDom) {
-		var cells = this.cells,
-			sibling = cells[index];
-		this.insertBefore(cell, sibling, ignoreDom);
-		cells.splice(index, 0, cell);
-	},
-	redraw: function (out) {
-		out.push(this.getHtmlPrologHalf())
-		var cells = this.cells,
-			size = cells.length;
-		for (var i = 0; i < size; i++) {
-			var cell = cells[i];
-			cell.redraw(out);
-		}
-		out.push(this.getHtmlEpilogHalf());
-	},
-	getHtmlPrologHalf: function () {
-		return '<div id="' + this.uuid + '" class="' + this.getZclass() + '" zs.t="SRow">';
-	},
-	getHtmlEpilogHalf: function () {
-		return '</div>';
-	},
-	//super//
-	getZclass: function () {
-		var cls = 'zsrow',
-			hId = this.zsh;
-		return hId ? cls + ' zsh' + hId : 'zsrow';
+		this.cells.length = 0;
+		this.cells = null;
 	},
 	/**
 	 * Returns the {@link zss.Cell}
@@ -221,17 +71,66 @@ zss.Row = zk.$extends(zk.Widget, {
 	getCellAt: function (index) {
 		return this.cells[index];
 	},
+	/** 
+	 * Push cell to the end, don't append component
+	 * @param zss.Cell cell
+	 */
+	pushCell: function (cell) {
+		this.cells.push(cell);
+	},
 	/**
-	 * Remove cell
+	 * Push cell/cells to the end, append component
+	 * @param zss.Cell/array cell
+	 */
+	pushCellE: function (cell) {
+		this.cells.push(cell);
+		this.comp.appendChild(cell.comp);
+		cell.afterAppend();
+	},
+	/**
+	 * Push cell to the start, append component
+	 * @param zss.Cell
+	 */
+	pushCellS: function (cell) {
+		this.cells.unshift(cell);
+		this.comp.insertBefore(cell.comp, this.comp.firstChild);
+		cell.afterAppend();
+	},
+	/**
+	 * Insert cell, TODO cellctrls for better performance
+	 * @param zss.Cell cellctrl
+	 * @param int index
+	 */
+	pushCellI: function (cellctrl, index) {
+		var cells = this.cells,
+			size = cells.length;
+		if (index > size)
+			throw('index out of bound:' + index + ' > ' + size) ;
+
+		if (index == 0)
+			this.pushCellS(cellctrl);
+		else if (index == size)
+			this.pushCellE(cellctrl);
+		else {
+			var tail = cells.slice(index,size);
+			cells.length = index;
+			cells.push(cellctrl);
+			cells.push.apply(cells, tail);
+			this.comp.insertBefore(cellctrl.comp, tail[0].comp);
+			cellctrl.afterAppend();
+		}
+	},
+	/**
+	 * Remove left cell
 	 * @param int size
 	 */
 	removeLeftCell: function (size) {
-		var cells = this.cells;
-		var beforeSize = cells.length;
+		var cells = this.cells,
+			cell;
 		while (size--) {
-			if (!cells.length)
-				return;
-			cells.shift().detach();
+			cell = cells.shift();
+			jq(cell.comp).remove();
+			cell.cleanup();
 		}
 	},
 	/**
@@ -239,11 +138,12 @@ zss.Row = zk.$extends(zk.Widget, {
 	 * @param int size
 	 */
 	removeRightCell: function (size) {
-		var cells = this.cells;
+		var cells = this.cells,
+			cell;
 		while (size--) {
-			if (!cells.length)
-				return;
-			cells.pop().detach();
+			cell = cells.pop();
+			jq(cell.comp).remove();
+			cell.cleanup();
 		}
 	},
 	/**
@@ -260,13 +160,11 @@ zss.Row = zk.$extends(zk.Widget, {
 	 * @param int zsh the height position index
 	 */
 	appendZSH: function (zsh) {
-		if (zsh) {
-			this.zsh = zsh;
-			jq(this.$n()).addClass("zsh" + zsh);
-			var size = this.cells.length;
-			for (var i = 0; i < size; i++)
-				this.cells[i].appendZSH(zsh);	
-		}
+		this.zsh = zsh;
+		jq(this.comp).addClass("zsh" + zsh).attr("z.zsh", zsh);
+		var size = this.cells.length;
+		for (var i = 0; i < size; i++)
+			this.cells[i].appendZSH(zsh);
 	},
 	/**
 	 * Insert new cell
@@ -274,8 +172,7 @@ zss.Row = zk.$extends(zk.Widget, {
 	 * @param int size
 	 */
 	insertNewCell: function (index, size) {
-		var sheet = this.sheet,
-			ctrl,
+		var ctrl,
 			cells = this.cells,
 			col;
 		
@@ -284,19 +181,18 @@ zss.Row = zk.$extends(zk.Widget, {
 		//there is a pentional BUG, if index==0 , not template to copy previous format
 		//however, for now, the only templat need to copy is overflow and merge cell, 
 		//and it is never be care if previous not beend loaded in client.
-		var tempcell = index == 0 ? null : cells[index - 1];
+		var tempcell = index ==0 ? null : cells[index - 1];
 		col = index == 0 ? cells[0].c :(tempcell.c + 1);
 		
-		var block = this.block,
-			src = this.src,
-			r = this.r;
+		var parm = {row: this.r};
+		if (this.zsh)
+			parm.zsh = this.zsh;
 		
 		for (var i = 0; i < size; i++) {
-			var c = col + i;
-			
+			parm.col = col + i;
 			//don't care merge property, it will be sync by removeMergeRange and addMergeRange.
 			//don't care the sytle, since cell should be updated by continus updatecell event.
-			ctrl = new zss.Cell(sheet, block, r, c, src);
+			ctrl = zss.Cell.createComp(this.sheet, this.block, parm);
 			
 			//because of overflow logic, we must maintain overflow link from overhead
 			//copy over flow attrbute overby and overhead,
@@ -304,7 +200,7 @@ zss.Row = zk.$extends(zk.Widget, {
 				if (tempcell.overflowed) ctrl.overlapBy = tempcell;
 				else if(tempcell.overlapBy) ctrl.overlapBy = tempcell.overlapBy;
 			}
-			this.insertCell(index + i, ctrl);
+			this.pushCellI(ctrl, index + i);
 		}
 		this.shiftCellInfo(index + size, col + size);
 	},
@@ -328,6 +224,7 @@ zss.Row = zk.$extends(zk.Widget, {
 		this.r = newrow;
 		var cells = this.cells,
 			i = cells.length;
+		this.comp.setAttribute("z.r", newrow);
 		while (i--)
 			cells[i].resetRowIndex(newrow);
 	},
@@ -354,32 +251,57 @@ zss.Row = zk.$extends(zk.Widget, {
 		
 		var cell = rem.pop();
 		for (;cell ; cell = rem.pop()) {
-			cell.detach();
+			jq(cell.comp).remove();
+			cell.cleanup();
 		}
 			
 		this.shiftCellInfo(index, col);
+	},
+	onHeightChanged: function () {
+		//iter row's cells
+		var cs = this.cells,
+			i = cs.length;
+		while (i--) {
+			var c = cs[i];
+			if (c.onSize) {
+				c.onSize();
+			}
+		}
+		
 	}
 }, {
 	/**
+	 * Create row DOM node and return zss.Row object
+	 * @return zss.Row
+	 */
+	createComp: function (sheet, block, parm) {
+		var zsh = parm.zsh,
+			cmp = document.createElement("div"),
+			$n = jq(cmp);
+		$n.attr({"zs.t": "SRow", "z.r": parm.row}).addClass("zsrow" + (zsh ? " zsh" + zsh :""));
+		if (zsh)
+			$n.attr("z.zsh", zsh);
+
+		return new zss.Row(sheet, block, cmp);
+	},
+	/**
 	 * Returns a row that copy cells from target
 	 * @param zss.Row tmprow a target row to copy it's cells
-	 * @return string zss.Cell's html content
+	 * @return zss.Row
 	 */
-	copyCells: function (srcRow, destRow) {
-		var cells = srcRow.cells;
+	copyCells: function (tmprow, rowctrl) {
+		var cells = tmprow.cells,
 			size = cells.length,
-			r = destRow.r,
-			html = '';
+			parm = {row: rowctrl.r};
+		if (rowctrl.zsh)
+			parm.zsh = rowctrl.zsh;
+
 		for (var i = 0; i < size; i++) {
-			var srcCell = cells[i],
-				c = srcCell.c,
-				src = srcCell.src,
-				block = srcCell.block,
-				sht = srcCell.sheet,
-				newCell = new zss.Cell(sht, block, r, c, src);
-			html += newCell.getHtml();
-			destRow.appendCell(newCell);
+			parm.col = cells[i].c;
+			parm.zsw = (cells[i].zsw) ? cells[i].zsw : null;
+			parm.edit = cells[i].edit;
+			ctrl = zss.Cell.createComp(rowctrl.sheet, rowctrl.block, parm);
+			rowctrl.pushCellE(ctrl);
 		}
-		return html;
 	}
 });

@@ -15,8 +15,6 @@ Copyright (C) 2011 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.zss.model.impl;
 
-import java.util.Locale;
-
 import org.zkoss.poi.ss.usermodel.Cell;
 
 /**
@@ -27,8 +25,8 @@ import org.zkoss.poi.ss.usermodel.Cell;
 /*package*/ class ShortMonthStep implements Step {
 	private final CircularStep _innerStep;
 	private final int _type;
-	public ShortMonthStep(int initial, int step, int type, int datatype, Locale locale) { //ZSS-69
-		_innerStep = new CircularStep(initial, step, ShortMonthData.getInstance(type, locale));
+	public ShortMonthStep(int initial, int step, int type, int datatype) {
+		_innerStep = new CircularStep(initial, step, new ShortMonthData(type));
 		_type = datatype;
 	}
 	@Override

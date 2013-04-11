@@ -27,7 +27,11 @@ import org.zkoss.zk.ui.Component;
  */
 public class AuCellFocusTo extends AuResponse {
 	
-	public AuCellFocusTo(Component comp, Object data) {
+	public AuCellFocusTo(Component comp, String data) {
+		/**
+		 * rename zssretfocus -> retrieveFocus
+		 */
+		//super("zssretfocus", comp, new String[] {comp.getUuid(),data});
 		super("setAttr", comp, new Object[] {comp.getUuid(), "retrieveFocus", data});
 	}
 }

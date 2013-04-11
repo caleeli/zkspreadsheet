@@ -41,6 +41,7 @@ import org.zkoss.zss.ui.sys.SpreadsheetInCtrl;
  *
  */
 public class CellSelectionCommand implements Command {
+	final static String Command = org.zkoss.zss.ui.event.Events.ON_CELL_SELECTION;
 
 	public void process(AuRequest request) {
 		final Component comp = request.getComponent();
@@ -71,5 +72,9 @@ public class CellSelectionCommand implements Command {
 		ctrl.setSelectionRect(left, top, right, bottom);	
 		
 		Events.postEvent(new CellSelectionEvent(org.zkoss.zss.ui.event.Events.ON_CELL_SELECTION, comp, sheet,action,left,top,right,bottom));
+	}
+
+	public String getCommand() {
+		return Command;
 	}
 }

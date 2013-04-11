@@ -5,18 +5,9 @@
 	position: relative;
 	width: 100px;
 	height: 100px;
-	background:#FFFFFF;
+	background:#A4C3EB;
 	overflow:hidden;
 	border:1px solid #D8D8D8;
-}
-
-.zscave {
-	background: #A4C3EB;
-}
-
-.zscenter {
-	border:0;
-	border-top:1px solid #C5C5C5;
 }
 
 .zsscroll {
@@ -27,7 +18,7 @@
 	width: 100%;
 	height:100%;
 	left:0px;
-	background-color:#FFFFFF;
+	background-color:#CAD7E6;
 }
 
 .zsdata {
@@ -38,7 +29,7 @@
 	padding-top: 20px;
 	padding-left: 36px;
 	overflow: hidden;
-	background-color:#FFFFFF;
+	background-color:#EEEEFF;
 }
 .zsdatapad{
 	position: relative;
@@ -62,11 +53,6 @@
 	position: relative;
 	overflow: visible;
 	background-color:#FFFFFF;
-	user-select: none;
-	-o-user-select:none;
-	-moz-user-select: none;
-	-khtml-user-select: none;
-	-webkit-user-select: none;
 }
 
 .zsrow {
@@ -141,24 +127,126 @@
 	position: relative;
 }
 
+.zscell-inner-mid-left {
+	display: box;
+	box-orient: horizontal;
+	box-pack: start;
+	box-align: center;
+	<c:if test="${c:isGecko()}">
+		display: -moz-box;
+		-moz-box-orient: horizontal;
+		-moz-box-pack: start;
+		-moz-box-align: center;
+	</c:if>
+	<c:if test="${c:isSafari()}">
+		display: -webkit-box;
+		-webkit-box-orient: horizontal;
+		-webkit-box-pack: start;
+		-webkit-box-align: center;
+	</c:if>
+}
+
+.zscell-inner-mid-center {
+	display: box;
+	box-orient: horizontal;
+	box-pack: center;
+	box-align: center;
+	<c:if test="${c:isGecko()}">
+		display: -moz-box;
+		-moz-box-orient: horizontal;
+		-moz-box-pack: center;
+		-moz-box-align: center;
+	</c:if>
+	<c:if test="${c:isSafari()}">
+		display: -webkit-box;
+		-webkit-box-orient: horizontal;
+		-webkit-box-pack: center;
+		-webkit-box-align: center;		
+	</c:if>
+}
+
+.zscell-inner-mid-right {
+	display: box;
+	box-orient: horizontal;
+	box-pack: end;
+	box-align: center;
+	<c:if test="${c:isGecko()}">
+		display: -moz-box;
+		-moz-box-orient: horizontal;
+		-moz-box-pack: end;
+		-moz-box-align: center;
+	</c:if>
+	<c:if test="${c:isSafari()}">
+		display: -webkit-box;
+		-webkit-box-orient: horizontal;
+		-webkit-box-pack: end;
+		-webkit-box-align: center;		
+	</c:if>
+}
+
+.zscell-inner-btm-left {
+	display: box;
+	box-orient: horizontal;
+	box-pack: start;
+	box-align: end;
+	<c:if test="${c:isGecko()}">
+		display: -moz-box;
+		-moz-box-orient: horizontal;
+		-moz-box-pack: start;
+		-moz-box-align: end;
+	</c:if>
+	<c:if test="${c:isSafari()}">
+		display: -webkit-box;
+		-webkit-box-orient: horizontal;
+		-webkit-box-pack: start;
+		-webkit-box-align: end;
+	</c:if>
+}
+
+.zscell-inner-btm-center {
+	display: box;
+	box-orient: horizontal;
+	box-pack: center;
+	box-align: end;
+	<c:if test="${c:isGecko()}">
+		display: -moz-box;
+		-moz-box-orient: horizontal;
+		-moz-box-pack: center;
+		-moz-box-align: end;
+	</c:if>
+	<c:if test="${c:isSafari()}">
+		display: -webkit-box;
+		-webkit-box-orient: horizontal;
+		-webkit-box-pack: center;
+		-webkit-box-align: end;		
+	</c:if>
+}
+
+.zscell-inner-btm-right {
+	display: box;
+	box-orient: horizontal;
+	box-pack: end;
+	box-align: end;
+	<c:if test="${c:isGecko()}">
+		display: -moz-box;
+		-moz-box-orient: horizontal;
+		-moz-box-pack: end;
+		-moz-box-align: end;
+	</c:if>
+	<c:if test="${c:isSafari()}">
+		display: -webkit-box;
+		-webkit-box-orient: horizontal;
+		-webkit-box-pack: end;
+		-webkit-box-align: end;
+	</c:if>
+}
+
 .zscelltxt {
 	font-family: Calibri;
 	font-size: 11px;
 	text-align: left;
 	width: 49px; /* colWidth - 2*cellPadding - 1 , 1 is border*/
 	overflow: hidden;
-	<c:if test="${c:browser('ie7-') || c:browser('ie6-')}">
-		position: absolute;
-		zoom: 1;
-	</c:if>
-}
-
-.zscelltxt-real {
-	width: 100%;
-	<c:if test="${c:browser('ie7-') || c:browser('ie6-')}">
-		left: 0;
-		position: absolute;
-	</c:if>
 }
 
 .zstop {
@@ -275,7 +363,7 @@
 }
 
 .zstopcelltxt {
-	font-size: 11px;
+	font-size: smaller;
 	text-align: center;
 	width: 49px;  /* colWidth - 2*cellPadding - 1 , 1 is border*/
 }
@@ -332,7 +420,7 @@
 	cursor : default;
 }
 .zsleftcelltxt {
-	font-size: 11px;
+	font-size: smaller;
 	height: 19px; /* rowHeight - 1, 1 is border */
 	text-align: center;
 	<c:if test="${c:browser('ie')}">
@@ -438,9 +526,6 @@
 	border: 3px solid #222222;
 	<c:if test="${c:browser('ie')}">
 		font-size: 0;
-	</c:if>
-	<c:if test="${c:isGecko3()}">
-		-moz-user-select: none;
 	</c:if>
 }
 .zsselecti{
@@ -693,32 +778,6 @@
 	visibility:hidden;/* hidden when loading, javascript will show it after init*/
 }
 
-.zswidget-drag {
-	background: #FFFFFF;
-	border: 2px solid #333333;
-	opacity:.5;
-	<c:if test="${c:browser('ie')}">
-		filter: alpha(opacity=50);
-	</c:if>
-}
-
-.zswidget-focus {
-	border: 1px solid #CFDDDE;
-	border-radius: 1px;
-}
-
-.zswidget-ifocus {
-	position: absolute;	
-}
-
-.zswidget-real, .zswidget-real a:hover{
-	cursor: move;
-}
-
-.zswidget-focus .zswidget-cave {
-	border: 5px solid #E8FDFD;
-}
-
 .chartborder img {
 	border: 1px solid #868686;
 }
@@ -739,676 +798,4 @@
 
 .zsfilter {
 	background-image: url(${c:encodeURL('~./zss/img/filter.gif')});
-}
-
-.zspopuppanel {
-	position:absolute;
-	width:0px;
-	height:0px;
-	top:0px;
-	left:0px;
-	overflow:visible;
-	z-index:10;
-}
-
-.zscellpopup {
-	overflow:hidden;
-	position:absolute;
-	top:0px;
-	left:0px;
-	z-index:10;
-	background: #FFFFFF;
-	border: 1px solid #868686;
-	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.zsdv-popup-cave {
-	margin: 0;
-	padding: 0;
-}
-
-.zsdv-item {
-	list-style: none;
-	padding: 2px;
-	margin: 0;
-	font-size: 12px;
-}
-
-.zsdv-item a.zsdv-item-text {
-	text-decoration: none !important;
-	white-space: nowrap;
-	color: #000000;
-}
-
-.zsdv-item-over, .zsdv-item-over a.zsdv-item-text {
-	color: #FFFFFF;
-	background: #3399FF;
-} 
-
-.zsdvp-popup {
-	background: #FFFFE1;
-	<c:if test="${c:browser('ie7-') || c:browser('ie6-') || c:isOpera()}">
-		width: 200px;
-		height: 90px;
-		overflow: auto;
-	</c:if>
-}
-
-.zsdvp-popup-cave {
-	padding: 1px 2px;
-	background: #FFFFE1;
-	display: block;
-	overflow: auto;
-}
-
-.zsdvp-title {
-	font-weight: bold;
-	color: #333333;
-	padding: 2px 2px 0;
-	word-wrap: break-word;
-	zoom: 1;
-}
-
-.zsdvp-text {
-	padding: 0 2px 2px;
-	color: #555555;
-	word-wrap: break-word;
-	zoom: 1;
-}
-
-.zsafp-popup, .zsafp-popup-cave {
-	height: 235px;
-	width: 240px;
-}
-
-.zsafp-search {
-	border-bottom: 1px solid #D8D8D8;
-	width: 100%;
-	padding: 2px;
-}
-
-.zsafp-search-inp {
-	background: #FFFFFF;
-	border: none;
-	font-size: 12px;
-	width: 215px;
-}
-
-.zsafp-items {
-	overflow-y: auto;
-	overflow-x: hidden;
-	height: 158px;
-	width: 100%;
-	border-bottom: 1px solid #D8D8D8;
-	position: relative;
-}
-
-.zsafp-item {
-	padding: 2px 2px 2px 20px;
-	position: relative;
-	background-position: left center;
-	font-size: 13px;
-	cursor: pointer;
-	<c:if test="${c:browser('ie6-')}">
-		padding-left: 2px;
-	</c:if>
-}
-
-.zsafp-item-over {
-	background: #D6F0FD;
-}
-
-.zsafp-item-hide {
-	display: none;
-}
-
-.zsafp-item-checkbox {
-	height: 16px;
-	width: 16px;
-	background-repeat: no-repeat;
-	position: absolute;
-	left: 3px;
-	top: 2px;
-	background: url(${c:encodeURL('~./zss/img/ui-check-box-uncheck.png')}) no-repeat transparent;
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/ui-check-box-uncheck.gif')});
-	</c:if>
-}
-
-<c:if test="${c:browser('ie6-')}">
-.zsafp-item-text {
-	margin-left: 22px;
-}
-</c:if>
-
-.zsafp-item-seld .zsafp-item-checkbox {
-	background: url(${c:encodeURL('~./zss/img/ui-check-box.png')}) no-repeat transparent;
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/ui-check-box.gif')});
-	</c:if>
-}
-
-.zsafp-item-seld-mix .zsafp-item-checkbox {
-	background: url(${c:encodeURL('~./zss/img/ui-check-box-mix.png')}) no-repeat transparent;
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/ui-check-box-mix.gif')});
-	</c:if>
-}
-	
-.zsafp-search-icon {
-	background: url(${c:encodeURL('~./zss/img/magnifier-zoom.png')}) no-repeat transparent;
-	display: inline-block;
-	position: absolute;
-	right: 4px;
-	top: 4px;
-	width: 16px;
-	height: 16px;
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/magnifier-zoom.gif')});
-	</c:if>
-}
-
-.zsafp-btns {
-	padding: 10px 12px;
-	position: absolute;
-	right: 0;
-	<c:if test="${c:isExplorer() and not c:browser('ie8')}">
-		width: 150px;
-		height: 50px;
-	</c:if>
-}
-
-.zsafp-btn {
-	cursor: pointer;
-	border-radius: 2px;
-	height: 27px;
-	width: 50px;
-	padding: 0 8px;
-	display: inline-block;
-	<c:if test="${c:isExplorer() and not c:browser('ie8')}">
-		position: absolute;
-	</c:if>
-	border: 1px solid #C7C7C7;
-	margin: 0 8px;
-}
-
-.zsafp-btn-disd {
-	cursor: default;
-	opacity: 0.6;
-	<c:if test="${c:browser('ie')}">
-		filter: alpha(opacity=60);
-	</c:if>
-}
-
-.zsafp-ok-btn {
-	background: url(${c:encodeURL('~./zss/img/tick.png')}) no-repeat 25px 5px #EFEFEF;
-	<c:if test="${c:isExplorer() and not c:browser('ie8')}">
-		left: 0;
-	</c:if>
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/tick.gif')});
-	</c:if>
-}
-
-.zsafp-cancel-btn {
-	background: url(${c:encodeURL('~./zss/img/cross.png')}) no-repeat 25px 5px #EFEFEF;
-	<c:if test="${c:isExplorer() and not c:browser('ie8')}">
-		right: 8px;
-	</c:if>
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/cross.gif')});
-	</c:if>
-}
-
-.zsnamebox {
-	width: 100%;
-	position: relative;
-	background: #FFFFFF;
-	border: 1px solid #D8D8D8;
-	border-top: 0;
-	border-left: 0;
-	padding-bottom: 1px;
-	<c:if test="${c:browser('ie7-') || c:browser('ie6-')}">
-		height: 24px;
-	</c:if>
-}
-.zsnamebox-inp {
-	font-size: 14px;
-	border: 0;
-	height: 14px;
-	padding: 5px 4px;
-	text-align: center;
-}
-.zsnamebox-disd .zsnamebox-inp {
-	cursor: default;
-}
-.zsnamebox-icon {
-	background: url(${c:encodeURL('~./zss/img/namebox-arrow.png')}) no-repeat;
-	position: absolute;
-	right: 0;
-	top: 0;
-	width: 24px;
-	height: 24px;
-	cursor: pointer;
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/namebox-arrow.gif')});
-	</c:if>
-}
-.zsnamebox-disd .zsnamebox-icon {
-	cursor: default;
-	opacity: 0.5;
-	<c:if test="${c:browser('ie')}">
-		filter: alpha(opacity=50);
-	</c:if>
-}
-.zsnamebox-pp {
-	position:absolute;
-	background: #FFFFFF;
-	border: 1px solid #868686;
-	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-	z-index: 20;
-}
-.zsnamebox-item-over {
-	background: #3399FF;
-	color: #FFFFFF;
-}
-.zsformulabar-blank {
-	width: 100%;
-	height: 100%;
-  	background-color: #FEFEFE;
-  	background-image: -moz-linear-gradient(top, #FEFEFE, #E4ECF7); /* FF3.6 */
- 	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, #FEFEFE),color-stop(1, #E4ECF7)); /* Saf4+, Chrome */
-            filter:  progid:DXImageTransform.Microsoft.gradient(startColorStr='#FEFEFE', EndColorStr='#E4ECF7'); /* IE6,IE7 */
-        -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#FEFEFE', EndColorStr='#E4ECF7')"; /* IE8 */
-}
-
-.zsformulabar-okbtn .z-toolbarbutton-cnt, .zsformulabar-cancelbtn .z-toolbarbutton-cnt {
-	width: 20px;
-	height: 17px;
-	font-size: 14px;
-	text-align: center;
-	padding-top: 0;
-	padding-bottom: 4px;
-	<c:if test="${c:browser('ie')}">
-		padding-top: 1px;
-		padding-bottom: 3px;
-	</c:if>
-	<c:if test="${c:browser('ie6-')}">
-		font-family: Lucida Sans Unicode;
-	</c:if>
-}
-.zsformulabar-insertbtn .z-toolbarbutton-cnt {
-	font-size: 14px;
-	font-style: italic;
-	text-align: center;
-	padding-top: 0;
-	padding-bottom: 4px;
-	<c:if test="${c:browser('ie')}">
-		padding-top: 1px;
-		padding-bottom: 3px;
-	</c:if>
-}
-.zsformulabar-insertbtn .zsformulabar-insertbtn-body-over .z-toolbarbutton-cnt,
-.zsformulabar-okbtn .zsformulabar-okbtn-body-over .z-toolbarbutton-cnt,
-.zsformulabar-cancelbtn .zsformulabar-cancelbtn-body-over .z-toolbarbutton-cnt {
-	padding-top: 0;
-	padding-bottom: 4px;
-	<c:if test="${c:browser('ie')}">
-		padding-top: 1px;
-		padding-bottom: 3px;
-	</c:if>
-}
-.zsformulabar-buttons {
-	position: absolute;
-	top: 0;
-	right: -1px;
-	padding-left: 4px;
-	padding-top: 1px;
-	height: 24px;
-	background: #F7F7F7;
-	border-bottom: 1px solid #D8D8D8;
-}
-.zsformulabar-west {
-	border-right: 0;
-}
-.zsformulabar-center-cave-colbtn {
-	position: absolute;
-	right: 0;
-	top: 0;
-	height: 100%;
-	padding-top: 1px;
-	border-left: 1px solid #D8D8D8;
-	background: #F5F5F5;
-}
-.zsformulabar-expandbtn-body-over {
-	background: url(${c:encodeURL('~./zss/img/toolbarbtn-ctr.gif')}) 0 -500px;
-}
-.zsformulabar-expandbtn .z-toolbarbutton-cnt {
-	width: 20px;
-	height: 17px;
-	padding: 2px;
-	background: url(${c:encodeURL('~./zss/img/arrow-270-small.png')}) no-repeat 4px 2px transparent;
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/arrow-270-small.gif')});
-	</c:if>	
-}
-.zsformulabar-expandbtn-expanded .z-toolbarbutton-cnt {
-	background: url(${c:encodeURL('~./zss/img/arrow-090-small.png')}) no-repeat 4px 2px transparent;
-	<c:if test="${c:browser('ie6-')}">
-		background-image: url(${c:encodeURL('~./zss/img/arrow-090-small.gif')});
-	</c:if>		
-}
-.zsformulabar-editor {
-	border: 1px solid #D8D8D8;
-	border-top: 0;
-	overflow: hidden;
-	margin-top: -1px;
-}
-.zsformulabar-editor-real {
-	border: 0;
-	font-size: 16px;
-	padding: 2px 3px 0 3px;
-	font-family: arial,sans-serif;
-	position: absolute;
-	top: 0;
-	left: 0;
-	<c:if test="${c:isSafari()}">
-		padding-top: 4px;
-	</c:if>
-	<c:if test="${c:isOpera() || c:browser('ie7-') || c:browser('ie6-')}">
-		padding-top: 5px;
-	</c:if>
-}
-
-.zssheetselector .z-tab-hl, .zssheetselector .z-tab-hr, .zssheetselector .z-tab-hm {
-	background: #F9F9F9;
-}
-
-.zssheetselector .z-tab {
-	border: 1px solid #D4D4D4;
-	border-top: 0;
-}
-
-.zssheetselector .z-tab-seld, 
-.zssheetselector .z-tab-seld .z-tab-hl, 
-.zssheetselector .z-tab-seld .z-tab-hr, 
-.zssheetselector .z-tab-seld .z-tab-hm {
-	background-color: #FFFFFF;
-}
-
-.zssheetselector .z-tabs-left-scroll,
-.zssheetselector .z-tabs-right-scroll {
-	margin-top: -3px;
-}
-
-<c:if test="${c:isGecko()}">
-.zssheetselector .z-tabs-cnt {
-	-moz-user-select: text;
-}
-.zssheetselector .z-tab {
-	-moz-user-select: text;
-}
-</c:if>	
-
-.zssheet-editor {
-	padding: 1px 0;
-}
-
-.zstbtn .z-toolbarbutton-cnt {
-	overflow: hidden;
-}
-
-<c:if test="${c:browser('ie6-')}">
-.zstbtn .zstbtn-cave {
-	margin-right: -12px;
-}
-.zstbtn .z-toolbarbutton-cnt {
-	overflow: visible;
-}
-.zschktbtn {
-	font-size: 0;
-}
-.zschktbtn IMG {
-	margin-right: -16px;
-}
-</c:if>	
-
-.zstbtn-cave {
-	position: absolute;
-	top: 0;
-	right: 0;
-	height: 16px;
-	padding: 2px 1px;
-	width: 10px;
-}
-
-.zstbtn-clk-disd .zstbtn-real {
-	cursor: default;
-}
-
-.zstbtn-clk-disd .zstbtn-cave {
-	cursor: pointer;
-}
-
-.zstbtn-seld .z-toolbarbutton-cnt {
-	background: #FCDE9A;
-	padding: 1px;
-	border: 1px solid #B7C6C9;
-}
-
-.zstbtn-seld .zstbtn-cave {
-	padding: 1px;
-}
-
-.z-toolbarbutton-over .z-toolbarbutton-cnt {
-	padding: 2px;
-	border: 0;
-}
-
-.z-toolbarbutton-over .zstbtn-cave {
-	padding: 2px 1px 2px 0;
-	border-left: 1px solid #79B9E0;
-}
-
-.zstbtn-cave-over {
-	background:#A4D4FD;
-	<c:if test="${c:isGecko()}">
-		background-image: -moz-linear-gradient(top, #D1EDFF, #A4D4FD);
-	</c:if>
-	<c:if test="${c:browser('ie')}">
-		filter:  progid:DXImageTransform.Microsoft.gradient(startColorStr='#D1EDFF', EndColorStr='#A4D4FD'); /* IE6,IE7 */
-		-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#D1EDFF', EndColorStr='#A4D4FD')"; /* IE8 */
-	</c:if>
-	<c:if test="${c:isSafari()}">
-		background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, #D1EDFF),color-stop(1, #A4D4FD));
-	</c:if>
-	<c:if test="${c:isOpera()}">
-		background-image: -o-linear-gradient(#D1EDFF, #A4D4FD);
-	</c:if>
-}
-
-<c:if test="${c:browser('ie6-')}">
-.zstbtn .z-toolbarbutton-body,
-.zstbtn .zstbtn-cave  {
-	font-size: 0;
-}
-</c:if>
-
-.zstbtn-arrow {
-	width: 10px;
-	height: 16px;
-	background: url(${c:encodeURL('~./zss/img/arrow-down.gif')}) no-repeat;
-	<c:if test="${c:browser('ie6-')}">
-		font-size: 0;
-	</c:if>
-}
-
-.zstbtn-sep {
-	border: 0;
-	padding: 1px 0;
-	cursor: default;
-}
-
-.zstbtn-sep .z-toolbarbutton-body {
-	border: 0;
-	padding: 0 1px;
-}
-
-.zsfontfamily-arial .z-comboitem-text {
-	font-family:Arial;
-	font-size: 18px;
-}
-
-.zsfontfamily-arial-black .z-comboitem-text {
-	font-family:Arial Black;
-	font-size: 18px;
-}
-
-.zsfontfamily-comic-sans-ms .z-comboitem-text {
-	font-family:Comic Sans MS;
-	font-size: 18px;
-}
-
-.zsfontfamily-courier-new .z-comboitem-text {
-	font-family:courier new;
-	font-size: 18px;
-}
-
-.zsfontfamily-georgia .z-comboitem-text {
-	font-family:Georgia;
-	font-size: 18px;
-}
-
-.zsfontfamily-impact .z-comboitem-text {
-	font-family:Impact;
-	font-size: 18px;
-}
-
-.zsfontfamily-lucida-console .z-comboitem-text {
-	font-family:Lucida Console;
-	font-size: 18px;
-}
-
-.zsfontfamily-lucida-sans-unicode .z-comboitem-text {
-	font-family:Lucida Sans Unicode;
-	font-size: 18px;
-}
-
-.zsfontfamily-palatino-linotype .z-comboitem-text {
-	font-family:Palatino Linotype;
-	font-size: 18px;
-}
-
-.zsfontfamily-tahoma .z-comboitem-text {
-	font-family:Tahoma;
-	font-size: 18px;
-}
-
-.zsfontfamily-times-new-roman .z-comboitem-text {
-	font-family:Times New Roman;
-	font-size: 18px;
-}
-
-.zsfontfamily-trebuchet-ms .z-comboitem-text {
-	font-family:Trebuchet MS;
-	font-size: 18px;
-}
-
-.zsfontfamily-verdana .z-comboitem-text {
-	font-family:Verdana;
-	font-size: 18px;
-}
-
-.zsfontfamily-ms-sans-serif .z-comboitem-text {
-	font-family:MS Sans Serif;
-	font-size: 18px;
-}
-
-.zsfontfamily-ms-serif .z-comboitem-text {
-	font-family:MS Serif;
-	font-size: 18px;
-}
-
-.zsfontsize .z-comboitem-text {
-	font-size:13px;
-}
-
-.zsfontfamily,
-.zsfontsize {
-	vertical-align: middle;
-	margin: 0 2px;
-}
-
-.zstbtn-color {
-	width: 14px;
-	height: 3px;
-	left: 3px;
-	bottom: 2px;
-	position: absolute;
-	<c:if test="${c:browser('ie6-')}">
-		font-size: 0;
-	</c:if>
-}
-
-.zschktbtn img {
-	position: absolute;
-	right: 3px;
-	top: 2px;
-}
-.zschktbtn-check {
-	width: 16px;
-	height: 16px;
-}
-
-.zscolormenu .z-menu-cnt .z-menu-img{
-	margin: 0 16px 0 -4px;
-	width: 14px;
-}
-
-.zsstylepanel-toolbar {
-	background: #F5F5F5;	
-}
-
-.zsstylepanel .z-popup-cl .z-popup-cnt {
-	padding: 0;
-}
-
-.zsstylepanel-toolbar {
-	border: 0;
-}
-
-<%-- Colorbutton --%>
-.zstbtn-pp {
-	border: 1px solid #86A4BE;
-	background: #FFF;
-	position: absolute;
-	width: 180px;
-	height: 120px;
-}
-.zstbtn-pp .zstbtn-cell {
-	display: inline;
-	float: left;
-	height: 18px;
-	overflow: hidden;
-	padding: 2px;
-	width: 18px;
-}
-
-.zstbtn-pp .zstbtn-cell-over {
-	padding: 1px;
-	border: 1px solid #666666;
-}
-
-.zstbtn-pp .zstbtn-cell-cnt {
-	border: 1px solid #808080;
-	height: 10px;
-	overflow: hidden;
-	width: 11px;
-	margin: 2px;
-	cursor: pointer;
-}
-
-.zstbtabpanel {
-	background: #EEEEEE;
-	padding: 0;
 }

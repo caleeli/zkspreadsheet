@@ -26,8 +26,6 @@ import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.Executions;
-import org.zkoss.zk.ui.event.Event;
-import org.zkoss.zk.ui.event.ForwardEvent;
 import org.zkoss.zk.ui.event.SelectEvent;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zss.app.zul.Dialog;
@@ -108,11 +106,12 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 		return arg;
 	}
 	
-	public void onOpen$_customSortDialog(ForwardEvent event) {
-		Rect selection = (Rect) event.getOrigin().getData();
-		ss.setSelection(selection);
+	public void onOpen$_customSortDialog() {
 		init();
-		_customSortDialog.setMode(Window.MODAL);
+		try {
+			_customSortDialog.setMode(Window.MODAL);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	public void doAfterCompose(Component comp) throws Exception {
@@ -202,13 +201,19 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 	
 	public void onClick$okBtn () {
 		if (hasEmptyArgs(sortLevelModel.getInnerList())) {
-			Messagebox.show(getLabel("sort.err.hasEmptyField"));
+			try {
+				Messagebox.show(getLabel("sort.err.hasEmptyField"));
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		
 		String dupTarget = checkDuplicateSortIndex(sortLevelModel.getInnerList());
 		if (dupTarget != null) {
-			Messagebox.show(dupTarget + " " + getLabel("sort.err.duplicateField"));
+			try {
+				Messagebox.show(dupTarget + " " + getLabel("sort.err.duplicateField"));
+			} catch (InterruptedException e) {
+			}
 			return;
 		}
 		
@@ -310,12 +315,6 @@ public class CustomSortWindowCtrl extends GenericForwardComposer {
 			cell.appendChild(sortMethod);
 			idxSel.setAttribute(SortAlgorithm.class.getCanonicalName(), sortMethod);
 			item.appendChild(cell);
-		}
-
-		@Override
-		public void render(Listitem item, Object data, int index)
-				throws Exception {
-			render(item, data);
 		}
 		
 	};

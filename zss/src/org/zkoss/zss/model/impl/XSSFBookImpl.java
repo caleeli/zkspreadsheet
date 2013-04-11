@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.openxmlformats.schemas.officeDocument.x2006.docPropsVTypes.CTVariant;
@@ -28,18 +27,15 @@ import org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.CTVect
 import org.zkoss.lang.Classes;
 import org.zkoss.lang.Library;
 import org.zkoss.poi.POIXMLProperties;
+import org.zkoss.poi.ss.formula.ptg.Ptg;
+import org.zkoss.poi.ss.formula.SheetNameFormatter;
 import org.zkoss.poi.ss.SpreadsheetVersion;
 import org.zkoss.poi.ss.formula.FormulaParser;
 import org.zkoss.poi.ss.formula.FormulaType;
-import org.zkoss.poi.ss.formula.SheetNameFormatter;
 import org.zkoss.poi.ss.formula.WorkbookEvaluator;
-import org.zkoss.poi.ss.formula.ptg.Ptg;
 import org.zkoss.poi.ss.usermodel.Color;
 import org.zkoss.poi.ss.usermodel.Font;
 import org.zkoss.poi.ss.usermodel.FormulaEvaluator;
-import org.zkoss.poi.ss.usermodel.PictureData;
-import org.zkoss.poi.ss.usermodel.PivotCache;
-import org.zkoss.poi.ss.util.AreaReference;
 import org.zkoss.poi.ss.util.CellRangeAddress;
 import org.zkoss.poi.xssf.usermodel.XSSFColor;
 import org.zkoss.poi.xssf.usermodel.XSSFEvaluationWorkbook;
@@ -225,11 +221,6 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 		BookHelper.reevaluateAndNotify(this, last, all);
 	}
 	
-	@Override
-	public void deletePictureData(PictureData img) {
-		getAllPictures().remove(img);
-	}
-	
 	//--Workbook--//
 	@Override
 	public void removeSheetAt(int index) {
@@ -382,22 +373,6 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 		getOrCreateRefBook().setShareScope(scope);
 	}
 	
-	@Override
-	public Worksheet getWorksheet(String name) {
-		return (Worksheet) getSheet(name);
-	}
-	
-	@Override
-	public boolean isDate1904() {
-		return super.isDate1904();
-	}
-
-	@Override
-	public Worksheet getWorksheetAt(int index) {
-		return (Worksheet) getSheetAt(index);
-	}
-
-    
 	//--BookCtrl--//
 	@Override
 	public RefBook newRefBook(Book book) {
@@ -408,23 +383,14 @@ public class XSSFBookImpl extends XSSFWorkbook implements Book, BookCtrl {
 	public Object nextSheetId() {
 		return getBookCtrl().nextSheetId();
 	}
-	
+
 	@Override
-	public String nextFocusId() {
-		return (String) getBookCtrl().nextFocusId();
+	public Worksheet getWorksheetAt(int index) {
+		return (Worksheet) getSheetAt(index);
 	}
 
 	@Override
-	public void addFocus(Object focus) {
-		getBookCtrl().addFocus(focus);
-	}
-
-	@Override
-	public void removeFocus(Object focus) {
-		getBookCtrl().removeFocus(focus);	}
-
-	@Override
-	public boolean containsFocus(Object focus) {
-		return getBookCtrl().containsFocus(focus);
+	public Worksheet getWorksheet(String name) {
+		return (Worksheet) getSheet(name);
 	}
 }

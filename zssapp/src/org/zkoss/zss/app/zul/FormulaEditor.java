@@ -34,6 +34,7 @@ import org.zkoss.zss.ui.Position;
 import org.zkoss.zss.ui.event.CellEvent;
 import org.zkoss.zss.ui.event.EditboxEditingEvent;
 import org.zkoss.zss.ui.event.Events;
+import org.zkoss.zss.ui.event.StartEditingEvent;
 import org.zkoss.zss.ui.event.StopEditingEvent;
 import org.zkoss.zss.ui.impl.Utils;
 import org.zkoss.zul.Textbox;
@@ -89,7 +90,7 @@ public class FormulaEditor extends Textbox {
 
 	private void addFormulaEditCellFocus() {
 		WorkbookCtrl bookCtrl = getDesktopWorkbenchContext().getWorkbookCtrl();
-		bookCtrl.moveEditorFocus(FORMULA_FOCUS_NAME, FORMULA_FOCUS_NAME, FORMULA_COLOR, formulaRow, formulaColumn);
+		bookCtrl.moveEditorFocus(FORMULA_FOCUS_NAME, FORMULA_COLOR, formulaRow, formulaColumn);
 		addedFocusNames.add(FORMULA_FOCUS_NAME);
 	}
 	
@@ -135,7 +136,7 @@ public class FormulaEditor extends Textbox {
 			               (addedFocusNames.contains(FORMULA_FOCUS_NAME) ? addedFocusNames.size() - 1 : addedFocusNames.size()) % FORMULA_COLORS.length];
 			newFocus.add(name);
 			addedFocusNames.add(name);
-			bookCtrl.moveEditorFocus(name, name, color, row, col);
+			bookCtrl.moveEditorFocus(name, color, row, col);
 		}
 		if (startEditingFormula) {
 			newFocus.add(FORMULA_FOCUS_NAME);
@@ -490,26 +491,25 @@ public class FormulaEditor extends Textbox {
 					}
 				});
 		//TODO: add ON_START_EDITING, add cell focus if cell is formula
-//		bookCtrl.addEventListener(Events.ON_START_EDITING,
-//				new EventListener() {
-//			public void onEvent(Event event) throws Exception {
-//				StartEditingEvent evt = (StartEditingEvent)event;
-//				newEdit = (String) evt.getClientValue();
-//				if (isStartEditingFormula(newEdit)) {
-//					cacheFormulaEditingInfo();
-//				}
-//				if (isComposingFormula(newEdit)) {
-//					int left = bookCtrl.getSelection().getLeft();
-//					int top = bookCtrl.getSelection().getTop();
-//					formulaCell = Utils.getCell(bookCtrl.getSelectedSheet(), top, left);
-//
-//					addedFocusNames.add(FORMULA_FOCUS_NAME);
-//					bookCtrl.moveEditorFocus(FORMULA_FOCUS_NAME, FORMULA_COLOR, top, left);
-//				}
-//				setText((String) evt.getEditingValue());
-//			}
-//		});
-		
+		bookCtrl.addEventListener(Events.ON_START_EDITING,
+				new EventListener() {
+			public void onEvent(Event event) throws Exception {
+				StartEditingEvent evt = (StartEditingEvent)event;
+				newEdit = (String) evt.getClientValue();
+				if (isStartEditingFormula(newEdit)) {
+					cacheFormulaEditingInfo();
+				}
+				if (isComposingFormula(newEdit)) {
+					int left = bookCtrl.getSelection().getLeft();
+					int top = bookCtrl.getSelection().getTop();
+					formulaCell = Utils.getCell(bookCtrl.getSelectedSheet(), top, left);
+
+					addedFocusNames.add(FORMULA_FOCUS_NAME);
+					bookCtrl.moveEditorFocus(FORMULA_FOCUS_NAME, FORMULA_COLOR, top, left);
+				}
+				setText((String) evt.getEditingValue());
+			}
+		});
 		bookCtrl.addEventListener(Events.ON_EDITBOX_EDITING,
 				new EventListener() {
 			public void onEvent(Event event) throws Exception {
